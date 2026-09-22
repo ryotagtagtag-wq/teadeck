@@ -1,0 +1,263 @@
+diff --git a/app/javascript/mastodon/api/search.ts b/app/javascript/mastodon/api/search.ts
+--- a/app/javascript/mastodon/api/search.ts
++++ b/app/javascript/mastodon/api/search.ts
+@@ -1,10 +1,33 @@
++import {
++  applySearchDefaults,
++  createHashtagSearchPages,
++  hashtagFromQuery,
++} from '@/teadeck/api_compat';
+ import { apiRequestGet } from 'mastodon/api';
+ import type {
+   ApiSearchType,
+   ApiSearchResultsJSON,
+ } from 'mastodon/api_types/search';
++import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
+ 
+-export const apiGetSearch = (
++// A search for "#tag" returns only hashtags on GoToSocial (and on Mastodon
++// without full-text search). If the first page of such a search has no posts,
++// all post pages of that search come from the hashtag's timeline, paged by
++// max_id; a search that returned posts itself never switches source.
++const hashtagSearches = createHashtagSearchPages();
++
++const tagTimeline = (
++  tag: string,
++  params: { limit: number; max_id?: string },
++  options: { signal?: AbortSignal },
++) =>
++  apiRequestGet<ApiStatusJSON[]>(
++    `v1/timelines/tag/${encodeURIComponent(tag)}`,
++    params,
++    options,
++  );
++
++export const apiGetSearch = async (
+   params: {
+     q: string;
+     resolve?: boolean;
+@@ -15,11 +38,49 @@ export const apiGetSearch = (
+   options: {
+     signal?: AbortSignal;
+   } = {},
+-) =>
+-  apiRequestGet<ApiSearchResultsJSON>(
+-    'v2/search',
+-    {
+-      ...params,
+-    },
+-    options,
++) => {
++  const limit = params.limit ?? 20;
++  const isFirstPage = !params.offset;
++  const wantsStatuses = !params.type || params.type === 'statuses';
++
++  // Further post pages of a search answered from the hashtag timeline.
++  const timelineSearch = hashtagSearches.next(params.q);
++  if (!isFirstPage && params.type === 'statuses' && timelineSearch) {
++    const statuses = timelineSearch.done
++      ? []
++      : await tagTimeline(
++          timelineSearch.tag,
++          { limit, max_id: timelineSearch.maxId },
++          options,
++        );
++    hashtagSearches.continue(params.q, statuses, limit);
++    return applySearchDefaults({ statuses } as Partial<ApiSearchResultsJSON>) as ApiSearchResultsJSON;
++  }
++
++  const results = applySearchDefaults(
++    await apiRequestGet<ApiSearchResultsJSON>(
++      'v2/search',
++      {
++        ...params,
++      },
++      options,
++    ),
+   );
++
++  if (isFirstPage) {
++    hashtagSearches.reset(params.q);
++    const tag = hashtagFromQuery(params.q);
++    if (tag && wantsStatuses && results.statuses.length === 0) {
++      // If the timeline fails, keep the accounts and hashtags the search found.
++      const statuses = await tagTimeline(tag, { limit }, options).catch(
++        () => undefined,
++      );
++      if (statuses) {
++        results.statuses = statuses;
++        hashtagSearches.start(params.q, tag, statuses, limit);
++      }
++    }
++  }
++
++  return results;
++};
+diff --git a/app/javascript/mastodon/components/hashtag.tsx b/app/javascript/mastodon/components/hashtag.tsx
+--- a/app/javascript/mastodon/components/hashtag.tsx
++++ b/app/javascript/mastodon/components/hashtag.tsx
+@@ -1,3 +1,4 @@
++import { hashtagStats } from '@/teadeck/api_compat';
+ import type { JSX } from 'react';
+ import { Component } from 'react';
+ 
+@@ -61,48 +62,51 @@ interface ImmutableHashtagProps {
+   hashtag: Immutable.Map<string, unknown>;
+ }
+ 
+-export const ImmutableHashtag = ({ hashtag }: ImmutableHashtagProps) => (
+-  <Hashtag
+-    name={hashtag.get('name') as string}
+-    to={`/tags/${hashtag.get('name') as string}`}
+-    people={
+-      (hashtag.getIn(['history', 0, 'accounts']) as number) * 1 +
+-      (hashtag.getIn(['history', 1, 'accounts']) as number) * 1
+-    }
+-    history={(
+-      hashtag.get('history') as Immutable.Collection.Indexed<
+-        Immutable.Map<string, number>
+-      >
++export const ImmutableHashtag = ({ hashtag }: ImmutableHashtagProps) => {
++  // GoToSocial sends no usage history; see hashtagStats.
++  const stats = hashtagStats(
++    (
++      hashtag.get('history') as
++        | Immutable.Collection.Indexed<Immutable.Map<string, number>>
++        | undefined
+     )
+-      .reverse()
+-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+-      .map((day) => day.get('uses')!)
+-      .toArray()}
+-  />
+-);
++      ?.map((day) => day.toJS())
++      .toArray(),
++  );
++  return (
++    <Hashtag
++      name={hashtag.get('name') as string}
++      to={`/tags/${hashtag.get('name') as string}`}
++      people={stats.people}
++      history={stats.history}
++      withGraph={stats.withGraph}
++    />
++  );
++};
+ 
+ export const CompatibilityHashtag: React.FC<{
+   hashtag: HashtagType;
+-}> = ({ hashtag }) => (
+-  <Hashtag
+-    name={hashtag.name}
+-    to={`/tags/${hashtag.name}`}
+-    people={
+-      (hashtag.history[0].accounts as unknown as number) * 1 +
+-      ((hashtag.history[1]?.accounts ?? 0) as unknown as number) * 1
+-    }
+-    history={hashtag.history
+-      .map((day) => (day.uses as unknown as number) * 1)
+-      .reverse()}
+-  />
+-);
++}> = ({ hashtag }) => {
++  // GoToSocial sends no usage history; see hashtagStats.
++  const stats = hashtagStats(hashtag.history as HashtagType['history'] | undefined);
++  return (
++    <Hashtag
++      name={hashtag.name}
++      to={`/tags/${hashtag.name}`}
++      people={stats.people}
++      history={stats.history}
++      withGraph={stats.withGraph}
++    />
++  );
++};
+ 
+ export interface HashtagProps {
+   className?: string;
+   description?: React.ReactNode;
+   history?: number[];
+   name: string;
+-  people?: number;
++  /** `null`: the server has no statistics, show none (undefined: still loading). */
++  people?: number | null;
+   to: string;
+   uses?: number;
+   withGraph?: boolean;
+@@ -134,9 +138,9 @@ export const Hashtag: React.FC<HashtagProps> = ({
+ 
+       {description ? (
+         <span>{description}</span>
+-      ) : typeof people !== 'undefined' ? (
++      ) : typeof people === 'number' ? (
+         <ShortNumber value={people} renderer={accountsCountRenderer} />
+-      ) : (
++      ) : people === null ? null : (
+         <Skeleton width={100} />
+       )}
+     </div>
+diff --git a/app/javascript/mastodon/features/followed_tags/index.tsx b/app/javascript/mastodon/features/followed_tags/index.tsx
+--- a/app/javascript/mastodon/features/followed_tags/index.tsx
++++ b/app/javascript/mastodon/features/followed_tags/index.tsx
+@@ -1,3 +1,4 @@
++import { hashtagStats } from '@/teadeck/api_compat';
+ import { useEffect, useCallback } from 'react';
+ 
+ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+@@ -42,9 +43,8 @@ const FollowedTag: React.FC<{
+     });
+   }, [dispatch, onUnfollow, tagId]);
+ 
+-  const people =
+-    parseInt(tag.history[0].accounts) +
+-    parseInt(tag.history[1]?.accounts ?? '');
++  // GoToSocial sends no usage history; see hashtagStats.
++  const { people } = hashtagStats(tag.history as typeof tag.history | undefined);
+ 
+   return (
+     <Hashtag
+diff --git a/app/javascript/mastodon/features/hashtag_timeline/components/hashtag_header.tsx b/app/javascript/mastodon/features/hashtag_timeline/components/hashtag_header.tsx
+--- a/app/javascript/mastodon/features/hashtag_timeline/components/hashtag_header.tsx
++++ b/app/javascript/mastodon/features/hashtag_timeline/components/hashtag_header.tsx
+@@ -184,7 +184,10 @@ export const HashtagHeader: React.FC<{
+     return null;
+   }
+ 
+-  const [uses, people] = tag.history.reduce(
++  // GoToSocial's tag history is an empty or absent stub: show no statistics then.
++  const tagHistory = tag.history as typeof tag.history | undefined;
++  const hasStats = Array.isArray(tagHistory) && tagHistory.length > 0;
++  const [uses, people] = (tagHistory ?? []).reduce(
+     (arr, day) => [
+       arr[0] + parseInt(day.uses),
+       arr[1] + parseInt(day.accounts),
+@@ -221,16 +224,18 @@ export const HashtagHeader: React.FC<{
+         </div>
+       </div>
+ 
+-      <div>
+-        <ShortNumber value={uses} renderer={usesRenderer} />
+-        {dividingCircle}
+-        <ShortNumber value={people} renderer={peopleRenderer} />
+-        {dividingCircle}
+-        <ShortNumber
+-          value={parseInt(tag.history[0].uses)}
+-          renderer={usesTodayRenderer}
+-        />
+-      </div>
++      {hasStats && (
++        <div>
++          <ShortNumber value={uses} renderer={usesRenderer} />
++          {dividingCircle}
++          <ShortNumber value={people} renderer={peopleRenderer} />
++          {dividingCircle}
++          <ShortNumber
++            value={parseInt(tagHistory[0].uses)}
++            renderer={usesTodayRenderer}
++          />
++        </div>
++      )}
+     </div>
+   );
+ };

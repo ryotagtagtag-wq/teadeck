@@ -1,0 +1,276 @@
+import assert from 'node:assert/strict';
+import { after, before, test } from 'node:test';
+
+import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
+import { account, instance, status } from './fixtures.mjs';
+import { createStaticServer } from './server.mjs';
+import {
+  accountStatusFormat, effectiveStatusFormat, statusContentType, statusFormatChoice,
+  statusFormatFromStored, statusFormatOfSource, supportsStatusFormat,
+} from '../integration/gotosocial.ts';
+
+/**
+ * GoToSocial parses a post as plain text or as Markdown, with a default per
+ * account (`source.status_content_type`) that a single post may override
+ * (`content_type`). The switch in the compose box shows that default and
+ * overrides it; the override is remembered.
+ */
+
+const gtsInstance = {
+  ...instance,
+  version: '3.5.3+0.22.1',
+  source_url: 'https://codeberg.org/superseriousbusiness/gotosocial',
+  configuration: { ...instance.configuration, statuses: { ...instance.configuration.statuses, supported_mime_types: ['text/plain', 'text/markdown'] } },
+};
+const markdownAccount = { ...account, source: { ...account.source, status_content_type: 'text/markdown' } };
+const plainAccount = { ...account, source: { ...account.source, status_content_type: 'text/plain' } };
+
+test('Markdown needs an explicit advertisement of both post formats', () => {
+  assert.equal(supportsStatusFormat(gtsInstance), true);
+  for (const types of [undefined, null, 'text/plain,text/markdown', [], ['text/plain'], ['text/markdown']]) {
+    assert.equal(supportsStatusFormat({ configuration: { statuses: { supported_mime_types: types } } }), false);
+  }
+  assert.equal(supportsStatusFormat({}), false);
+  assert.equal(statusContentType('markdown', false), undefined);
+  assert.equal(statusContentType('plain', false), undefined);
+});
+
+test('a stored choice is only kept while it differs from the account setting', () => {
+  assert.equal(statusFormatFromStored('markdown'), 'markdown');
+  assert.equal(statusFormatFromStored('html'), 'default');
+  assert.equal(statusFormatFromStored(null), 'default');
+
+  assert.equal(accountStatusFormat('text/markdown'), 'markdown');
+  assert.equal(accountStatusFormat('text/plain'), 'plain');
+  assert.equal(accountStatusFormat(undefined), 'plain');
+
+  // Choosing what the account already does stores nothing, so a later change there still arrives.
+  assert.equal(statusFormatChoice('markdown', 'markdown'), 'default');
+  assert.equal(statusFormatChoice('plain', 'markdown'), 'plain');
+
+  assert.equal(effectiveStatusFormat('default', 'markdown'), 'markdown');
+  assert.equal(effectiveStatusFormat('plain', 'markdown'), 'plain');
+});
+
+test('only an override is sent; the account setting sends nothing', () => {
+  assert.equal(statusContentType('default', true), undefined);
+  assert.equal(statusContentType('markdown', true), 'text/markdown');
+  assert.equal(statusContentType('plain', true), 'text/plain');
+
+  assert.equal(statusFormatOfSource('text/markdown'), 'markdown');
+  assert.equal(statusFormatOfSource('text/plain'), 'plain');
+  // Older GoToSocial versions omit it when editing: keep the account's setting.
+  assert.equal(statusFormatOfSource(undefined), 'default');
+});
+
+let server;
+let origin;
+let browser;
+
+before(async () => {
+  ({ server, origin } = await createStaticServer());
+  browser = await chromium.launch({ headless: true });
+});
+
+after(async () => {
+  await browser?.close();
+  await new Promise((resolve) => server?.close(resolve));
+});
+
+/** A signed-in page against an instance of the given shape, recording what it posts. */
+async function signedInPage({ instance: instanceBody, account: accountBody, statusSource, savedFormat }) {
+  const context = await browser.newContext({ locale: 'de-DE' });
+  const page = await context.newPage();
+  const pageErrors = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const posted = [];
+
+  const ownStatus = { ...status, account: accountBody };
+  await context.route('https://mastodon.test/**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const cors = { 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
+    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
+    if (url.pathname === '/oauth/authorize') {
+      const callback = new URL('/oauth/callback', origin);
+      callback.search = new URLSearchParams({ code: 'browser-code', state: url.searchParams.get('state') ?? '' });
+      return route.fulfill({ contentType: 'text/html', body: `<script>location.replace(${JSON.stringify(callback.href)})</script>` });
+    }
+    let body;
+    if (url.pathname === '/api/v1/apps') body = { client_id: 'browser-client', client_secret: 'browser-secret' };
+    else if (url.pathname === '/oauth/token') body = { access_token: 'browser-token', token_type: 'Bearer', scope: 'read write follow' };
+    else if (url.pathname === '/api/v2/instance') body = instanceBody;
+    else if (url.pathname === '/api/v1/accounts/verify_credentials') body = accountBody;
+    else if (url.pathname === '/api/v1/preferences') body = {};
+    else if (url.pathname === '/api/v1/timelines/home') body = [ownStatus];
+    else if (url.pathname === '/api/v1/markers') body = {};
+    else if (url.pathname === '/api/v2/notifications') body = { notification_groups: [], accounts: [], statuses: [] };
+    else if (url.pathname === '/api/v2/notifications/policy') body = {
+      for_not_following: 'accept', for_not_followers: 'accept', for_new_accounts: 'accept',
+      for_private_mentions: 'accept', for_limited_accounts: 'filter', for_bots: 'accept',
+      summary: { pending_requests_count: 0, pending_notifications_count: 0 },
+    };
+    else if (url.pathname === `/api/v1/statuses/${ownStatus.id}/source`) {
+      body = { id: ownStatus.id, text: 'geschrieben in Markdown', spoiler_text: '', ...statusSource };
+    }
+    else if (url.pathname === '/api/v1/statuses' && request.method() === 'POST') {
+      const sent = JSON.parse(request.postData());
+      posted.push(sent);
+      body = { ...ownStatus, id: `posted-${posted.length}`, content: `<p>${sent.status}</p>` };
+    }
+    else if (url.pathname === `/api/v1/statuses/${ownStatus.id}` && request.method() === 'PUT') {
+      posted.push(JSON.parse(request.postData()));
+      body = ownStatus;
+    }
+    else body = [];
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: cors, body: JSON.stringify(body) });
+  });
+
+  await page.goto(origin);
+  await page.locator('#teadeck-instance').fill('mastodon.test');
+  await page.locator('#teadeck-login button[type=submit]').click();
+  await page.getByPlaceholder('Was gibts Neues?').waitFor();
+  if (savedFormat) {
+    await page.evaluate(({ accountId, format }) => {
+      localStorage.setItem(`teadeck.v1:https://mastodon.test:${accountId}:statusFormat.v1`, JSON.stringify(format));
+    }, { accountId: accountBody.id, format: savedFormat });
+    await page.reload();
+    await page.getByPlaceholder('Was gibts Neues?').waitFor();
+  }
+  return {
+    page, posted, pageErrors,
+    toggle: page.locator('.teadeck-status-format-toggle'),
+    async post(text) {
+      const before = posted.length;
+      await page.getByPlaceholder('Was gibts Neues?').fill(text);
+      await page.getByRole('button', { name: 'Veröffentlichen' }).click();
+      for (let attempt = 0; attempt < 100 && posted.length === before; attempt++) await new Promise((r) => setTimeout(r, 50));
+      assert.equal(posted.length, before + 1, 'the status was never posted');
+      return posted[posted.length - 1];
+    },
+    stop: async () => { await context.close(); },
+  };
+}
+
+test('the switch shows the account setting, and a post follows it without saying so', { timeout: 60_000 }, async () => {
+  const app = await signedInPage({ instance: gtsInstance, account: markdownAccount });
+  try {
+    await app.toggle.waitFor();
+    assert.equal(await app.toggle.getAttribute('aria-pressed'), 'true', 'the account writes Markdown');
+    const sent = await app.post('Teadeck Markdown-Standard');
+    // Nothing is sent: whatever the account is set to applies, including a change made since.
+    assert.equal(sent.content_type, undefined);
+    assert.deepEqual(app.pageErrors, []);
+  } finally { await app.stop(); }
+});
+
+test('the switch sits with the compose buttons, right after the emoji picker', { timeout: 60_000 }, async () => {
+  const app = await signedInPage({ instance: gtsInstance, account: markdownAccount });
+  try {
+    await app.toggle.waitFor();
+    // Same row as the attachment, poll, warning and emoji buttons - and directly after the last of them.
+    const order = await app.page.locator('.compose-form__buttons > *').evaluateAll((elements) => elements.map((element) => element.className));
+    const emoji = order.findIndex((name) => name.includes('emoji'));
+    const toggle = order.findIndex((name) => name.includes('teadeck-status-format-toggle'));
+    assert.ok(emoji >= 0, `no emoji button in the row: ${order.join(' | ')}`);
+    assert.equal(toggle, emoji + 1, `the switch is not next to the emoji button: ${order.join(' | ')}`);
+
+    // And it is one of them to look at: same button class, same size.
+    assert.ok((await app.toggle.getAttribute('class')).includes('icon-button'));
+    const [emojiBox, toggleBox] = [
+      await app.page.locator('.compose-form__buttons .emoji-button, .compose-form__buttons [class*=emoji] button').first().boundingBox(),
+      await app.toggle.boundingBox(),
+    ];
+    assert.ok(Math.abs(emojiBox.height - toggleBox.height) <= 2, `heights differ: ${emojiBox.height} vs ${toggleBox.height}`);
+    assert.deepEqual(app.pageErrors, []);
+  } finally { await app.stop(); }
+});
+
+test('a click overrides the account setting for the posts that follow, and is remembered', { timeout: 60_000 }, async () => {
+  const app = await signedInPage({ instance: gtsInstance, account: markdownAccount });
+  try {
+    await app.toggle.click();
+    assert.equal(await app.toggle.getAttribute('aria-pressed'), 'false');
+    assert.equal((await app.post('ohne Markdown')).content_type, 'text/plain');
+
+    // Remembered: a fresh start of the app keeps the choice.
+    await app.page.reload();
+    await app.page.getByPlaceholder('Was gibts Neues?').waitFor();
+    assert.equal(await app.toggle.getAttribute('aria-pressed'), 'false');
+    assert.equal((await app.post('immer noch ohne Markdown')).content_type, 'text/plain');
+
+    // Back to what the account does: nothing is remembered and nothing is sent.
+    await app.toggle.click();
+    assert.equal(await app.toggle.getAttribute('aria-pressed'), 'true');
+    assert.equal((await app.post('wieder Kontostandard')).content_type, undefined);
+    await app.page.reload();
+    await app.page.getByPlaceholder('Was gibts Neues?').waitFor();
+    assert.equal(await app.toggle.getAttribute('aria-pressed'), 'true');
+    assert.deepEqual(app.pageErrors, []);
+  } finally { await app.stop(); }
+});
+
+test('an account that writes plain text starts with the switch off', { timeout: 60_000 }, async () => {
+  const app = await signedInPage({ instance: gtsInstance, account: plainAccount });
+  try {
+    await app.toggle.waitFor();
+    assert.equal(await app.toggle.getAttribute('aria-pressed'), 'false');
+    assert.equal((await app.post('einfacher Text')).content_type, undefined);
+
+    await app.toggle.click();
+    assert.equal((await app.post('**fett**')).content_type, 'text/markdown');
+  } finally { await app.stop(); }
+});
+
+test('a server without this setting shows no switch', { timeout: 60_000 }, async () => {
+  const app = await signedInPage({ instance, account });
+  try {
+    assert.equal(await app.toggle.count(), 0);
+    assert.equal((await app.post('Mastodon kennt das nicht')).content_type, undefined);
+  } finally { await app.stop(); }
+});
+
+test('GoToSocial without advertised support hides Markdown and suppresses a remembered override', { timeout: 60_000 }, async () => {
+  const app = await signedInPage({
+    instance: { ...gtsInstance, configuration: instance.configuration },
+    account: markdownAccount,
+    savedFormat: 'markdown',
+  });
+  try {
+    assert.equal(await app.toggle.count(), 0);
+    assert.equal((await app.post('no unsupported parameter')).content_type, undefined);
+  } finally { await app.stop(); }
+});
+
+test('another implementation can advertise the same API without a GoToSocial name', { timeout: 60_000 }, async () => {
+  const app = await signedInPage({ instance: { ...instance, configuration: gtsInstance.configuration }, account: plainAccount });
+  try {
+    await app.toggle.click();
+    assert.equal((await app.post('**Markdown**')).content_type, 'text/markdown');
+  } finally { await app.stop(); }
+});
+
+test('editing a post keeps the format it was written in', { timeout: 60_000 }, async () => {
+  const app = await signedInPage({
+    instance: gtsInstance, account: plainAccount,
+    statusSource: { content_type: 'text/markdown' },
+  });
+  try {
+    // This account writes plain text, so the switch starts off.
+    assert.equal(await app.toggle.getAttribute('aria-pressed'), 'false');
+
+    await app.page.locator('.status__action-bar').getByRole('button', { name: 'Mehr' }).click();
+    await app.page.locator('.dropdown-menu').getByText('Beitrag bearbeiten', { exact: true }).click();
+    await app.page.waitForFunction(() => {
+      const textarea = document.querySelector('textarea[placeholder="Was gibts Neues?"]');
+      return textarea instanceof HTMLTextAreaElement && textarea.value.includes('Markdown');
+    });
+    // The post was written in Markdown: editing it must not turn it into plain text.
+    assert.equal(await app.toggle.getAttribute('aria-pressed'), 'true');
+
+    await app.page.getByRole('button', { name: 'Aktualisieren' }).click();
+    for (let attempt = 0; attempt < 100 && app.posted.length === 0; attempt++) await new Promise((r) => setTimeout(r, 50));
+    assert.equal(app.posted.length, 1, 'the edit was never sent');
+    assert.equal(app.posted[0].content_type, 'text/markdown');
+  } finally { await app.stop(); }
+});

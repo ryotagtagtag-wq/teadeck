@@ -1,0 +1,5 @@
+Teadeck adapts the Mastodon web client (AGPL-3.0-or-later).
+Copyright remains with the Mastodon authors and other respective contributors.
+The exact upstream revision is recorded in upstream.lock.json.
+Teadeck changes: browser OAuth, local client state, standalone build and static hosting.
+Each build includes corresponding source and build instructions at /source.tar.gz.

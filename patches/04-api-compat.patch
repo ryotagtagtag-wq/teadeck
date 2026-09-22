@@ -1,0 +1,156 @@
+diff --git a/app/javascript/mastodon/actions/importer/index.js b/app/javascript/mastodon/actions/importer/index.js
+--- a/app/javascript/mastodon/actions/importer/index.js
++++ b/app/javascript/mastodon/actions/importer/index.js
+@@ -1,3 +1,4 @@
++import { applyStatusDefaults } from '@/teadeck/api_compat';
+ import { createPollFromServerJSON } from 'mastodon/models/poll';
+ 
+ import { importAccounts } from './accounts';
+@@ -65,6 +66,7 @@ export function importFetchedStatuses(statuses, options = {}) {
+     const collections = [];
+ 
+     function processStatus(status) {
++      applyStatusDefaults(status);
+       pushUnique(normalStatuses, normalizeStatus(status, getState().getIn(['statuses', status.id]), options));
+       pushUnique(accounts, status.account);
+ 
+diff --git a/app/javascript/mastodon/actions/streaming.js b/app/javascript/mastodon/actions/streaming.js
+--- a/app/javascript/mastodon/actions/streaming.js
++++ b/app/javascript/mastodon/actions/streaming.js
+@@ -1,5 +1,7 @@
+ // @ts-check
+ 
++import { applyNotificationDefaults } from '@/teadeck/api_compat';
++
+ import { getLocale } from '../locales';
+ import { connectStream } from '../stream';
+ 
+@@ -115,7 +117,7 @@ export const connectTimelineStream = (timelineId, channelName, params = {}, opti
+           break;
+         case 'notification': {
+           // @ts-expect-error
+-          const notificationJSON = JSON.parse(data.payload);
++          const notificationJSON = applyNotificationDefaults(JSON.parse(data.payload));
+           dispatch(updateNotifications(notificationJSON, messages, locale));
+           // TODO: remove this once the groups feature replaces the previous one
+           dispatch(processNewNotificationForGroups(notificationJSON));
+diff --git a/app/javascript/mastodon/api/instance.ts b/app/javascript/mastodon/api/instance.ts
+--- a/app/javascript/mastodon/api/instance.ts
++++ b/app/javascript/mastodon/api/instance.ts
+@@ -1,3 +1,4 @@
++import { withCapability } from '@/teadeck/api_capabilities';
+ import { apiRequestGet } from 'mastodon/api';
+ import type {
+   ApiTermsOfServiceJSON,
+@@ -25,8 +26,13 @@ export const apiGetExtendedDescription = () =>
+   apiRequestGet<ApiExtendedDescriptionJSON>('v1/instance/extended_description');
+ 
+ export const apiGetTranslationLanguages = () =>
+-  apiRequestGet<ApiTranslationLanguagesJSON>(
+-    'v1/instance/translation_languages',
++  withCapability<ApiTranslationLanguagesJSON>(
++    'translation.languages',
++    () =>
++      apiRequestGet<ApiTranslationLanguagesJSON>(
++        'v1/instance/translation_languages',
++      ),
++    () => ({}),
+   );
+ 
+ export const apiGetDomainBlocks = () =>
+diff --git a/app/javascript/mastodon/api/notification_policies.ts b/app/javascript/mastodon/api/notification_policies.ts
+--- a/app/javascript/mastodon/api/notification_policies.ts
++++ b/app/javascript/mastodon/api/notification_policies.ts
+@@ -1,8 +1,16 @@
++import { withCapability } from '@/teadeck/api_capabilities';
+ import { apiRequestGet, apiRequestPut } from 'mastodon/api';
+ import type { NotificationPolicyJSON } from 'mastodon/api_types/notification_policies';
+ 
++// Without the policy API (e.g. GoToSocial) there is no policy: `null` keeps
++// the policy controls and the filtered-notifications banner hidden instead of
++// showing settings that cannot be saved.
+ export const apiGetNotificationPolicy = () =>
+-  apiRequestGet<NotificationPolicyJSON>('v2/notifications/policy');
++  withCapability<NotificationPolicyJSON>(
++    'notifications.policy',
++    () => apiRequestGet<NotificationPolicyJSON>('v2/notifications/policy'),
++    () => null as unknown as NotificationPolicyJSON,
++  );
+ 
+ export const apiUpdateNotificationsPolicy = (
+   policy: Partial<NotificationPolicyJSON>,
+diff --git a/app/javascript/mastodon/api/notifications.ts b/app/javascript/mastodon/api/notifications.ts
+--- a/app/javascript/mastodon/api/notifications.ts
++++ b/app/javascript/mastodon/api/notifications.ts
+@@ -4,6 +4,13 @@ import api, {
+   apiRequestGet,
+   apiRequestPost,
+ } from 'mastodon/api';
++import type { AxiosResponse } from 'axios';
++
++import { withCapability } from '@/teadeck/api_capabilities';
++import {
++  notificationGroupsFromNotifications,
++  notificationParamsForV1,
++} from '@/teadeck/api_compat';
+ import type {
+   ApiNotificationGroupsResultJSON,
+   ApiNotificationRequestJSON,
+@@ -29,6 +36,26 @@ export const apiFetchNotifications = async (
+   };
+ };
+ 
++// Servers without grouped notifications (e.g. GoToSocial) get their v1
++// endpoint, grouped client-side (capability notifications.grouped).
++
++const fetchUngroupedNotifications = async (
++  params: Parameters<typeof apiFetchNotificationGroups>[0],
++) => {
++  const response = await api().request<ApiNotificationJSON[]>({
++    method: 'GET',
++    url: '/api/v1/notifications',
++    params: notificationParamsForV1(params),
++  });
++
++  return {
++    data: notificationGroupsFromNotifications(
++      response.data,
++    ) as unknown as ApiNotificationGroupsResultJSON,
++    response,
++  };
++};
++
+ export const apiFetchNotificationGroups = async (params?: {
+   url?: string;
+   grouped_types?: string[];
+@@ -36,13 +63,24 @@ export const apiFetchNotificationGroups = async (params?: {
+   max_id?: string;
+   since_id?: string;
+ }) => {
+-  const response = await api().request<ApiNotificationGroupsResultJSON>({
+-    method: 'GET',
+-    url: '/api/v2/notifications',
+-    params,
+-  });
++  const result = await withCapability<{
++    data: ApiNotificationGroupsResultJSON;
++    response: AxiosResponse;
++  }>(
++    'notifications.grouped',
++    async () => {
++      const response = await api().request<ApiNotificationGroupsResultJSON>({
++        method: 'GET',
++        url: '/api/v2/notifications',
++        params,
++      });
++      return { data: response.data, response };
++    },
++    () => fetchUngroupedNotifications(params),
++  );
+ 
+-  const { statuses, accounts, notification_groups } = response.data;
++  const { response } = result;
++  const { statuses, accounts, notification_groups } = result.data;
+ 
+   return {
+     statuses,

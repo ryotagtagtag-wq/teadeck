@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="referrer" content="no-referrer">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="initialPath" content="/home">
+    <title>Teadeck</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+    <!-- TEADECK_THEME -->
+  </head>
+  <body>
+    <div id="teadeck-loading" class="loading-indicator" role="progressbar" aria-busy="true" aria-label="Loading…" data-teadeck-text="loading" data-teadeck-text-attr="aria-label">
+      <svg width="50" height="50" viewBox="0 0 50 50" class="circular-progress"><circle fill="none" cx="25" cy="25" r="24" stroke-width="2px"></circle></svg>
+    </div>
+    <div id="teadeck-shell" class="container-alt" hidden>
+      <header class="teadeck-shell-brand">
+        <div id="teadeck-shell-logo" class="teadeck-logo" hidden></div>
+      </header>
+      <main class="form-container">
+        <p id="teadeck-status" class="flash-message alert" role="status" aria-live="polite"></p>
+        <div id="teadeck-account-list" class="simple_form" hidden>
+          <h1 class="title" data-teadeck-text="continueAs">Continue as</h1>
+          <ul></ul>
+        </div>
+        <form id="teadeck-login" class="simple_form">
+          <h1 class="title" data-teadeck-text="signIn">Log in</h1>
+          <p class="lead" data-teadeck-text="lead">Sign in with your account on a Mastodon or GoToSocial server.</p>
+          <div class="fields-group">
+            <div class="input with_label string required">
+              <div class="label_input">
+                <label class="string required" for="teadeck-instance" data-teadeck-text="domain">Domain</label>
+                <div class="label_input__wrapper">
+                  <input id="teadeck-instance" class="string required" name="instance" type="text" placeholder="mastodon.social" autocomplete="url" autocapitalize="none" spellcheck="false" required>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="fields-group">
+            <div class="input with_label boolean optional">
+              <div class="label_input">
+                <label class="boolean optional" for="teadeck-remember" data-teadeck-text="staySignedIn">Stay signed in</label>
+                <div class="label_input__wrapper">
+                  <label class="checkbox"><input id="teadeck-remember" class="boolean optional" type="checkbox"></label>
+                </div>
+              </div>
+              <span class="hint" data-teadeck-text="staySignedInHint">Stay signed in in new tabs and after closing the browser.</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn" data-teadeck-text="signIn">Log in</button>
+            <button id="teadeck-reset" type="button" class="btn button-secondary" hidden data-teadeck-text="signOut">Logout</button>
+          </div>
+        </form>
+        <p class="teadeck-shell-footer"><a href="https://git.knubbel.me/knubbel/teadeck" rel="noopener" target="_blank" data-teadeck-text="sourceCode">View source code</a></p>
+      </main>
+    </div>
+    <div id="teadeck-update" class="notification-list" role="status" hidden>
+      <div class="notification-bar notification-bar--active">
+        <span class="notification-bar__content"><span class="notification-bar__title" data-teadeck-text="updateTitle">New version</span> <span data-teadeck-text="updateBody">A new version of Teadeck is ready.</span></span>
+        <button id="teadeck-update-reload" class="notification-bar__action" type="button" data-teadeck-text="updateReload">Refresh</button>
+      </div>
+    </div>
+    <div id="mastodon" class="notranslate app-holder" data-props="{}" hidden></div>
+    <script id="initial-state" type="application/json"></script>
+    <noscript>Teadeck needs JavaScript in the browser.</noscript>
+    <!-- TEADECK_ASSETS -->
+    <script type="module" src="/teadeck/bootstrap.ts"></script>
+  </body>
+</html>

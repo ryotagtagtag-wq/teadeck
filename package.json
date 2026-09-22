@@ -1,0 +1,18 @@
+{
+  "name": "teadeck",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": ">=24.2"
+  },
+  "scripts": {
+    "doctor": "node scripts/toolchain.mjs",
+    "prepare:upstream": "node scripts/prepare.mjs",
+    "build": "node scripts/build.mjs",
+    "build:fresh": "npm run prepare:upstream && npm run build",
+    "test": "node scripts/verify.mjs",
+    "check": "npm run build && npm test",
+    "test:install": "node .work/upstream/node_modules/playwright/cli.js install --with-deps chromium"
+  }
+}

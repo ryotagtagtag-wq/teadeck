@@ -1,0 +1,240 @@
+/*
+ * Teadeck's own designs, as a layer over Mastodon's theme. Two teas, each with a
+ * dark and a light half; the colour scheme setting decides which half you see.
+ * Each half carries the colour of the tea it is named after:
+ *
+ *   Assam (dark)  / Silver Needle (light)  warm brown ground, copper accent
+ *                                          ivory and silver, pale straw gold
+ *   Sencha (dark) / Jasmine (light)        charcoal ground, yellow-green accent
+ *                                          warm rice paper, pale golden green
+ *
+ * Selected in Teadeck's settings (frontend_settings.ts, applied by appearance.ts
+ * as data-teadeck-theme); a deployment can set the starting design in its .env.
+ *
+ * Mastodon builds every colour from two ramps (grey and indigo) and derives its
+ * semantic tokens from them, so replacing the two ramps recolours the whole
+ * interface consistently. Only the ramps, the fonts, the radii, the primary
+ * button and the logo's tea colour are touched here - no component is restyled.
+ *
+ * Contrast comes from the tone values, not from saturation; the accent appears
+ * as a line, an icon or a tint, never as a filled surface. The typeface follows
+ * the half, not the tea: Space Grotesk over IBM Plex Sans in the dark ones,
+ * Newsreader over Public Sans in the light ones.
+ */
+
+@font-face {
+  font-family: 'Teadeck Space Grotesk';
+  src: url('./fonts/space-grotesk-latin.woff2') format('woff2-variations');
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Teadeck IBM Plex Sans';
+  src: url('./fonts/ibm-plex-sans-latin.woff2') format('woff2-variations');
+  font-weight: 400 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Teadeck Newsreader';
+  src: url('./fonts/newsreader-latin.woff2') format('woff2-variations');
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Teadeck Public Sans';
+  src: url('./fonts/public-sans-latin.woff2') format('woff2-variations');
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+/* Assam: warm brown ground, the copper of its liquor as the only accent. */
+html[data-teadeck-theme='assam'][data-color-scheme='dark'] {
+  --color-grey-50: #f7efe3;
+  --color-grey-100: #ece0d0;
+  --color-grey-200: #dccbb8;
+  --color-grey-300: #bda995;
+  --color-grey-400: #97826f;
+  --color-grey-500: #6d5b4c;
+  --color-grey-600: #4f4136;
+  --color-grey-700: #3a2f26;
+  --color-grey-800: #2b221b;
+  --color-grey-900: #1f1813;
+  --color-grey-950: #17110d;
+
+  --color-indigo-50: #fdf3e6;
+  --color-indigo-100: #f8e2c4;
+  --color-indigo-200: #efc492;
+  --color-indigo-300: #e2a668;
+  --color-indigo-400: #d18d4a;
+  --color-indigo-500: #c07a34;
+  --color-indigo-600: #a4632a;
+  --color-indigo-700: #864e21;
+  --color-indigo-800: #6b3e1c;
+  --color-indigo-900: #533018;
+  --color-indigo-950: #351d0f;
+
+  /* The tea in the cup: the accent itself, one step deeper than the text colour. */
+  --teadeck-logo-tea: var(--color-indigo-600);
+}
+
+/* Silver Needle: ivory and silver, the pale straw gold of its liquor as the accent. */
+html[data-teadeck-theme='assam'][data-color-scheme='light'] {
+  --color-grey-50: #faf8f2;
+  --color-grey-100: #f1ece0;
+  --color-grey-200: #e2dbcb;
+  --color-grey-300: #c6bda9;
+  --color-grey-400: #9e9481;
+  --color-grey-500: #776e5d;
+  --color-grey-600: #5b5346;
+  --color-grey-700: #453f35;
+  --color-grey-800: #322e27;
+  --color-grey-900: #22201b;
+  --color-grey-950: #171512;
+
+  --color-indigo-50: #fbf8e8;
+  --color-indigo-100: #f4edcc;
+  --color-indigo-200: #e8dc9c;
+  --color-indigo-300: #d8c674;
+  --color-indigo-400: #c3ad50;
+  --color-indigo-500: #ab9339;
+  --color-indigo-600: #8f7a2c;
+  --color-indigo-700: #736224;
+  --color-indigo-800: #5c4e1e;
+  --color-indigo-900: #473c19;
+  --color-indigo-950: #2c2510;
+
+  /* Ivory rather than plain white: the panels are paper, too. */
+  --color-bg-primary: #fffdf7;
+
+  /* A white tea brews pale: straw gold rather than amber. */
+  --teadeck-logo-tea: #c9ac4e;
+}
+
+/* Sencha: charcoal ground, its yellow-green liquor, honey as the second tone. */
+html[data-teadeck-theme='sencha'][data-color-scheme='dark'] {
+  --color-grey-50: #f3f8f4;
+  --color-grey-100: #e7efe9;
+  --color-grey-200: #d3ddd6;
+  --color-grey-300: #b3bfb6;
+  --color-grey-400: #8a978d;
+  --color-grey-500: #5f6d64;
+  --color-grey-600: #445049;
+  --color-grey-700: #313a36;
+  --color-grey-800: #232a27;
+  --color-grey-900: #1a201d;
+  --color-grey-950: #121614;
+
+  --color-indigo-50: #eef7ea;
+  --color-indigo-100: #dbefd3;
+  --color-indigo-200: #bcdfae;
+  --color-indigo-300: #9ccd8b;
+  --color-indigo-400: #82b971;
+  --color-indigo-500: #6ca25c;
+  --color-indigo-600: #57874a;
+  --color-indigo-700: #466c3c;
+  --color-indigo-800: #385631;
+  --color-indigo-900: #2c4427;
+  --color-indigo-950: #1a2a17;
+
+  /* The brewed leaf in the cup; honey stays the interface's second tone. */
+  --teadeck-logo-tea: #a8b23f;
+}
+
+/* Jasmine: warm rice paper, leaf green, the pale gold of jasmine tea. */
+html[data-teadeck-theme='sencha'][data-color-scheme='light'] {
+  --color-grey-50: #faf7ef;
+  --color-grey-100: #f2ece0;
+  --color-grey-200: #e3dccb;
+  --color-grey-300: #c5bda8;
+  --color-grey-400: #9c9480;
+  --color-grey-500: #756e5c;
+  --color-grey-600: #595345;
+  --color-grey-700: #433f34;
+  --color-grey-800: #312e26;
+  --color-grey-900: #21201a;
+  --color-grey-950: #161511;
+
+  --color-indigo-50: #eef5ec;
+  --color-indigo-100: #dcebd8;
+  --color-indigo-200: #b9d5b2;
+  --color-indigo-300: #94bd8b;
+  --color-indigo-400: #71a468;
+  --color-indigo-500: #5b8f51;
+  --color-indigo-600: #4a7a42;
+  --color-indigo-700: #3f6b3a;
+  --color-indigo-800: #33552f;
+  --color-indigo-900: #2a4527;
+  --color-indigo-950: #182b17;
+
+  /* Rice paper, a shade warmer than the ivory of the white tea. */
+  --color-bg-primary: #fbf8ef;
+
+  --teadeck-logo-tea: #cbbd62;
+}
+
+/* The typeface follows the half of the design, not the tea. */
+html[data-teadeck-theme][data-color-scheme='dark'] {
+  --font-heading: 'Teadeck Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Teadeck IBM Plex Sans', system-ui, sans-serif;
+}
+html[data-teadeck-theme][data-color-scheme='light'] {
+  --font-heading: 'Teadeck Newsreader', Georgia, serif;
+  --font-body: 'Teadeck Public Sans', system-ui, sans-serif;
+}
+
+html[data-teadeck-theme] {
+  /* 8px radii: flatter than Mastodon's, and the same everywhere. */
+  --radius-xs: 8px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+/*
+ * The interface font: Mastodon names its own family directly in many rules
+ * (`mastodon-font-sans-serif`), so the family is inherited from the body here.
+ * Code keeps the monospace family.
+ */
+html[data-teadeck-theme] body {
+  font-family: var(--font-body);
+}
+html[data-teadeck-theme] body :not(code):not(pre):not(kbd):not(samp):not(.monospace) {
+  font-family: inherit;
+}
+html[data-teadeck-theme] h1,
+html[data-teadeck-theme] h2,
+html[data-teadeck-theme] h3,
+html[data-teadeck-theme] .column-header__title,
+html[data-teadeck-theme] .status__content__text strong {
+  font-family: var(--font-heading);
+}
+
+/* An outlined primary button instead of a filled surface; the accent stays a line. */
+html[data-teadeck-theme] .button:not(:disabled):not(.disabled):not(.button-secondary):not(.button--plain) {
+  background-color: transparent;
+  border-color: var(--color-border-brand);
+  color: var(--color-text-brand);
+  border-radius: var(--radius-sm);
+}
+html[data-teadeck-theme] .button:not(:disabled):not(.disabled):not(.button-secondary):not(.button--plain):hover,
+html[data-teadeck-theme] .button:not(:disabled):not(.disabled):not(.button-secondary):not(.button--plain):focus,
+html[data-teadeck-theme] .button:not(:disabled):not(.disabled):not(.button-secondary):not(.button--plain):active {
+  background-color: color-mix(in oklab, transparent, var(--color-bg-brand-base) 14%);
+  border-color: var(--color-border-brand);
+  color: var(--color-text-brand);
+}
+
+/* The sign-in page follows the same rules; it uses Mastodon's auth button class. */
+html[data-teadeck-theme] #teadeck-shell .btn,
+html[data-teadeck-theme] #teadeck-shell .button {
+  background-color: transparent;
+  border: 1px solid var(--color-border-brand);
+  color: var(--color-text-brand);
+  border-radius: var(--radius-sm);
+}
+html[data-teadeck-theme] #teadeck-shell .btn:hover,
+html[data-teadeck-theme] #teadeck-shell .btn:focus {
+  background-color: color-mix(in oklab, transparent, var(--color-bg-brand-base) 14%);
+  color: var(--color-text-brand);
+}

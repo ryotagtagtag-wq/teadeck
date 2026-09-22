@@ -1,0 +1,101 @@
+# Weekly: does Teadeck still build and pass its tests on Mastodon's newest nightly?
+# If so, the updated upstream.lock.json is pushed to a branch `upstream/<release>` for review and an
+# image tagged with the release (e.g. `nightly.2026-09-15`, never `latest`) is published to try it;
+# if patches no longer apply or tests fail, the run fails (and nothing is pushed).
+# Tests include Mastodon's own web client tests. A green run does not prove that security fixes
+# reach Teadeck: the commit message lists upstream changes at Teadeck's integration points
+# (scripts/upstream_report.mjs) for review before merging. Security advisories are checked
+# separately and daily (security-advisories.yml).
+# Deploying stays a manual decision.
+name: upstream-update
+
+on:
+  schedule:
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+
+jobs:
+  candidate:
+    runs-on: docker
+    container:
+      image: node:24-bookworm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Resolve the newest nightly
+        id: resolve
+        run: |
+          echo "previous=$(node -p 'require("./upstream.lock.json").commit')" >> "$GITHUB_OUTPUT"
+          result="$(node scripts/resolve_upstream.mjs --write)"
+          echo "$result"
+          echo "changed=$(node -e 'console.log(JSON.parse(process.argv[1]).changed)' "$result")" >> "$GITHUB_OUTPUT"
+          echo "release=$(node -e 'console.log(JSON.parse(process.argv[1]).release ?? "nightly")' "$result")" >> "$GITHUB_OUTPUT"
+      - name: Import upstream and apply patches
+        if: steps.resolve.outputs.changed == 'true'
+        run: node scripts/prepare.mjs
+      - name: Build
+        if: steps.resolve.outputs.changed == 'true'
+        run: node scripts/build.mjs
+      - name: Install Chromium for the browser tests
+        if: steps.resolve.outputs.changed == 'true'
+        run: node .work/upstream/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Install nginx for production configuration tests
+        if: steps.resolve.outputs.changed == 'true'
+        run: apt-get update && apt-get install -y --no-install-recommends nginx
+      - name: Type check and tests
+        if: steps.resolve.outputs.changed == 'true'
+        env:
+          TEADECK_REQUIRE_NGINX: '1'
+        run: node scripts/verify.mjs
+      - name: List upstream changes at Teadeck's integration points
+        if: steps.resolve.outputs.changed == 'true'
+        run: |
+          node scripts/upstream_report.mjs "${{ steps.resolve.outputs.previous }}" "$(node -p 'require("./upstream.lock.json").commit')" > /tmp/upstream-report.md
+          cat /tmp/upstream-report.md
+      - name: Push the tested lock update for review
+        id: push
+        if: steps.resolve.outputs.changed == 'true'
+        run: |
+          branch="upstream/${{ steps.resolve.outputs.release }}"
+          git config user.name "Teadeck upstream update"
+          git config user.email "actions@git.knubbel.me"
+          git checkout -b "$branch"
+          git add upstream.lock.json
+          {
+            echo "chore: update Mastodon upstream to ${{ steps.resolve.outputs.release }}"
+            echo
+            echo "Patches applied; build, type check, Teadeck's and Mastodon's web client tests passed in CI."
+            echo "Review the upstream changes at integration points below before merging."
+            echo
+            cat /tmp/upstream-report.md
+          } > /tmp/commit-message
+          git commit -F /tmp/commit-message
+          git push origin "$branch"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # The Dockerfile packages dist/ and .work/image/ from the build above.
+      # A separate Git checkout would not contain either directory.
+      - name: Prepare registry credentials for the candidate image
+        if: steps.resolve.outputs.changed == 'true'
+        env:
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/.docker"
+          printf '{"auths":{"git.knubbel.me":{"username":"%s","password":"%s"}}}' \
+            "${{ github.repository_owner }}" "$REGISTRY_TOKEN" > "$GITHUB_WORKSPACE/.docker/config.json"
+      - name: Package the tested candidate image
+        if: steps.resolve.outputs.changed == 'true'
+        uses: docker://ghcr.io/osscontainertools/kaniko:v1.28.4-debug
+        env:
+          DOCKER_CONFIG: ${{ github.workspace }}/.docker
+        with:
+          args: >-
+            --context dir://${{ github.workspace }}
+            --dockerfile container/Dockerfile
+            --destination git.knubbel.me/knubbel/teadeck:${{ steps.resolve.outputs.release }}
+            --label org.opencontainers.image.source=https://git.knubbel.me/${{ github.repository }}
+            --label org.opencontainers.image.revision=${{ steps.push.outputs.sha }}
+      - name: Remove candidate registry credentials
+        if: always()
+        run: rm -rf "$GITHUB_WORKSPACE/.docker"

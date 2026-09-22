@@ -1,0 +1,171 @@
+diff --git a/app/javascript/mastodon/features/emoji/db-schema.ts b/app/javascript/mastodon/features/emoji/db-schema.ts
+--- a/app/javascript/mastodon/features/emoji/db-schema.ts
++++ b/app/javascript/mastodon/features/emoji/db-schema.ts
+@@ -11,6 +11,7 @@ import type {
+ } from 'idb';
+ 
+ import { EMOJI_DB_RELOAD_EVENT } from './constants';
++import { getEmojiDatabaseName } from './origin';
+ import type {
+   CustomEmojiData,
+   CacheKey,
+@@ -63,12 +64,12 @@ type Transaction<Mode extends IDBTransactionMode = 'versionchange'> =
+ 
+ export type Database = IDBPDatabase<EmojiDB>;
+ 
+-const DATABASE_NAME = 'mastodon-emoji';
+ const SCHEMA_VERSION = 5;
+ 
+ export async function openEmojiDB() {
++  const databaseName = getEmojiDatabaseName();
+   try {
+-    const db = await openDB<EmojiDB>(DATABASE_NAME, SCHEMA_VERSION, {
++    const db = await openDB<EmojiDB>(databaseName, SCHEMA_VERSION, {
+       upgrade(database, oldVersion, newVersion, trx) {
+         if (!database.objectStoreNames.contains('custom')) {
+           database.createObjectStore('custom', {
+@@ -147,7 +148,7 @@ export async function openEmojiDB() {
+       log(
+         'Emoji database version is newer than expected, deleting and recreating',
+       );
+-      await deleteDB(DATABASE_NAME);
++      await deleteDB(databaseName);
+       return openEmojiDB();
+     }
+     throw error;
+diff --git a/app/javascript/mastodon/features/emoji/index.ts b/app/javascript/mastodon/features/emoji/index.ts
+--- a/app/javascript/mastodon/features/emoji/index.ts
++++ b/app/javascript/mastodon/features/emoji/index.ts
+@@ -1,11 +1,16 @@
++import { getSession } from '@/teadeck/session';
+ import { initialState } from '@/mastodon/initial_state';
+ 
+ import { EMOJI_DB_RELOAD_EVENT } from './constants';
+ import { toSupportedLocale } from './locale';
++import { setEmojiOrigin } from './origin';
+ import type { EmojiWorkerMessage } from './types';
+ import { emojiLogger } from './utils';
+ 
+ const userLocale = toSupportedLocale(initialState?.meta.locale ?? 'en');
++const emojiOrigin = getSession()?.origin ?? location.origin;
++const emojiAccessToken = getSession()?.accessToken;
++setEmojiOrigin(emojiOrigin, emojiAccessToken);
+ 
+ let worker: Worker | null = null;
+ 
+@@ -66,6 +71,12 @@ export async function initializeEmoji() {
+         return; // Exit for other messages.
+       }
+ 
++      messageWorker({
++        type: 'init',
++        origin: emojiOrigin,
++        accessToken: emojiAccessToken,
++      });
++
+       const debugValue = localStorage.getItem('debug');
+       if (debugValue) {
+         messageWorker({ type: 'debug', debugValue });
+diff --git a/app/javascript/mastodon/features/emoji/loader.ts b/app/javascript/mastodon/features/emoji/loader.ts
+--- a/app/javascript/mastodon/features/emoji/loader.ts
++++ b/app/javascript/mastodon/features/emoji/loader.ts
+@@ -11,6 +11,7 @@ import {
+   loadCacheValue,
+ } from './database';
+ import { toSupportedLocale, toValidCacheKey } from './locale';
++import { getEmojiAuthorization, getEmojiOrigin } from './origin';
+ import type { CustomEmojiData } from './types';
+ import { emojiLogger } from './utils';
+ 
+@@ -61,7 +62,8 @@ async function importEmojiDataImpl(locale: Locale, shortcodes: boolean) {
+ export async function importCustomEmojiData() {
+   const response = await fetchAndCheckEtag({
+     oldEtag: await loadCacheValue('custom'),
+-    path: '/api/v1/custom_emojis',
++    path: new URL('/api/v1/custom_emojis', getEmojiOrigin()).href,
++    authorization: getEmojiAuthorization(),
+   });
+ 
+   if (!response) {
+@@ -166,9 +168,11 @@ async function fetchIfNotLoaded<ResultType extends object[] | object>({
+ async function fetchAndCheckEtag({
+   oldEtag,
+   path,
++  authorization,
+ }: {
+   oldEtag?: string;
+   path: string;
++  authorization?: string;
+ }) {
+   const headers = new Headers({
+     'Content-Type': 'application/json',
+@@ -176,6 +180,9 @@ async function fetchAndCheckEtag({
+   if (oldEtag) {
+     headers.set('If-None-Match', oldEtag);
+   }
++  if (authorization) {
++    headers.set('Authorization', authorization);
++  }
+ 
+   // Use location.origin as this script may be loaded from a CDN domain.
+   const url = new URL(path, location.origin);
+diff --git a/app/javascript/mastodon/features/emoji/origin.ts b/app/javascript/mastodon/features/emoji/origin.ts
+new file mode 100644
+--- /dev/null
++++ b/app/javascript/mastodon/features/emoji/origin.ts
+@@ -0,0 +1,22 @@
++let emojiOrigin: string | undefined;
++let emojiAccessToken: string | undefined;
++
++export function setEmojiOrigin(origin: string, accessToken?: string) {
++  emojiOrigin = new URL(origin).origin;
++  emojiAccessToken = accessToken;
++}
++
++// Some servers (e.g. GoToSocial) only list custom emojis to authenticated clients.
++export function getEmojiAuthorization() {
++  return emojiAccessToken ? `Bearer ${emojiAccessToken}` : undefined;
++}
++
++export function getEmojiOrigin() {
++  return emojiOrigin ?? location.origin;
++}
++
++export function getEmojiDatabaseName() {
++  return emojiOrigin
++    ? `mastodon-emoji-${encodeURIComponent(emojiOrigin)}`
++    : 'mastodon-emoji';
++}
+diff --git a/app/javascript/mastodon/features/emoji/types.ts b/app/javascript/mastodon/features/emoji/types.ts
+--- a/app/javascript/mastodon/features/emoji/types.ts
++++ b/app/javascript/mastodon/features/emoji/types.ts
+@@ -82,6 +82,7 @@ export type ExtraCustomEmojiMap = Record<
+ 
+ export type EmojiWorkerMessage =
+   | { type: 'ready' }
++  | { type: 'init'; origin: string; accessToken?: string }
+   | { type: 'db-blocked' }
+   | {
+       type: 'load';
+diff --git a/app/javascript/mastodon/features/emoji/worker.ts b/app/javascript/mastodon/features/emoji/worker.ts
+--- a/app/javascript/mastodon/features/emoji/worker.ts
++++ b/app/javascript/mastodon/features/emoji/worker.ts
+@@ -6,6 +6,7 @@ import {
+   importEmojiData,
+   importLegacyShortcodes,
+ } from './loader';
++import { setEmojiOrigin } from './origin';
+ import type { EmojiWorkerMessage } from './types';
+ 
+ addEventListener('message', handleMessage);
+@@ -13,7 +14,9 @@ self.postMessage({ type: 'ready' } satisfies EmojiWorkerMessage); // After the w
+ 
+ function handleMessage(event: MessageEvent<EmojiWorkerMessage>) {
+   const { data } = event;
+-  if (data.type === 'debug') {
++  if (data.type === 'init') {
++    setEmojiOrigin(data.origin, data.accessToken);
++  } else if (data.type === 'debug') {
+     debug.enable(data.debugValue);
+   } else if (data.type === 'load') {
+     void loadData(data.storeName);

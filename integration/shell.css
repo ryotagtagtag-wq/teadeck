@@ -1,0 +1,55 @@
+/* The sign-in page reuses Mastodon's auth page classes (container-alt, simple_form, …); only gaps are filled here. */
+#teadeck-status:empty { display: none; }
+#teadeck-status { overflow-wrap: anywhere; }
+#teadeck-account-list ul { display: grid; gap: 10px; margin-bottom: 30px; }
+#teadeck-account-list .btn { width: 100%; }
+/* The sign-in page: the logo large above a heading to match, both following the design. */
+.teadeck-shell-brand { display: flex; justify-content: center; margin-bottom: 8px; }
+#teadeck-shell-logo { width: min(260px, 60vw); }
+#teadeck-shell-logo > svg { width: 100%; height: auto; }
+#teadeck-shell .title { font-size: 30px; line-height: 1.2; }
+/*
+ * The colour roles of the logo drawings (see integration/logos/, scripts/teacup.mjs).
+ * They are derived from the theme's own colours, so a design - or a change to one -
+ * carries over to the cup without touching any SVG file. Single roles can be
+ * overridden by a design (themes.css) or by hand.
+ */
+html {
+  --teadeck-logo-line: var(--color-text-primary);
+  --teadeck-logo-steam: var(--color-text-secondary);
+  --teadeck-logo-body: var(--color-bg-secondary);
+  --teadeck-logo-body-dark: color-mix(in oklab, var(--teadeck-logo-body), var(--teadeck-logo-line) 22%);
+  --teadeck-logo-highlight: color-mix(in oklab, var(--teadeck-logo-body), white 45%);
+  /*
+   * The tea keeps its own colour: in this drawing it is the warmest element, not the
+   * interface accent. For a cup entirely in the design's accent colour, set
+   * --teadeck-logo-tea: var(--color-text-brand); the shades follow on their own.
+   */
+  --teadeck-logo-tea: #b85c1e;
+  --teadeck-logo-tea-dark: color-mix(in oklab, var(--teadeck-logo-tea), black 28%);
+  --teadeck-logo-tea-light: color-mix(in oklab, var(--teadeck-logo-tea), white 18%);
+  --teadeck-logo-tea-shade: color-mix(in oklab, var(--teadeck-logo-tea), black 52%);
+}
+
+/* Put into the page rather than loaded as an image (brand_logo.tsx), so the page sizes it. */
+.teadeck-logo { display: block; }
+.teadeck-logo > svg { display: block; width: auto; height: 100%; max-width: 100%; }
+.navigation-panel__logo .teadeck-logo { height: 30px; }
+/* The mascot's place in the compose column: at the bottom, as the design has it.
+   Upstream positions its own elephant through rules for `img` only (and mirrors it),
+   which do not apply to the drawing put into the page. */
+.drawer__inner__mastodon { display: flex; justify-content: center; }
+/* The drawing fills the space the column has left and sits at its bottom edge
+   (preserveAspectRatio="xMidYMax", set when inlining), so it is never cut off. */
+.drawer__inner__mastodon .teadeck-logo { width: 88%; height: 100%; }
+.drawer__inner__mastodon .teadeck-logo > svg { width: 100%; height: 100%; }
+.drawer__inner__mastodon > img.teadeck-logo { width: 88%; height: 100%; object-fit: contain; object-position: bottom center; transform: none; }
+.teadeck-shell-footer { margin-top: 30px; text-align: center; }
+.teadeck-shell-footer a { color: var(--color-text-secondary); }
+body.teadeck-connected { display: flex; flex-direction: column; height: 100dvh; }
+body.teadeck-connected #mastodon { flex: 1; min-height: 0; }
+/* Only Teadeck's own shell: upstream relies on `hidden` elements that its CSS shows (e.g. toggle switches). */
+body > [hidden], #teadeck-shell [hidden] { display: none !important; }
+/* Bottom right, clear of Mastodon's own alerts at the bottom left. Unlike those, the
+   update notice stays until the page is reloaded; upstream's disappear after five seconds. */
+#teadeck-update { inset-inline-start: auto; inset-inline-end: 1rem; }

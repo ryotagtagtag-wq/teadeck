@@ -1,0 +1,182 @@
+diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodon/actions/compose.js
+--- a/app/javascript/mastodon/actions/compose.js
++++ b/app/javascript/mastodon/actions/compose.js
+@@ -4,6 +4,8 @@ import axios from 'axios';
+ import { throttle } from 'lodash';
+ 
+ import api from '@/mastodon/api';
++import { InteractionDefaultsUnavailableError, interactionPolicyFor } from '@/teadeck/gotosocial';
++import { interactionDefaultsUnavailableMessage } from '@/teadeck/reply_audience_picker';
+ import { browserHistory } from '@/mastodon/components/router';
+ import { countableText } from '@/mastodon/features/compose/util/counter';
+ import { tagHistory } from '@/mastodon/settings';
+@@ -256,7 +258,9 @@ export function submitCompose(successCallback) {
+     }
+ 
+     const visibility = getState().getIn(['compose', 'privacy']);
+-    api().request({
++    const replyAudience = getState().getIn(['compose', 'reply_audience'], 'default');
++    // Waits for the account's interaction defaults when replies are restricted (GoToSocial).
++    interactionPolicyFor(replyAudience, visibility).then((interactionPolicy) => api().request({
+       url: statusId === null ? '/api/v1/statuses' : `/api/v1/statuses/${statusId}`,
+       method: statusId === null ? 'post' : 'put',
+       data: {
+@@ -271,11 +275,12 @@ export function submitCompose(successCallback) {
+         language: getState().getIn(['compose', 'language']),
+         quoted_status_id: getState().getIn(['compose', 'quoted_status_id']),
+         quote_approval_policy: visibility === 'private' || visibility === 'direct' ? 'nobody' : getState().getIn(['compose', 'quote_policy']),
++        interaction_policy: interactionPolicy,
+       },
+       headers: {
+         'Idempotency-Key': getState().getIn(['compose', 'idempotencyKey']),
+       },
+-    }).then(function (response) {
++    })).then(function (response) {
+       if ((browserHistory.location.pathname === '/publish' || browserHistory.location.pathname === '/statuses/new') && window.history.state) {
+         browserHistory.goBack();
+       }
+@@ -322,6 +327,11 @@ export function submitCompose(successCallback) {
+         ),
+       }));
+     }).catch(function (error) {
++      if (error instanceof InteractionDefaultsUnavailableError) {
++        dispatch(showAlert({ message: interactionDefaultsUnavailableMessage() }));
++        dispatch({ ...submitComposeFail(error), skipAlert: true });
++        return;
++      }
+       dispatch(submitComposeFail(error));
+     });
+   };
+diff --git a/app/javascript/mastodon/actions/compose_typed.ts b/app/javascript/mastodon/actions/compose_typed.ts
+--- a/app/javascript/mastodon/actions/compose_typed.ts
++++ b/app/javascript/mastodon/actions/compose_typed.ts
+@@ -7,6 +7,7 @@ import { apiUpdateMedia } from '@/mastodon/api/compose';
+ import { apiGetSearch } from '@/mastodon/api/search';
+ import type { ApiMediaAttachmentJSON } from '@/mastodon/api_types/media_attachments';
+ import type { ApiQuotePolicy } from '@/mastodon/api_types/quotes';
++import type { ReplyAudience } from '@/teadeck/gotosocial';
+ import type { MediaAttachment } from '@/mastodon/models/media_attachment';
+ import type { Status, StatusVisibility } from '@/mastodon/models/status';
+ import type { RootState } from '@/mastodon/store';
+@@ -293,6 +294,10 @@ export const setComposeQuotePolicy = createAction<ApiQuotePolicy>(
+   'compose/setQuotePolicy',
+ );
+ 
++export const setComposeReplyAudience = createAction<ReplyAudience>(
++  'compose/setReplyAudience',
++);
++
+ export const setDragUploadEnabled = createAction<boolean>(
+   'compose/setDragUploadEnabled',
+ );
+diff --git a/app/javascript/mastodon/features/compose/components/compose_form.jsx b/app/javascript/mastodon/features/compose/components/compose_form.jsx
+--- a/app/javascript/mastodon/features/compose/components/compose_form.jsx
++++ b/app/javascript/mastodon/features/compose/components/compose_form.jsx
+@@ -32,6 +32,7 @@ import { UploadForm } from './upload_form';
+ import { Warning } from './warning';
+ import { ComposeQuotedStatus } from './quoted_post';
+ import { VisibilityButton } from './visibility_button';
++import { ReplyAudiencePicker } from '@/teadeck/reply_audience_picker';
+ 
+ const allowedAroundShortCode = '><\u0085\u0020\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\u2028\u2029\u0009\u000a\u000b\u000c\u000d';
+ 
+@@ -76,6 +77,9 @@ class ComposeForm extends ImmutablePureComponent {
+     lang: PropTypes.string,
+     maxChars: PropTypes.number,
+     redirectOnSuccess: PropTypes.bool,
++    replyAudience: PropTypes.string,
++    onChangeReplyAudience: PropTypes.func,
++    showReplyAudiencePicker: PropTypes.bool,
+   };
+ 
+   static defaultProps = {
+@@ -269,6 +273,9 @@ class ComposeForm extends ImmutablePureComponent {
+           <div className='compose-form__dropdowns'>
+             <VisibilityButton disabled={this.props.isEditing} />
+             <LanguageDropdown />
++            {this.props.showReplyAudiencePicker && (
++              <ReplyAudiencePicker value={this.props.replyAudience} onChange={this.props.onChangeReplyAudience} />
++            )}
+           </div>
+ 
+           {this.props.spoiler && (
+diff --git a/app/javascript/mastodon/features/compose/containers/compose_form_container.js b/app/javascript/mastodon/features/compose/containers/compose_form_container.js
+--- a/app/javascript/mastodon/features/compose/containers/compose_form_container.js
++++ b/app/javascript/mastodon/features/compose/containers/compose_form_container.js
+@@ -10,9 +10,9 @@ import {
+   insertEmojiCompose,
+   uploadCompose,
+ } from 'mastodon/actions/compose';
+-import { pasteLinkCompose, PRIVATE_QUOTE_MODAL_ID } from 'mastodon/actions/compose_typed';
++import { pasteLinkCompose, PRIVATE_QUOTE_MODAL_ID, setComposeReplyAudience } from 'mastodon/actions/compose_typed';
+ import { openModal } from 'mastodon/actions/modal';
+-import { me } from 'mastodon/initial_state';
++import { me, initialState } from 'mastodon/initial_state';
+ 
+ import ComposeForm from '../components/compose_form';
+ 
+@@ -58,6 +58,8 @@ const mapStateToProps = state => ({
+   isInReply: state.getIn(['compose', 'in_reply_to']) !== null,
+   lang: state.getIn(['compose', 'language']),
+   maxChars: state.getIn(['server', 'server', 'item', 'configuration', 'statuses', 'max_characters'], 500),
++  replyAudience: state.getIn(['compose', 'reply_audience'], 'default'),
++  showReplyAudiencePicker: !!initialState?.meta?.teadeck_gotosocial,
+ });
+ 
+ const mapDispatchToProps = (dispatch, props) => ({
+@@ -114,6 +116,10 @@ const mapDispatchToProps = (dispatch, props) => ({
+     dispatch(insertEmojiCompose(position, data, needsSpace));
+   },
+ 
++  onChangeReplyAudience (value) {
++    dispatch(setComposeReplyAudience(value));
++  },
++
+ });
+ 
+ export default connect(mapStateToProps, mapDispatchToProps)(ComposeForm);
+diff --git a/app/javascript/mastodon/reducers/compose.js b/app/javascript/mastodon/reducers/compose.js
+--- a/app/javascript/mastodon/reducers/compose.js
++++ b/app/javascript/mastodon/reducers/compose.js
+@@ -1,3 +1,4 @@
++import { loadReplyAudience } from '@/teadeck/reply_audience';
+ import { Map as ImmutableMap, List as ImmutableList, OrderedSet as ImmutableOrderedSet, fromJS, isList } from 'immutable';
+ 
+ import {
+@@ -7,6 +8,7 @@ import {
+   quoteCompose,
+   quoteComposeCancel,
+   setComposeQuotePolicy,
++  setComposeReplyAudience,
+   pasteLinkCompose,
+   cancelPasteLinkCompose,
+   setDragUploadEnabled,
+@@ -102,6 +104,11 @@ const initialState = ImmutableMap({
+   quote_policy: 'public',
+   default_quote_policy: 'public', // Set in hydration.
+   fetching_link: null,
++
++  // GoToSocial reply audience restriction (Teadeck-specific; ignored by servers that don't support it).
++  // Remembered per account: new posts keep the last choice.
++  reply_audience: loadReplyAudience(),
++  default_reply_audience: loadReplyAudience(),
+ });
+ 
+ const initialPoll = ImmutableMap({
+@@ -142,6 +149,7 @@ function clearAll(state) {
+     map.set('idempotencyKey', uuid());
+     map.set('quoted_status_id', null);
+     map.set('quote_policy', state.get('default_quote_policy'));
++    map.set('reply_audience', state.get('default_reply_audience'));
+     map.set('isDragDisabled', false);
+   });
+ }
+@@ -381,6 +389,8 @@ export const composeReducer = (state = initialState, action) => {
+     return state.set('quoted_status_id', null);
+   } else if (setComposeQuotePolicy.match(action)) {
+     return state.set('quote_policy', action.payload);
++  } else if (setComposeReplyAudience.match(action)) {
++    return state.set('reply_audience', action.payload).set('default_reply_audience', action.payload);
+   } else if (pasteLinkCompose.pending.match(action)) {
+     return state.set('fetching_link', action.meta.requestId);
+   } else if (pasteLinkCompose.fulfilled.match(action) || pasteLinkCompose.rejected.match(action)) {

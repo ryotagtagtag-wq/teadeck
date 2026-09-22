@@ -1,0 +1,45 @@
+{
+  "about": "Upstream paths whose changes need a security review before an upstream update is merged, beyond what patches/ touch. Used by scripts/upstream_report.mjs. A trailing /** matches everything below a directory.",
+  "groups": [
+    {
+      "reason": "Security headers: Mastodon's server sets them, Teadeck replaces them with container/nginx.conf. A change here (e.g. a new CSP directive the client needs, or a tightened one) must be mirrored there.",
+      "paths": [
+        "config/initializers/content_security_policy.rb",
+        "app/lib/content_security_policy.rb",
+        "config/initializers/permissions_policy.rb",
+        "config/environments/production.rb"
+      ]
+    },
+    {
+      "reason": "HTML and URL sanitizing: Mastodon sanitizes on its server, and the web client renders that HTML as delivered. Teadeck receives HTML from any instance, so a fix moved into or relying on these places may need a client-side counterpart.",
+      "paths": [
+        "lib/sanitize_ext/**",
+        "app/lib/text_formatter.rb",
+        "app/lib/html_aware_formatter.rb",
+        "app/lib/emoji_formatter.rb",
+        "app/lib/translation_service/**",
+        "app/services/fetch_link_card_service.rb",
+        "app/javascript/mastodon/utils/html.ts",
+        "app/javascript/mastodon/features/emoji/render.ts",
+        "app/javascript/mastodon/features/status/components/card.tsx",
+        "app/javascript/mastodon/actions/importer/normalizer.js",
+        "app/javascript/mastodon/actions/importer/statuses.ts",
+        "app/javascript/mastodon/features/about/index.jsx",
+        "app/javascript/mastodon/features/privacy_policy/index.tsx",
+        "app/javascript/mastodon/features/terms_of_service/index.tsx"
+      ]
+    },
+    {
+      "reason": "Replaced by Teadeck: startup, login/OAuth, the service worker and the page shell. A security fix here does not reach Teadeck by itself; check integration/ for the counterpart.",
+      "paths": [
+        "app/javascript/entrypoints/**",
+        "app/javascript/mastodon/main.tsx",
+        "app/javascript/mastodon/initial_state.ts",
+        "app/javascript/mastodon/api.ts",
+        "app/javascript/mastodon/service_worker/**",
+        "app/controllers/oauth/**",
+        "app/views/layouts/application.html.haml"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+# Local source build: docker compose -f compose.yml.example -f compose.build.yml up -d --build --wait
+services:
+  teadeck:
+    image: teadeck:local
+    build:
+      context: .
+      dockerfile: container/Dockerfile

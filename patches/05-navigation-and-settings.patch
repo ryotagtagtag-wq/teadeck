@@ -1,0 +1,481 @@
+diff --git a/app/javascript/mastodon/features/collections/overview/featuring_you.tsx b/app/javascript/mastodon/features/collections/overview/featuring_you.tsx
+--- a/app/javascript/mastodon/features/collections/overview/featuring_you.tsx
++++ b/app/javascript/mastodon/features/collections/overview/featuring_you.tsx
+@@ -1,3 +1,4 @@
++import { serverUrl } from '@/teadeck/navigation';
+ import { useEffect } from 'react';
+ 
+ import { FormattedMessage } from 'react-intl';
+@@ -73,7 +74,7 @@ export const CollectionsFeaturingYou: React.FC = () => {
+                 defaultMessage='In order for people to add you to collections, you need to allow featuring in discovery experiences from <link>Preferences > Privacy and reach</link>'
+                 values={{
+                   link: (chunks) => (
+-                    <a href='/settings/privacy#account_discoverable'>
++                    <a href={serverUrl('/settings/privacy#account_discoverable')}>
+                       {chunks}
+                     </a>
+                   ),
+diff --git a/app/javascript/mastodon/features/compose/components/warning.tsx b/app/javascript/mastodon/features/compose/components/warning.tsx
+--- a/app/javascript/mastodon/features/compose/components/warning.tsx
++++ b/app/javascript/mastodon/features/compose/components/warning.tsx
+@@ -1,3 +1,4 @@
++import { serverUrl } from '@/teadeck/navigation';
+ import { FormattedMessage } from 'react-intl';
+ 
+ import { createSelector } from '@reduxjs/toolkit';
+@@ -31,7 +32,7 @@ export const Warning = () => {
+           defaultMessage='Your account is not {locked}. Anyone can follow you to view your follower-only posts.'
+           values={{
+             locked: (
+-              <a href='/settings/privacy#account_unlocked'>
++              <a href={serverUrl('/settings/privacy#account_unlocked')}>
+                 <FormattedMessage
+                   id='compose_form.lock_disclaimer.lock'
+                   defaultMessage='locked'
+diff --git a/app/javascript/mastodon/features/compose/index.tsx b/app/javascript/mastodon/features/compose/index.tsx
+--- a/app/javascript/mastodon/features/compose/index.tsx
++++ b/app/javascript/mastodon/features/compose/index.tsx
+@@ -14,13 +14,11 @@ import { ColumnHeader } from '@/mastodon/components/column/header';
+ import EditIcon from '@/material-icons/400-24px/edit_square.svg?react';
+ import PeopleIcon from '@/material-icons/400-24px/group.svg?react';
+ import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
+-import LogoutIcon from '@/material-icons/400-24px/logout.svg?react';
+ import MenuIcon from '@/material-icons/400-24px/menu.svg?react';
+ import NotificationsIcon from '@/material-icons/400-24px/notifications-fill.svg?react';
+ import PublicIcon from '@/material-icons/400-24px/public.svg?react';
+ import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
+ import { mountCompose, unmountCompose } from 'mastodon/actions/compose';
+-import { openModal } from 'mastodon/actions/modal';
+ import { Icon } from 'mastodon/components/icon';
+ import { mascot, reduceMotion } from 'mastodon/initial_state';
+ import { useAppDispatch, useAppSelector } from 'mastodon/store';
+@@ -43,7 +41,6 @@ const messages = defineMessages({
+     id: 'navigation_bar.preferences',
+     defaultMessage: 'Preferences',
+   },
+-  logout: { id: 'navigation_bar.logout', defaultMessage: 'Logout' },
+ });
+ 
+ type ColumnMap = ImmutableMap<'id' | 'uuid' | 'params', string>;
+@@ -63,18 +60,6 @@ const Compose: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
+     };
+   }, [dispatch]);
+ 
+-  const handleLogoutClick = useCallback(
+-    (e: React.MouseEvent) => {
+-      e.preventDefault();
+-      e.stopPropagation();
+-
+-      dispatch(openModal({ modalType: 'CONFIRM_LOG_OUT', modalProps: {} }));
+-
+-      return false;
+-    },
+-    [dispatch],
+-  );
+-
+   const scrollNavbarIntoView = useCallback(() => {
+     const navbar = document.querySelector('.navigation-panel');
+     navbar?.scrollIntoView({
+@@ -138,23 +123,14 @@ const Compose: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
+               <Icon id='globe' icon={PublicIcon} />
+             </Link>
+           )}
+-          <a
+-            href='/settings/preferences'
++          <Link
++            to='/preferences'
+             className='drawer__tab'
+             title={intl.formatMessage(messages.preferences)}
+             aria-label={intl.formatMessage(messages.preferences)}
+           >
+             <Icon id='cog' icon={SettingsIcon} />
+-          </a>
+-          <a
+-            href='/auth/sign_out'
+-            className='drawer__tab'
+-            title={intl.formatMessage(messages.logout)}
+-            aria-label={intl.formatMessage(messages.logout)}
+-            onClick={handleLogoutClick}
+-          >
+-            <Icon id='sign-out' icon={LogoutIcon} />
+-          </a>
++          </Link>
+         </nav>
+ 
+         <Search singleColumn={false} />
+diff --git a/app/javascript/mastodon/features/interaction_modal/index.tsx b/app/javascript/mastodon/features/interaction_modal/index.tsx
+--- a/app/javascript/mastodon/features/interaction_modal/index.tsx
++++ b/app/javascript/mastodon/features/interaction_modal/index.tsx
+@@ -119,7 +119,7 @@ const sendToFrame = (
+   intent: string,
+ ): void => {
+   if (valueToDomain(value.trim()) === localDomain) {
+-    window.location.href = '/auth/sign_in';
++    window.location.href = '/';
+     return;
+   }
+ 
+diff --git a/app/javascript/mastodon/features/navigation_panel/components/disabled_account_banner.tsx b/app/javascript/mastodon/features/navigation_panel/components/disabled_account_banner.tsx
+--- a/app/javascript/mastodon/features/navigation_panel/components/disabled_account_banner.tsx
++++ b/app/javascript/mastodon/features/navigation_panel/components/disabled_account_banner.tsx
+@@ -1,3 +1,4 @@
++import { serverUrl } from '@/teadeck/navigation';
+ import { useCallback } from 'react';
+ 
+ import { FormattedMessage } from 'react-intl';
+@@ -67,7 +68,7 @@ export const DisabledAccountBanner: React.FC = () => {
+           />
+         )}
+       </p>
+-      <a href='/auth/edit' className='button button--block'>
++      <a href={serverUrl('/auth/edit')} className='button button--block'>
+         <FormattedMessage
+           id='disabled_account_banner.account_settings'
+           defaultMessage='Account settings'
+diff --git a/app/javascript/mastodon/features/navigation_panel/components/more_link.tsx b/app/javascript/mastodon/features/navigation_panel/components/more_link.tsx
+--- a/app/javascript/mastodon/features/navigation_panel/components/more_link.tsx
++++ b/app/javascript/mastodon/features/navigation_panel/components/more_link.tsx
+@@ -1,3 +1,4 @@
++import { serverUrl } from '@/teadeck/navigation';
+ import { useMemo } from 'react';
+ 
+ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+@@ -51,7 +52,7 @@ export const MoreLink: React.FC = () => {
+   const menu = useMemo(() => {
+     const arr: MenuItem[] = [
+       {
+-        href: '/filters',
++        href: serverUrl('/filters'),
+         text: intl.formatMessage(messages.filters),
+       },
+       {
+@@ -68,33 +69,33 @@ export const MoreLink: React.FC = () => {
+       },
+       null,
+       {
+-        href: '/settings/privacy',
++        href: serverUrl('/settings/privacy'),
+         text: intl.formatMessage(messages.privacyAndReach),
+       },
+       {
+-        href: '/statuses_cleanup',
++        href: serverUrl('/statuses_cleanup'),
+         text: intl.formatMessage(messages.automatedDeletion),
+       },
+       {
+-        href: '/auth/edit',
++        href: serverUrl('/auth/edit'),
+         text: intl.formatMessage(messages.accountSettings),
+       },
+       {
+-        href: '/settings/export',
++        href: serverUrl('/settings/export'),
+         text: intl.formatMessage(messages.importExport),
+       },
+     ];
+ 
+     if (canManageReports(permissions)) {
+       arr.push(null, {
+-        href: '/admin/reports',
++        href: serverUrl('/admin/reports'),
+         text: intl.formatMessage(messages.moderation),
+       });
+     }
+ 
+     if (canViewAdminDashboard(permissions)) {
+       arr.push({
+-        href: '/admin/dashboard',
++        href: serverUrl('/admin/dashboard'),
+         text: intl.formatMessage(messages.administration),
+       });
+     }
+diff --git a/app/javascript/mastodon/features/navigation_panel/components/sign_in_banner.tsx b/app/javascript/mastodon/features/navigation_panel/components/sign_in_banner.tsx
+--- a/app/javascript/mastodon/features/navigation_panel/components/sign_in_banner.tsx
++++ b/app/javascript/mastodon/features/navigation_panel/components/sign_in_banner.tsx
+@@ -1,3 +1,4 @@
++import { serverUrl } from '@/teadeck/navigation';
+ import { useCallback } from 'react';
+ 
+ import { FormattedMessage } from 'react-intl';
+@@ -95,7 +96,7 @@ export const SignInBanner: React.FC = () => {
+         />
+       </p>
+       {signupButton}
+-      <a href='/auth/sign_in' className='button button--block button-secondary'>
++      <a href={serverUrl('/auth/sign_in')} className='button button--block button-secondary'>
+         <FormattedMessage id='sign_in_banner.sign_in' defaultMessage='Login' />
+       </a>
+     </div>
+diff --git a/app/javascript/mastodon/features/navigation_panel/index.tsx b/app/javascript/mastodon/features/navigation_panel/index.tsx
+--- a/app/javascript/mastodon/features/navigation_panel/index.tsx
++++ b/app/javascript/mastodon/features/navigation_panel/index.tsx
+@@ -55,6 +55,8 @@ import { AnnualReportNavItem } from '../annual_report/nav_item';
+ import { DisabledAccountBanner } from './components/disabled_account_banner';
+ import { FollowedTagsPanel } from './components/followed_tags_panel';
+ import { ListPanel } from './components/list_panel';
++import { LogoutNavigationLink } from '@/teadeck/logout_button';
++
+ import { MoreLink } from './components/more_link';
+ import { SignInBanner } from './components/sign_in_banner';
+ import { Trends } from './components/trends';
+@@ -385,7 +387,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
+             <li>
+               <ColumnLink
+                 transparent
+-                href='/settings/preferences'
++                to='/preferences'
+                 icon='cog'
+                 iconComponent={SettingsIcon}
+                 text={intl.formatMessage(messages.preferences)}
+@@ -395,6 +397,10 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
+             <li>
+               <MoreLink />
+             </li>
++
++            <li>
++              <LogoutNavigationLink />
++            </li>
+           </>
+         )}
+ 
+diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_card_and_menu.tsx b/app/javascript/mastodon/features/navigation_panel/redesign/account_card_and_menu.tsx
+--- a/app/javascript/mastodon/features/navigation_panel/redesign/account_card_and_menu.tsx
++++ b/app/javascript/mastodon/features/navigation_panel/redesign/account_card_and_menu.tsx
+@@ -111,7 +111,7 @@ export const AccountMenuItems: React.FC<{
+         />
+       </MenuItemLink>
+ 
+-      <MenuItemLink as='a' href='/settings/preferences' icon={GearIcon}>
++      <MenuItemLink to='/preferences' icon={GearIcon}>
+         <FormattedMessage id='tabs_bar.settings' defaultMessage='Settings' />
+       </MenuItemLink>
+ 
+diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx b/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx
+--- a/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx
++++ b/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx
+@@ -2,7 +2,7 @@ import { FormattedMessage } from 'react-intl';
+ 
+ import { Link } from 'react-router-dom';
+ 
+-import { domain, termsOfServiceEnabled } from '@/mastodon/initial_state';
++import { domain, initialState, termsOfServiceEnabled } from '@/mastodon/initial_state';
+ 
+ import classes from './footer_links.module.scss';
+ 
+@@ -21,6 +21,7 @@ export const NavigationFooterLinks: React.FC<{ siteName?: string }> = ({
+             />
+           </Link>
+         </li>
++        {(initialState?.meta as { teadeck_privacy_policy?: boolean } | undefined)?.teadeck_privacy_policy && (
+         <li>
+           <Link to='/privacy-policy' rel='privacy-policy'>
+             <FormattedMessage
+@@ -29,6 +30,7 @@ export const NavigationFooterLinks: React.FC<{ siteName?: string }> = ({
+             />
+           </Link>
+         </li>
++        )}
+         {termsOfServiceEnabled && (
+           <li>
+             <Link to='/terms-of-service' rel='terms-of-service'>
+diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx b/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx
+--- a/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx
++++ b/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx
+@@ -1,3 +1,4 @@
++import { serverUrl } from '@/teadeck/navigation';
+ import { useEffect } from 'react';
+ 
+ import { FormattedMessage } from 'react-intl';
+@@ -35,13 +36,13 @@ export const LoggedOutInfo: React.FC = () => {
+         )}
+       </p>
+       <div className={classes.buttons}>
+-        <Button as='a' href='/auth/sign_up' variant='solid'>
++        <Button as='a' href={serverUrl('/auth/sign_up')} variant='solid'>
+           <FormattedMessage
+             id='server_banner.create_account'
+             defaultMessage='Create an account'
+           />
+         </Button>
+-        <Button as='a' href='/auth/sign_in'>
++        <Button as='a' href={serverUrl('/auth/sign_in')}>
+           <FormattedMessage id='server_banner.log_in' defaultMessage='Log in' />
+         </Button>
+       </div>
+diff --git a/app/javascript/mastodon/features/ui/components/columns_area/multi_column_content.tsx b/app/javascript/mastodon/features/ui/components/columns_area/multi_column_content.tsx
+--- a/app/javascript/mastodon/features/ui/components/columns_area/multi_column_content.tsx
++++ b/app/javascript/mastodon/features/ui/components/columns_area/multi_column_content.tsx
+@@ -1,7 +1,10 @@
+-import { Children, cloneElement, isValidElement } from 'react';
++import { Children, cloneElement, isValidElement, useEffect } from 'react';
+ 
+ import type { List, Record } from 'immutable';
+ 
++import { Redirect, useLocation } from 'react-router-dom';
++
++import { pinnedColumnIndexForPath } from '@/teadeck/pinned_columns';
+ import { ColumnIndexContext } from '@/mastodon/components/column/context';
+ import { useAppSelector } from '@/mastodon/store';
+ 
+@@ -66,6 +69,20 @@ export const MultiColumnContent: React.FC<{
+   const columns = useAppSelector(
+     (state) => state.settings.get('columns') as List<Record<Column>>,
+   );
++  const { pathname } = useLocation();
++  const pinnedIndex = pinnedColumnIndexForPath(
++    pathname,
++    columns.map((column) => column.get('id')).toArray(),
++  );
++
++  // Show the pinned column instead of opening it a second time.
++  useEffect(() => {
++    if (pinnedIndex < 0) return;
++    document
++      .querySelector('main.columns-area')
++      ?.children[pinnedIndex]?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
++  }, [pinnedIndex]);
++
+   return (
+     <>
+       {columns.map((column, index) => {
+@@ -98,10 +115,14 @@ export const MultiColumnContent: React.FC<{
+       })}
+ 
+       <ColumnIndexContext.Provider value={columns.size}>
+-        {Children.map(children, (child) =>
+-          isValidElement<{ multiColumn?: boolean }>(child)
+-            ? cloneElement(child, { multiColumn: true })
+-            : child,
++        {pinnedIndex >= 0 ? (
++          <Redirect to='/deck/getting-started' />
++        ) : (
++          Children.map(children, (child) =>
++            isValidElement<{ multiColumn?: boolean }>(child)
++              ? cloneElement(child, { multiColumn: true })
++              : child,
++          )
+         )}
+       </ColumnIndexContext.Provider>
+     </>
+diff --git a/app/javascript/mastodon/features/ui/components/link_footer.tsx b/app/javascript/mastodon/features/ui/components/link_footer.tsx
+--- a/app/javascript/mastodon/features/ui/components/link_footer.tsx
++++ b/app/javascript/mastodon/features/ui/components/link_footer.tsx
+@@ -11,20 +11,23 @@ import {
+   termsOfServiceEnabled,
+ } from 'mastodon/initial_state';
+ 
++import { initialState } from 'mastodon/initial_state';
++
+ import classes from './link_footer.module.scss';
+ 
++// From the instance's configuration.urls (see teadeck/bootstrap.ts): not every server has one.
++const hasPrivacyPolicy = Boolean((initialState?.meta as { teadeck_privacy_policy?: boolean } | undefined)?.teadeck_privacy_policy);
++
+ export const LinkFooter: React.FC<{
+   context?: 'default' | 'multi-column' | 'about';
+ }> = ({ context = 'default' }) => {
+-  const multiColumn = context === 'multi-column';
+-
+   return (
+     <footer className={classes.wrapper} data-context={context}>
+       <section>
+         <h2 className={classes.heading}>{`${domain}:`}</h2>
+         <ul className={classes.list}>
+           <li>
+-            <Link to='/about' target={multiColumn ? '_blank' : undefined}>
++            <Link to='/about'>
+               <FormattedMessage
+                 id='footer.about_this_server'
+                 defaultMessage='About'
+@@ -49,10 +52,10 @@ export const LinkFooter: React.FC<{
+               </Link>
+             </li>
+           )}
++          {hasPrivacyPolicy && (
+           <li>
+             <Link
+               to='/privacy-policy'
+-              target={multiColumn ? '_blank' : undefined}
+               rel='privacy-policy'
+             >
+               <FormattedMessage
+@@ -61,11 +64,11 @@ export const LinkFooter: React.FC<{
+               />
+             </Link>
+           </li>
++          )}
+           {termsOfServiceEnabled && (
+             <li>
+               <Link
+                 to='/terms-of-service'
+-                target={multiColumn ? '_blank' : undefined}
+                 rel='terms-of-service'
+               >
+                 <FormattedMessage
+diff --git a/app/javascript/mastodon/features/ui/components/navigation_bar.tsx b/app/javascript/mastodon/features/ui/components/navigation_bar.tsx
+--- a/app/javascript/mastodon/features/ui/components/navigation_bar.tsx
++++ b/app/javascript/mastodon/features/ui/components/navigation_bar.tsx
+@@ -1,3 +1,4 @@
++import { serverUrl } from '@/teadeck/navigation';
+ import { useCallback, useEffect } from 'react';
+ 
+ import { useIntl, defineMessages, FormattedMessage } from 'react-intl';
+@@ -147,7 +148,7 @@ const LoginOrSignUp: React.FC = () => {
+     return (
+       <div className='ui__navigation-bar__sign-up'>
+         {signupButton}
+-        <a href='/auth/sign_in' className='button button-secondary'>
++        <a href={serverUrl('/auth/sign_in')} className='button button-secondary'>
+           <FormattedMessage
+             id='sign_in_banner.sign_in'
+             defaultMessage='Login'
+diff --git a/app/javascript/mastodon/features/ui/components/visibility_modal.tsx b/app/javascript/mastodon/features/ui/components/visibility_modal.tsx
+--- a/app/javascript/mastodon/features/ui/components/visibility_modal.tsx
++++ b/app/javascript/mastodon/features/ui/components/visibility_modal.tsx
+@@ -1,3 +1,4 @@
++import { serverUrl } from '@/teadeck/navigation';
+ import { forwardRef, useCallback, useId, useMemo, useState } from 'react';
+ import type { FC } from 'react';
+ 
+@@ -235,7 +236,7 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
+               defaultMessage='Control who can interact with this post. You can also apply settings to all future posts by navigating to <link>Preferences > Posting defaults</link>.'
+               values={{
+                 link: (chunks) => (
+-                  <a href='/settings/preferences/posting_defaults'>{chunks}</a>
++                  <a href={serverUrl('/settings/preferences/posting_defaults')}>{chunks}</a>
+                 ),
+               }}
+               tagName='p'
+diff --git a/app/javascript/mastodon/features/ui/index.jsx b/app/javascript/mastodon/features/ui/index.jsx
+--- a/app/javascript/mastodon/features/ui/index.jsx
++++ b/app/javascript/mastodon/features/ui/index.jsx
+@@ -44,6 +44,7 @@ import {
+   Status,
+   GettingStarted,
+   KeyboardShortcuts,
++  TeadeckSettings,
+   Firehose,
+   AccountTimeline,
+   AccountGallery,
+@@ -199,6 +200,7 @@ class SwitchingColumnsArea extends PureComponent {
+ 
+             <WrappedRoute path='/getting-started' component={GettingStarted} content={children} />
+             <WrappedRoute path='/keyboard-shortcuts' component={KeyboardShortcuts} content={children} />
++            <WrappedRoute path='/preferences' component={TeadeckSettings} content={children} />
+             <WrappedRoute path='/about' component={About} content={children} />
+             <WrappedRoute path='/privacy-policy' component={PrivacyPolicy} content={children} />
+             <WrappedRoute path='/terms-of-service/:date?' component={TermsOfService} content={children} />
+diff --git a/app/javascript/mastodon/features/ui/util/async-components.js b/app/javascript/mastodon/features/ui/util/async-components.js
+--- a/app/javascript/mastodon/features/ui/util/async-components.js
++++ b/app/javascript/mastodon/features/ui/util/async-components.js
+@@ -42,6 +42,10 @@ export function Lists () {
+   return import('../../lists');
+ }
+ 
++export function TeadeckSettings () {
++  return import('@/teadeck/frontend_settings_column');
++}
++
+ export function Collections() {
+   return import('../../collections').then(
+     module => ({default: module.Collections})

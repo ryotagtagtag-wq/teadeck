@@ -1,0 +1,26 @@
+services:
+  teadeck:
+    # Set TEADECK_TAG in .env to choose an existing tag instead of latest.
+    image: git.knubbel.me/knubbel/teadeck:${TEADECK_TAG:-latest}
+    ports:
+      # Host port; override in .env, for example TEADECK_PUBLISH=8099.
+      - "${TEADECK_PUBLISH:-8080}:8080"
+    environment:
+      # Choose a built-in logo or a custom SVG from ./logo (see .env.example).
+      # Leave both unset to show no logo.
+      TEADECK_LOGO: ${TEADECK_LOGO:-}
+      TEADECK_LOGO_FILE: ${TEADECK_LOGO_FILE:-}
+      # Defaults for users who have not chosen their own theme or colour scheme.
+      TEADECK_THEME: ${TEADECK_THEME:-}
+      TEADECK_COLOR_SCHEME: ${TEADECK_COLOR_SCHEME:-}
+    volumes:
+      # Custom logos; the directory can be empty.
+      - ./logo:/config:ro
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,noexec,nosuid,size=32m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped

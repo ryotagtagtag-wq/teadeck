@@ -1,0 +1,461 @@
+{
+  "about": "Assessment of every Mastodon security advisory for Teadeck. Checked daily by scripts/check_advisories.mjs. Each entry records the advisory’s updated_at it was assessed against; an edited advisory must be read again. Verdicts: server-only (not in Teadeck), mitigated (reaches Teadeck only through data from the instance; blocked by Teadeck's own measures, named in the note), fixed-upstream (fix is in imported client code; name the upstream commit included via upstream.lock.json), fixed-in-teadeck (needed a change here; name the commit), affected (open; act now).",
+  "assessments": {
+    "GHSA-38g9-pfm9-gfqv": {
+      "summary": "Blind LDAP injection in login allows the attacker to leak arbitrary attributes from LDAP database",
+      "published": "2023-04-04",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2023-04-04T14:21:15Z"
+    },
+    "GHSA-55j9-c3mp-6fcq": {
+      "summary": "Verified profile links can be formatted in a misleading way",
+      "published": "2023-07-06",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2023-07-06T15:32:39Z"
+    },
+    "GHSA-9pxv-6qvf-pjwc": {
+      "summary": "Denial of Service through slow HTTP responses",
+      "published": "2023-07-06",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2023-07-06T15:32:51Z"
+    },
+    "GHSA-9928-3cp5-93fm": {
+      "summary": "Arbitrary file creation through media attachments",
+      "published": "2023-07-06",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2023-07-06T15:33:04Z"
+    },
+    "GHSA-ccm4-vgcc-73hp": {
+      "summary": "XSS through oEmbed preview cards",
+      "published": "2023-07-06",
+      "assessed": "2026-09-15",
+      "verdict": "mitigated",
+      "note": "Server-side sanitizing of oEmbed preview HTML; the card HTML comes from the connected instance. Teadeck's CSP blocks inline scripts; embeds are limited to https iframes (frame-src https:), which run in their own origin.",
+      "updated": "2023-07-06T15:33:17Z"
+    },
+    "GHSA-hcqf-fw2r-52g4": {
+      "summary": "Server-side request forgery",
+      "published": "2023-09-19",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2023-09-25T14:18:38Z"
+    },
+    "GHSA-2693-xr3m-jhqr": {
+      "summary": "Stored XSS through the translation feature",
+      "published": "2023-09-19",
+      "assessed": "2026-09-15",
+      "verdict": "mitigated",
+      "note": "Server-side sanitizing of translations; translated HTML comes from the connected instance. Execution of injected scripts is blocked by Teadeck's CSP (script-src 'self'), as in Mastodon.",
+      "updated": "2023-09-19T15:26:16Z"
+    },
+    "GHSA-v3xf-c9qf-j667": {
+      "summary": "Invalid domain name normalization",
+      "published": "2023-09-19",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2023-10-02T16:41:17Z"
+    },
+    "GHSA-3fjr-858r-92rw": {
+      "summary": "Remote user impersonation and takeover",
+      "published": "2024-02-01",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2024-02-15T17:28:42Z"
+    },
+    "GHSA-vm39-j3vx-pch3": {
+      "summary": "External OpenID Connect Account Takeover by E-Mail Change",
+      "published": "2024-02-14",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2024-02-14T23:35:11Z"
+    },
+    "GHSA-7w3c-p9j8-mq3x": {
+      "summary": "Destroying OAuth Applications doesn't notify Streaming of Access Tokens being destroyed",
+      "published": "2024-02-14",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2024-02-14T17:44:58Z"
+    },
+    "GHSA-jhrq-qvrm-qr36": {
+      "summary": "Lack of media type verification of Activity Streams objects allows impersonation of remote accounts",
+      "published": "2024-02-17",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2024-02-17T11:35:36Z"
+    },
+    "GHSA-5fq7-3p3j-9vrf": {
+      "summary": "Private mention filtering can be bypassed",
+      "published": "2024-05-30",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2024-05-30T14:03:21Z"
+    },
+    "GHSA-q3rg-xx5v-4mxh": {
+      "summary": "Missing rate-limit to password change endpoint",
+      "published": "2024-05-30",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2024-05-30T14:03:47Z"
+    },
+    "GHSA-c2r5-cfqr-c553": {
+      "summary": "Bypassing rate limiting with X-Forwarded-For header",
+      "published": "2024-05-30",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2024-05-30T14:04:01Z"
+    },
+    "GHSA-xjvf-fm67-4qc3": {
+      "summary": "Improper authorship check on audience extension for existing posts",
+      "published": "2024-07-04",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2024-07-15T07:25:28Z"
+    },
+    "GHSA-58x8-3qxw-6hm7": {
+      "summary": "Insufficient permission checking on multiple API endpoints",
+      "published": "2024-07-04",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2024-07-04T16:00:41Z"
+    },
+    "GHSA-vp5r-5pgw-jwqx": {
+      "summary": "Streaming continues to send events for a user after access token is revoked",
+      "published": "2024-07-04",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2024-07-04T16:00:57Z"
+    },
+    "GHSA-3m9q-ww7w-qc5j": {
+      "summary": "Subdomains allow spoofing of accounts in search results",
+      "published": "2024-09-17",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2024-09-17T16:05:23Z"
+    },
+    "GHSA-jpxp-r43f-rhvx": {
+      "summary": "Potential Polynomial regular expression used on uncontrolled data",
+      "published": "2024-09-30",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2024-09-30T13:50:34Z"
+    },
+    "GHSA-5wxh-3p65-r4g6": {
+      "summary": "Partial Denial of Service due to insufficient validation of remote actors",
+      "published": "2025-01-16",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2025-01-16T11:42:34Z"
+    },
+    "GHSA-94h4-fj37-c825": {
+      "summary": "Domain blocks & rationales ignore user approval when visibility set as \"users\"",
+      "published": "2025-02-27",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2025-02-27T16:49:45Z"
+    },
+    "GHSA-v39f-c9jj-8w7h": {
+      "summary": "Missing rate-limit on sign-up email verification",
+      "published": "2025-02-27",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2025-02-27T16:50:00Z"
+    },
+    "GHSA-mq2m-hr29-8gqf": {
+      "summary": "OEmbed embeds allow <embed> tag (blocked by CSP)",
+      "published": "2025-02-27",
+      "assessed": "2026-09-15",
+      "verdict": "mitigated",
+      "note": "Server-side sanitizer allowed <embed>. Teadeck's CSP has default-src 'none' without object-src, so <embed>/<object> cannot load, which the advisory names as the effective protection.",
+      "updated": "2025-02-27T16:50:08Z"
+    },
+    "GHSA-x2rc-v5wx-g3m5": {
+      "summary": "Lack of sanitization of user-facing URLs for remote objects can lead to XSS in misconfigured servers",
+      "published": "2025-05-06",
+      "assessed": "2026-09-15",
+      "verdict": "mitigated",
+      "note": "Server fix (validating remote URLs). Teadeck shows URLs as the connected instance delivers them, so it depends on that instance; injected javascript: URLs or inline scripts are blocked by the CSP in container/nginx.conf (script-src 'self', no unsafe-inline), which the advisory names as the effective protection. Keep that CSP.",
+      "updated": "2025-05-06T14:22:29Z"
+    },
+    "GHSA-84ch-6436-c7mg": {
+      "summary": "Mastodon confirmation e‑mail throttle misconfiguration allows unlimited email confirmations against unconfirmed emails",
+      "published": "2025-08-05",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2025-08-05T16:13:04Z"
+    },
+    "GHSA-7gwh-mw97-qjgp": {
+      "summary": "Streaming server allows OAuth clients without the `read` scope to subscribe to public channels",
+      "published": "2025-10-13",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Scope check in the streaming server. Teadeck requests read/write/follow scopes and only connects as a client.",
+      "updated": "2025-10-13T16:00:29Z"
+    },
+    "GHSA-f3q3-rmf7-9655": {
+      "summary": "Changing a user's password via CLI does not revoke sessions & access tokens",
+      "published": "2025-10-13",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2025-10-13T15:57:54Z"
+    },
+    "GHSA-r2fh-jr9c-9pxh": {
+      "summary": "Disabled and suspended user accounts stay connected to the streaming API and can connect afterwards",
+      "published": "2025-10-13",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2025-10-13T16:00:23Z"
+    },
+    "GHSA-8h43-rcqj-wpc6": {
+      "summary": "Quotes control bypass",
+      "published": "2025-10-21",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2025-10-21T16:00:27Z"
+    },
+    "GHSA-gwhw-gcjx-72v8": {
+      "summary": "Inconsistent error handling allows anonymously checking existence of known private posts",
+      "published": "2025-12-08",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2025-12-08T21:39:32Z"
+    },
+    "GHSA-xfrj-c749-jxxq": {
+      "summary": "SSRF Protection bypass",
+      "published": "2026-01-07",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-01-08T00:24:34Z"
+    },
+    "GHSA-ww85-x9cp-5v24": {
+      "summary": "Local users can enumerate and access severed relationships of every other local user",
+      "published": "2026-01-07",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-01-08T00:24:40Z"
+    },
+    "GHSA-5h2f-wg8j-xqwp": {
+      "summary": "Remote suspension bypass",
+      "published": "2026-01-20",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-01-20T21:44:27Z"
+    },
+    "GHSA-f3q8-7vw3-69v4": {
+      "summary": "Insufficient access control to push notification settings",
+      "published": "2026-01-20",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Access control of the web push subscription API on the server. Teadeck does not use web push.",
+      "updated": "2026-01-20T21:45:27Z"
+    },
+    "GHSA-gg8q-rcg7-p79g": {
+      "summary": "Denial of Service from a single post (client/server)",
+      "published": "2026-01-20",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Fixed by limiting poll options on the server. The web client has no own limit; a very large poll served by an unpatched or non-Mastodon instance could still slow the tab down. No code change in the web client to import.",
+      "updated": "2026-06-16T12:45:03Z"
+    },
+    "GHSA-6x3w-9g92-gvf3": {
+      "summary": "Missing length limits on list names, filter names, and filter keywords",
+      "published": "2026-01-20",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-01-20T21:45:12Z"
+    },
+    "GHSA-ccpr-m53r-mfwr": {
+      "summary": "Signature-dependent ActivityPub collection responses cached under signature-independent keys",
+      "published": "2026-02-03",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-02-08T07:28:05Z"
+    },
+    "GHSA-46w6-g98f-wxqm": {
+      "summary": "SSRF via unvalidated FASP Provider base_url  ",
+      "published": "2026-02-24",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-02-24T16:30:36Z"
+    },
+    "GHSA-qgmm-vr4c-ggjg": {
+      "summary": "Allowing unconfirmed FASP to make subscriptions",
+      "published": "2026-02-24",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-02-24T16:30:43Z"
+    },
+    "GHSA-xqw8-4j56-5hj6": {
+      "summary": "GET-Based Open Redirect via '/web/%2F<domain>'",
+      "published": "2026-03-25",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Open redirect in the Rails /web/* route. Teadeck's nginx serves index.html for unknown paths and never redirects; the client router does not turn paths into external navigations.",
+      "updated": "2026-03-25T10:39:30Z"
+    },
+    "GHSA-q4g8-82c5-9h33": {
+      "summary": "Denial of service for quote authorization",
+      "published": "2026-03-25",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-03-25T10:40:18Z"
+    },
+    "GHSA-5r37-qpwq-2jhh": {
+      "summary": "Insufficient verification of email addresses",
+      "published": "2026-04-15",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-04-20T15:17:22Z"
+    },
+    "GHSA-53m7-2wrh-q839": {
+      "summary": "Removal of integrity-protected JSON entries from signed activities",
+      "published": "2026-05-20",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-05-20T18:24:05Z"
+    },
+    "GHSA-chgx-jx3p-rf73": {
+      "summary": "LD-Signature Bypass via JSON-LD Named-Graph Restructuring",
+      "published": "2026-05-20",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-05-20T14:16:02Z"
+    },
+    "GHSA-crr4-7rm4-8gpw": {
+      "summary": "SSRF Bypass via IPv6 Unspecified Address (::)",
+      "published": "2026-05-20",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-05-20T14:16:06Z"
+    },
+    "GHSA-xx55-4rrg-8xg6": {
+      "summary": "SSRF protection bypass on older Ruby versions (incomplete remediation for GHSA-xfrj-c749-jxxq)",
+      "published": "2026-05-20",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-05-20T14:16:10Z"
+    },
+    "GHSA-vg36-gxjg-2v46": {
+      "summary": "Consent-check bypass in remote Collections",
+      "published": "2026-05-20",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-06-08T11:13:40Z"
+    },
+    "GHSA-rwcw-vq68-g34p": {
+      "summary": "Spoofing of attribution domains",
+      "published": "2026-06-03",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-06-03T21:24:07Z"
+    },
+    "GHSA-qrgq-9fx2-vf2r": {
+      "summary": "DoS via unhandled NoMethodError in MATH_TRANSFORMER",
+      "published": "2026-06-03",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-06-03T21:26:58Z"
+    },
+    "GHSA-3rhr-8phh-jm86": {
+      "summary": "Unwanted deactivation of SSL/TLS certificate verification",
+      "published": "2026-07-16",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-07-16T14:20:14Z"
+    },
+    "GHSA-7jvv-fhmg-wpfw": {
+      "summary": "Denial of Service through insufficient authentification of statistics endpoints",
+      "published": "2026-07-27",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-08-10T21:10:44Z"
+    },
+    "GHSA-hx34-2pfw-2qfj": {
+      "summary": "Personally-identifying information disclosure due to incorrect access control validation",
+      "published": "2026-07-27",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-08-10T21:14:06Z"
+    },
+    "GHSA-vwhj-3g83-v276": {
+      "summary": "SSRF Protection Bypass via IPv4-compatible IPv6 Addresses",
+      "published": "2026-07-27",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-08-18T06:55:06Z"
+    },
+    "GHSA-vx32-x96w-qq65": {
+      "summary": "Accounts provisioned by LDAP or SSO with two-factor enabled can be signed in to with any password",
+      "published": "2026-09-02",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-09-02T07:44:12Z"
+    },
+    "GHSA-62j4-hvj7-px3f": {
+      "summary": "Disabling a staff account does not remove its access to the admin API",
+      "published": "2026-09-02",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-09-02T07:44:29Z"
+    },
+    "GHSA-vgm8-frgh-rh2v": {
+      "summary": "Denial of service in JSON-LD processing of pathologic activities",
+      "published": "2026-09-10",
+      "assessed": "2026-09-15",
+      "verdict": "server-only",
+      "note": "Mastodon server component (Rails, ActivityPub, streaming, OAuth provider or admin); Teadeck contains only the web client and its own static web server.",
+      "updated": "2026-09-10T16:01:26Z"
+    }
+  }
+}

@@ -1,0 +1,620 @@
+{
+  "linux/amd64": {
+    "created": "2026-09-13T02:14:36.245828355Z",
+    "architecture": "amd64",
+    "os": "linux",
+    "config": {
+      "User": "mastodon",
+      "ExposedPorts": {
+        "3000/tcp": {}
+      },
+      "Env": [
+        "PATH=/usr/local/bundle/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/ruby/bin:/opt/mastodon/bin",
+        "LANG=C.UTF-8",
+        "RUBY_VERSION=4.0.6",
+        "RUBY_DOWNLOAD_URL=https://cache.ruby-lang.org/pub/ruby/4.0/ruby-4.0.6.tar.xz",
+        "RUBY_DOWNLOAD_SHA256=9c9d121fe3314ea7c801e690b9de981d2b9d12d7849db99c27482468a541ba0a",
+        "GEM_HOME=/usr/local/bundle",
+        "BUNDLE_SILENCE_ROOT_WARNING=1",
+        "BUNDLE_APP_CONFIG=/usr/local/bundle",
+        "MASTODON_VERSION_PRERELEASE=nightly.2026-09-13",
+        "MASTODON_VERSION_METADATA=",
+        "SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11",
+        "RAILS_SERVE_STATIC_FILES=true",
+        "RUBY_YJIT_ENABLE=1",
+        "TZ=Etc/UTC",
+        "BIND=0.0.0.0",
+        "NODE_ENV=production",
+        "RAILS_ENV=production",
+        "DEBIAN_FRONTEND=noninteractive",
+        "MALLOC_CONF=narenas:2,background_thread:true,thp:never,dirty_decay_ms:1000,muzzy_decay_ms:0",
+        "MASTODON_SIDEKIQ_READY_FILENAME=sidekiq_process_has_started_and_will_begin_processing_jobs"
+      ],
+      "Entrypoint": [
+        "/usr/bin/tini",
+        "--"
+      ],
+      "WorkingDir": "/opt/mastodon"
+    },
+    "rootfs": {
+      "type": "layers",
+      "diff_ids": [
+        "sha256:411a86676185cb54d695a805b238194a64e9b77e0c723f3802fbb87d333ea0b3",
+        "sha256:fa7980a658d0dac4844518d27456ee91595afc265b6faf449c82d64b7f7dbc0b",
+        "sha256:6b1ebf5eda8a13849f91647a41d8a0005d9b8e0e9737e582134d67530bdeded9",
+        "sha256:b9a3b1017e6297393f9a8498aa9812e0529e46889ad489867563842862da438f",
+        "sha256:3e4513044faa722580853688d3ae1119cef116b79e9312dc65ea77d1cf54fcdc",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:bc324dab8ef0496718955351c01abd2811d86d1083592d3cfc0dbdc387b70ee4",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:8de1178e8767c848b2a8fa3b52e4acd4cca04fa586f215de845e6ab7e3e7a71a",
+        "sha256:58a3c4e2a0851029c3f3365263008d9f355c424d469a385ed155ad1f1c8df14e",
+        "sha256:b653a7a16986e3ef376398cba6b57dbcb4bc695faf5c58de4fb667202694c99e",
+        "sha256:0e9438f6b9f62c7b7a77ed43c878232d8084ddc5fa70df3f1aee8cc5d7c819cf",
+        "sha256:eddac4e8548d4257e0f11bd54fa9dd637dd3f0b640ea296921cef27f9bfe5cc8",
+        "sha256:1f2570e046a409d4484aa6f342ca74f5c2501829a1f5e66952fe37818fab8a50",
+        "sha256:1af92575cda6f199737ccd5e4569781049398c443896689d749b5d05e0b60603",
+        "sha256:43e18814d305f3b6b1ad4c9110b3c1f9efba94f068b38363dd28b3b73af6ae73",
+        "sha256:13d24b220639d60e02597689d166ef6584c7ede2600c95fc240662b7a46bab4f",
+        "sha256:012915d39c0da143e6ffb60d4c25754c1ce195670310bfe0accd707174f3386f",
+        "sha256:bb3d9ba698096a1132a16de63c26d70b600d908a8fa3dd83f61b3dc4db5ceceb",
+        "sha256:4b0d5371fab1218b202876571c058e87d235683cf1d49d6b1249cf3a9a490f10"
+      ]
+    },
+    "history": [
+      {
+        "created": "2026-08-24T00:00:00Z",
+        "created_by": "# debian.sh --arch 'amd64' out/ 'trixie' '@1787529600'",
+        "comment": "debuerreotype 0.17"
+      },
+      {
+        "created": "2026-08-25T01:19:57.106714407Z",
+        "created_by": "RUN /bin/sh -c set -eux; \tapt-get update; \tapt-get install -y --no-install-recommends \t\tca-certificates \t; \tapt-get dist-clean # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-08-25T01:19:57.175038494Z",
+        "created_by": "RUN /bin/sh -c set -eux; \tmkdir -p /usr/local/etc; \techo 'gem: --no-document' \u003e\u003e /usr/local/etc/gemrc # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-08-25T01:22:19.344251454Z",
+        "created_by": "ENV LANG=C.UTF-8",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-08-25T01:22:19.344251454Z",
+        "created_by": "ENV RUBY_VERSION=4.0.6",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-08-25T01:22:19.344251454Z",
+        "created_by": "ENV RUBY_DOWNLOAD_URL=https://cache.ruby-lang.org/pub/ruby/4.0/ruby-4.0.6.tar.xz",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-08-25T01:22:19.344251454Z",
+        "created_by": "ENV RUBY_DOWNLOAD_SHA256=9c9d121fe3314ea7c801e690b9de981d2b9d12d7849db99c27482468a541ba0a",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-08-25T01:22:19.344251454Z",
+        "created_by": "RUN /bin/sh -c set -eux; \t\tsavedAptMark=\"$(apt-mark showmanual)\"; \tapt-get update; \tapt-get install -y --no-install-recommends \t\tdpkg-dev \t\tlibgdbm-dev \t\truby \t\tautoconf \t\tbzip2 \t\tg++ \t\tgcc \t\tlibbz2-dev \t\tlibffi-dev \t\tlibgdbm-compat-dev \t\tlibglib2.0-dev \t\tlibgmp-dev \t\tlibncurses-dev \t\tlibssl-dev \t\tlibxml2-dev \t\tlibxslt-dev \t\tlibyaml-dev \t\tmake \t\twget \t\txz-utils \t\tzlib1g-dev \t; \t\trustArch=; \tdpkgArch=\"$(dpkg --print-architecture)\"; \tcase \"$dpkgArch\" in \t\t'amd64') rustArch='x86_64-unknown-linux-gnu'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.28.2/x86_64-unknown-linux-gnu/rustup-init'; rustupSha256='20a06e644b0d9bd2fbdbfd52d42540bdde820ea7df86e92e533c073da0cdd43c' ;; \t\t'arm64') rustArch='aarch64-unknown-linux-gnu'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.28.2/aarch64-unknown-linux-gnu/rustup-init'; rustupSha256='e3853c5a252fca15252d07cb23a1bdd9377a8c6f3efa01531109281ae47f841c' ;; \tesac; \t\tif [ -n \"$rustArch\" ]; then \t\tmkdir -p /tmp/rust; \t\t\t\twget -O /tmp/rust/rustup-init \"$rustupUrl\"; \t\techo \"$rustupSha256 */tmp/rust/rustup-init\" | sha256sum --check --strict; \t\tchmod +x /tmp/rust/rustup-init; \t\t\t\texport RUSTUP_HOME='/tmp/rust/rustup' CARGO_HOME='/tmp/rust/cargo'; \t\texport PATH=\"$CARGO_HOME/bin:$PATH\"; \t\t/tmp/rust/rustup-init -y --no-modify-path --profile minimal --default-toolchain '1.91.1' --default-host \"$rustArch\"; \t\t\t\trustc --version; \t\tcargo --version; \tfi; \t\twget -O ruby.tar.xz \"$RUBY_DOWNLOAD_URL\"; \techo \"$RUBY_DOWNLOAD_SHA256 *ruby.tar.xz\" | sha256sum --check --strict; \t\tmkdir -p /usr/src/ruby; \ttar -xJf ruby.tar.xz -C /usr/src/ruby --strip-components=1; \trm ruby.tar.xz; \t\tcd /usr/src/ruby; \t\tautoconf; \tgnuArch=\"$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)\"; \t./configure \t\t--build=\"$gnuArch\" \t\t--disable-install-doc \t\t--enable-shared \t\t${rustArch:+--enable-yjit} \t\t${rustArch:+--enable-zjit} \t; \tmake -j \"$(nproc)\"; \tmake install; \t\trm -rf /tmp/rust; \tapt-mark auto '.*' \u003e /dev/null; \tapt-mark manual $savedAptMark \u003e /dev/null; \tfind /usr/local -type f -executable -not \\( -name '*tkinter*' \\) -exec ldd '{}' ';' \t\t| awk '/=\u003e/ { so = $(NF-1); if (index(so, \"/usr/local/\") == 1) { next }; gsub(\"^/(usr/)?\", \"\", so); printf \"*%s\\n\", so }' \t\t| sort -u \t\t| xargs -r dpkg-query --search \t\t| awk 'sub(\":$\", \"\", $1) { print $1 }' \t\t| sort -u \t\t| xargs -r apt-mark manual \t; \tapt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \tapt-get dist-clean; \t\tcd /; \trm -r /usr/src/ruby; \tif dpkg -l | grep -i ruby; then exit 1; fi; \t[ \"$(command -v ruby)\" = '/usr/local/bin/ruby' ]; \truby --version; \tgem --version; \tbundle --version # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-08-25T01:22:19.344251454Z",
+        "created_by": "ENV GEM_HOME=/usr/local/bundle",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-08-25T01:22:19.344251454Z",
+        "created_by": "ENV BUNDLE_SILENCE_ROOT_WARNING=1 BUNDLE_APP_CONFIG=/usr/local/bundle",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-08-25T01:22:19.344251454Z",
+        "created_by": "ENV PATH=/usr/local/bundle/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-08-25T01:22:19.433801814Z",
+        "created_by": "RUN /bin/sh -c set -eux; \tmkdir \"$GEM_HOME\"; \tchmod 1777 \"$GEM_HOME\" # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-08-25T01:22:19.433801814Z",
+        "created_by": "CMD [\"irb\"]",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:10.718616279Z",
+        "created_by": "ARG MASTODON_VERSION_PRERELEASE=nightly.2026-09-13",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:10.718616279Z",
+        "created_by": "ARG MASTODON_VERSION_METADATA=",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:10.718616279Z",
+        "created_by": "ARG SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:10.718616279Z",
+        "created_by": "ARG RAILS_SERVE_STATIC_FILES=true",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:10.718616279Z",
+        "created_by": "ARG RUBY_YJIT_ENABLE=1",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:10.718616279Z",
+        "created_by": "ARG TZ=Etc/UTC",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:10.718616279Z",
+        "created_by": "ARG UID=991",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:10.718616279Z",
+        "created_by": "ARG GID=991",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:10.718616279Z",
+        "created_by": "ENV MASTODON_VERSION_PRERELEASE=nightly.2026-09-13 MASTODON_VERSION_METADATA= SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11 RAILS_SERVE_STATIC_FILES=true RUBY_YJIT_ENABLE=1 TZ=Etc/UTC",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:10.718616279Z",
+        "created_by": "ENV BIND=0.0.0.0 NODE_ENV=production RAILS_ENV=production DEBIAN_FRONTEND=noninteractive PATH=/usr/local/bundle/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/ruby/bin:/opt/mastodon/bin MALLOC_CONF=narenas:2,background_thread:true,thp:never,dirty_decay_ms:1000,muzzy_decay_ms:0 MASTODON_SIDEKIQ_READY_FILENAME=sidekiq_process_has_started_and_will_begin_processing_jobs",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:10.718616279Z",
+        "created_by": "SHELL [/bin/bash -o pipefail -o errexit -c]",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:10.718616279Z",
+        "created_by": "ARG TARGETPLATFORM=linux/amd64",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:10.718616279Z",
+        "created_by": "RUN |9 MASTODON_VERSION_PRERELEASE=nightly.2026-09-13 MASTODON_VERSION_METADATA= SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11 RAILS_SERVE_STATIC_FILES=true RUBY_YJIT_ENABLE=1 TZ=Etc/UTC UID=991 GID=991 TARGETPLATFORM=linux/amd64 /bin/bash -o pipefail -o errexit -c echo \"Target platform is $TARGETPLATFORM\" # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:06:10.804681971Z",
+        "created_by": "RUN |9 MASTODON_VERSION_PRERELEASE=nightly.2026-09-13 MASTODON_VERSION_METADATA= SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11 RAILS_SERVE_STATIC_FILES=true RUBY_YJIT_ENABLE=1 TZ=Etc/UTC UID=991 GID=991 TARGETPLATFORM=linux/amd64 /bin/bash -o pipefail -o errexit -c rm -f /etc/apt/apt.conf.d/docker-clean;   echo \"${TZ}\" \u003e /etc/localtime;   groupadd -g \"${GID}\" mastodon;   useradd -l -u \"${UID}\" -g \"${GID}\" -m -d /opt/mastodon mastodon;   ln -s /opt/mastodon /mastodon; # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:06:10.814264708Z",
+        "created_by": "WORKDIR /opt/mastodon",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:06:23.915716823Z",
+        "created_by": "RUN |9 MASTODON_VERSION_PRERELEASE=nightly.2026-09-13 MASTODON_VERSION_METADATA= SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11 RAILS_SERVE_STATIC_FILES=true RUBY_YJIT_ENABLE=1 TZ=Etc/UTC UID=991 GID=991 TARGETPLATFORM=linux/amd64 /bin/bash -o pipefail -o errexit -c apt-get update;   apt-get dist-upgrade -yq;   apt-get install -y --no-install-recommends   curl   file   libjemalloc2   patchelf   procps   tini   tzdata   wget   libexpat1   libglib2.0-0t64   libicu76   libidn12   libpq5   libreadline8t64   libssl3t64   libyaml-0-2   libcgif0   libexif12   libheif1   libhwy1t64   libimagequant0   libjpeg62-turbo   liblcms2-2   libspng0   libtiff6   libwebp7   libwebpdemux2   libwebpmux3   libdav1d7   libmp3lame0   libopencore-amrnb0   libopencore-amrwb0   libopus0   libsnappy1v5   libtheora0   libvorbis0a   libvorbisenc2   libvorbisfile3   libvpx9   libx264-164   libx265-215   ;   patchelf --add-needed libjemalloc.so.2 /usr/local/bin/ruby;   apt-get purge -y   patchelf   ; # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:06:23.915716823Z",
+        "created_by": "ARG TARGETPLATFORM=linux/amd64",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:25.960976273Z",
+        "created_by": "COPY . /opt/mastodon/ # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:11:39.285030572Z",
+        "created_by": "COPY /opt/mastodon/public/packs /opt/mastodon/public/packs # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:11:39.408862079Z",
+        "created_by": "COPY /opt/mastodon/public/assets /opt/mastodon/public/assets # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:11:43.366441595Z",
+        "created_by": "COPY /usr/local/bundle/ /usr/local/bundle/ # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:11:43.656167474Z",
+        "created_by": "COPY /usr/local/libvips/bin /usr/local/bin # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:11:43.677471328Z",
+        "created_by": "COPY /usr/local/libvips/lib /usr/local/lib # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:14:23.928101213Z",
+        "created_by": "COPY /usr/local/ffmpeg/bin /usr/local/bin # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:14:23.962918131Z",
+        "created_by": "COPY /usr/local/ffmpeg/lib /usr/local/lib # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:14:24.052527039Z",
+        "created_by": "RUN |9 MASTODON_VERSION_PRERELEASE=nightly.2026-09-13 MASTODON_VERSION_METADATA= SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11 RAILS_SERVE_STATIC_FILES=true RUBY_YJIT_ENABLE=1 TZ=Etc/UTC UID=991 GID=991 TARGETPLATFORM=linux/amd64 /bin/bash -o pipefail -o errexit -c ldconfig;   vips -v;   ffmpeg -version;   ffprobe -version; # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:14:28.74302128Z",
+        "created_by": "RUN |9 MASTODON_VERSION_PRERELEASE=nightly.2026-09-13 MASTODON_VERSION_METADATA= SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11 RAILS_SERVE_STATIC_FILES=true RUBY_YJIT_ENABLE=1 TZ=Etc/UTC UID=991 GID=991 TARGETPLATFORM=linux/amd64 /bin/bash -o pipefail -o errexit -c bundle exec bootsnap precompile --gemfile app/ lib/ config/; # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:14:36.245828355Z",
+        "created_by": "RUN |9 MASTODON_VERSION_PRERELEASE=nightly.2026-09-13 MASTODON_VERSION_METADATA= SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11 RAILS_SERVE_STATIC_FILES=true RUBY_YJIT_ENABLE=1 TZ=Etc/UTC UID=991 GID=991 TARGETPLATFORM=linux/amd64 /bin/bash -o pipefail -o errexit -c mkdir -p /opt/mastodon/public/system;   chown mastodon:mastodon /opt/mastodon/public/system;   chown -R mastodon:mastodon /opt/mastodon/tmp; # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:14:36.245828355Z",
+        "created_by": "USER mastodon",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:14:36.245828355Z",
+        "created_by": "EXPOSE \u0026{[{{414 0} {414 0}}] 0xc000428180}",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:14:36.245828355Z",
+        "created_by": "ENTRYPOINT [\"/usr/bin/tini\" \"--\"]",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      }
+    ]
+  },
+  "linux/arm64": {
+    "created": "2026-09-13T02:11:31.57596358Z",
+    "architecture": "arm64",
+    "os": "linux",
+    "config": {
+      "User": "mastodon",
+      "ExposedPorts": {
+        "3000/tcp": {}
+      },
+      "Env": [
+        "PATH=/usr/local/bundle/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/ruby/bin:/opt/mastodon/bin",
+        "LANG=C.UTF-8",
+        "RUBY_VERSION=4.0.6",
+        "RUBY_DOWNLOAD_URL=https://cache.ruby-lang.org/pub/ruby/4.0/ruby-4.0.6.tar.xz",
+        "RUBY_DOWNLOAD_SHA256=9c9d121fe3314ea7c801e690b9de981d2b9d12d7849db99c27482468a541ba0a",
+        "GEM_HOME=/usr/local/bundle",
+        "BUNDLE_SILENCE_ROOT_WARNING=1",
+        "BUNDLE_APP_CONFIG=/usr/local/bundle",
+        "MASTODON_VERSION_PRERELEASE=nightly.2026-09-13",
+        "MASTODON_VERSION_METADATA=",
+        "SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11",
+        "RAILS_SERVE_STATIC_FILES=true",
+        "RUBY_YJIT_ENABLE=1",
+        "TZ=Etc/UTC",
+        "BIND=0.0.0.0",
+        "NODE_ENV=production",
+        "RAILS_ENV=production",
+        "DEBIAN_FRONTEND=noninteractive",
+        "MALLOC_CONF=narenas:2,background_thread:true,thp:never,dirty_decay_ms:1000,muzzy_decay_ms:0",
+        "MASTODON_SIDEKIQ_READY_FILENAME=sidekiq_process_has_started_and_will_begin_processing_jobs"
+      ],
+      "Entrypoint": [
+        "/usr/bin/tini",
+        "--"
+      ],
+      "WorkingDir": "/opt/mastodon"
+    },
+    "rootfs": {
+      "type": "layers",
+      "diff_ids": [
+        "sha256:41d6505109809884e681a97f978542a2d4d3506af0124f18b3f3a471edfcc9b7",
+        "sha256:9d548afc2794b6240bedcad68f0c015f5ca2b285d2148e5db520750fe920adc5",
+        "sha256:6c092ec96d403aaa5716766a3ce9b7f348b57e7c036e2680f80a4cdc587b36d4",
+        "sha256:6d990c0f109bc6a79f7ba44ec871629b9c001a8d8ecb1e9f36b81b929c4862e2",
+        "sha256:df0ce9f5db8fc0c86caeaecd260b226117457e7e705a4ad77df741818b539638",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:ef55eec9e140e7d0e78a4f94f35f8223fe2e3fa1ff8b16f97b9c5144cde1aabb",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:df8e55164cc41bf587ebbf9d3a58e312b821598ed47d1db65fc5c45ff7075cc8",
+        "sha256:8224b6045d35b98c764bedf6961daa0fc892f4aceed78f6070ccdcec327b7232",
+        "sha256:07a7eb89c51dcee5584a53b903bc76107f9b5974b438bb6d9bfb02700b7971ea",
+        "sha256:0240ff53ad87bd637beea7ff8d2e4ae1c6b82d80106b90e55718075a02423a76",
+        "sha256:ef3d1f86e59e8d649aa784127a43eb015fa8440c4874d38a062dda2990550180",
+        "sha256:b8c5af852605af90f8d65868fec3f4e063d06bf18da2929a47a87ab6f217983f",
+        "sha256:28f5aa707848020726c266e65d5f40c412e6e2454ad87a8a6620ea956171fa8d",
+        "sha256:44121a61c02e3fcdf3a97cddb43a0bcbe420f72ccfb5f850ee00d55d0d45f7b3",
+        "sha256:b30d4b690aaa86611400f83238c48c87c8c09ffb633d6b9add298111c58c0e98",
+        "sha256:add885f6a36a6e771af0f66c088cdf8d078fbe769a967ce2d90bd48dc5472073",
+        "sha256:ebe3af8d12c4bedc26bc05f80966155ae174a31ddfb1f491a060f5162aa98b1f",
+        "sha256:34429f1735b29e81acf89f6392f53162611b8738c0c10e1c87056514d5eef1b4"
+      ]
+    },
+    "history": [
+      {
+        "created": "2026-08-24T00:00:00Z",
+        "created_by": "# debian.sh --arch 'arm64' out/ 'trixie' '@1787529600'",
+        "comment": "debuerreotype 0.17"
+      },
+      {
+        "created": "2026-08-25T01:24:15.017528705Z",
+        "created_by": "RUN /bin/sh -c set -eux; \tapt-get update; \tapt-get install -y --no-install-recommends \t\tca-certificates \t; \tapt-get dist-clean # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-08-25T01:24:15.11699488Z",
+        "created_by": "RUN /bin/sh -c set -eux; \tmkdir -p /usr/local/etc; \techo 'gem: --no-document' \u003e\u003e /usr/local/etc/gemrc # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-08-25T01:26:42.81007551Z",
+        "created_by": "ENV LANG=C.UTF-8",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-08-25T01:26:42.81007551Z",
+        "created_by": "ENV RUBY_VERSION=4.0.6",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-08-25T01:26:42.81007551Z",
+        "created_by": "ENV RUBY_DOWNLOAD_URL=https://cache.ruby-lang.org/pub/ruby/4.0/ruby-4.0.6.tar.xz",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-08-25T01:26:42.81007551Z",
+        "created_by": "ENV RUBY_DOWNLOAD_SHA256=9c9d121fe3314ea7c801e690b9de981d2b9d12d7849db99c27482468a541ba0a",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-08-25T01:26:42.81007551Z",
+        "created_by": "RUN /bin/sh -c set -eux; \t\tsavedAptMark=\"$(apt-mark showmanual)\"; \tapt-get update; \tapt-get install -y --no-install-recommends \t\tdpkg-dev \t\tlibgdbm-dev \t\truby \t\tautoconf \t\tbzip2 \t\tg++ \t\tgcc \t\tlibbz2-dev \t\tlibffi-dev \t\tlibgdbm-compat-dev \t\tlibglib2.0-dev \t\tlibgmp-dev \t\tlibncurses-dev \t\tlibssl-dev \t\tlibxml2-dev \t\tlibxslt-dev \t\tlibyaml-dev \t\tmake \t\twget \t\txz-utils \t\tzlib1g-dev \t; \t\trustArch=; \tdpkgArch=\"$(dpkg --print-architecture)\"; \tcase \"$dpkgArch\" in \t\t'amd64') rustArch='x86_64-unknown-linux-gnu'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.28.2/x86_64-unknown-linux-gnu/rustup-init'; rustupSha256='20a06e644b0d9bd2fbdbfd52d42540bdde820ea7df86e92e533c073da0cdd43c' ;; \t\t'arm64') rustArch='aarch64-unknown-linux-gnu'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.28.2/aarch64-unknown-linux-gnu/rustup-init'; rustupSha256='e3853c5a252fca15252d07cb23a1bdd9377a8c6f3efa01531109281ae47f841c' ;; \tesac; \t\tif [ -n \"$rustArch\" ]; then \t\tmkdir -p /tmp/rust; \t\t\t\twget -O /tmp/rust/rustup-init \"$rustupUrl\"; \t\techo \"$rustupSha256 */tmp/rust/rustup-init\" | sha256sum --check --strict; \t\tchmod +x /tmp/rust/rustup-init; \t\t\t\texport RUSTUP_HOME='/tmp/rust/rustup' CARGO_HOME='/tmp/rust/cargo'; \t\texport PATH=\"$CARGO_HOME/bin:$PATH\"; \t\t/tmp/rust/rustup-init -y --no-modify-path --profile minimal --default-toolchain '1.91.1' --default-host \"$rustArch\"; \t\t\t\trustc --version; \t\tcargo --version; \tfi; \t\twget -O ruby.tar.xz \"$RUBY_DOWNLOAD_URL\"; \techo \"$RUBY_DOWNLOAD_SHA256 *ruby.tar.xz\" | sha256sum --check --strict; \t\tmkdir -p /usr/src/ruby; \ttar -xJf ruby.tar.xz -C /usr/src/ruby --strip-components=1; \trm ruby.tar.xz; \t\tcd /usr/src/ruby; \t\tautoconf; \tgnuArch=\"$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)\"; \t./configure \t\t--build=\"$gnuArch\" \t\t--disable-install-doc \t\t--enable-shared \t\t${rustArch:+--enable-yjit} \t\t${rustArch:+--enable-zjit} \t; \tmake -j \"$(nproc)\"; \tmake install; \t\trm -rf /tmp/rust; \tapt-mark auto '.*' \u003e /dev/null; \tapt-mark manual $savedAptMark \u003e /dev/null; \tfind /usr/local -type f -executable -not \\( -name '*tkinter*' \\) -exec ldd '{}' ';' \t\t| awk '/=\u003e/ { so = $(NF-1); if (index(so, \"/usr/local/\") == 1) { next }; gsub(\"^/(usr/)?\", \"\", so); printf \"*%s\\n\", so }' \t\t| sort -u \t\t| xargs -r dpkg-query --search \t\t| awk 'sub(\":$\", \"\", $1) { print $1 }' \t\t| sort -u \t\t| xargs -r apt-mark manual \t; \tapt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \tapt-get dist-clean; \t\tcd /; \trm -r /usr/src/ruby; \tif dpkg -l | grep -i ruby; then exit 1; fi; \t[ \"$(command -v ruby)\" = '/usr/local/bin/ruby' ]; \truby --version; \tgem --version; \tbundle --version # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-08-25T01:26:42.81007551Z",
+        "created_by": "ENV GEM_HOME=/usr/local/bundle",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-08-25T01:26:42.81007551Z",
+        "created_by": "ENV BUNDLE_SILENCE_ROOT_WARNING=1 BUNDLE_APP_CONFIG=/usr/local/bundle",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-08-25T01:26:42.81007551Z",
+        "created_by": "ENV PATH=/usr/local/bundle/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-08-25T01:26:42.885303509Z",
+        "created_by": "RUN /bin/sh -c set -eux; \tmkdir \"$GEM_HOME\"; \tchmod 1777 \"$GEM_HOME\" # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-08-25T01:26:42.885303509Z",
+        "created_by": "CMD [\"irb\"]",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:11.373526595Z",
+        "created_by": "ARG MASTODON_VERSION_PRERELEASE=nightly.2026-09-13",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:11.373526595Z",
+        "created_by": "ARG MASTODON_VERSION_METADATA=",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:11.373526595Z",
+        "created_by": "ARG SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:11.373526595Z",
+        "created_by": "ARG RAILS_SERVE_STATIC_FILES=true",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:11.373526595Z",
+        "created_by": "ARG RUBY_YJIT_ENABLE=1",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:11.373526595Z",
+        "created_by": "ARG TZ=Etc/UTC",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:11.373526595Z",
+        "created_by": "ARG UID=991",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:11.373526595Z",
+        "created_by": "ARG GID=991",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:11.373526595Z",
+        "created_by": "ENV MASTODON_VERSION_PRERELEASE=nightly.2026-09-13 MASTODON_VERSION_METADATA= SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11 RAILS_SERVE_STATIC_FILES=true RUBY_YJIT_ENABLE=1 TZ=Etc/UTC",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:11.373526595Z",
+        "created_by": "ENV BIND=0.0.0.0 NODE_ENV=production RAILS_ENV=production DEBIAN_FRONTEND=noninteractive PATH=/usr/local/bundle/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/ruby/bin:/opt/mastodon/bin MALLOC_CONF=narenas:2,background_thread:true,thp:never,dirty_decay_ms:1000,muzzy_decay_ms:0 MASTODON_SIDEKIQ_READY_FILENAME=sidekiq_process_has_started_and_will_begin_processing_jobs",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:11.373526595Z",
+        "created_by": "SHELL [/bin/bash -o pipefail -o errexit -c]",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:11.373526595Z",
+        "created_by": "ARG TARGETPLATFORM=linux/arm64",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:11.373526595Z",
+        "created_by": "RUN |9 MASTODON_VERSION_PRERELEASE=nightly.2026-09-13 MASTODON_VERSION_METADATA= SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11 RAILS_SERVE_STATIC_FILES=true RUBY_YJIT_ENABLE=1 TZ=Etc/UTC UID=991 GID=991 TARGETPLATFORM=linux/arm64 /bin/bash -o pipefail -o errexit -c echo \"Target platform is $TARGETPLATFORM\" # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:06:11.725451253Z",
+        "created_by": "RUN |9 MASTODON_VERSION_PRERELEASE=nightly.2026-09-13 MASTODON_VERSION_METADATA= SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11 RAILS_SERVE_STATIC_FILES=true RUBY_YJIT_ENABLE=1 TZ=Etc/UTC UID=991 GID=991 TARGETPLATFORM=linux/arm64 /bin/bash -o pipefail -o errexit -c rm -f /etc/apt/apt.conf.d/docker-clean;   echo \"${TZ}\" \u003e /etc/localtime;   groupadd -g \"${GID}\" mastodon;   useradd -l -u \"${UID}\" -g \"${GID}\" -m -d /opt/mastodon mastodon;   ln -s /opt/mastodon /mastodon; # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:06:11.734159425Z",
+        "created_by": "WORKDIR /opt/mastodon",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:06:23.804224487Z",
+        "created_by": "RUN |9 MASTODON_VERSION_PRERELEASE=nightly.2026-09-13 MASTODON_VERSION_METADATA= SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11 RAILS_SERVE_STATIC_FILES=true RUBY_YJIT_ENABLE=1 TZ=Etc/UTC UID=991 GID=991 TARGETPLATFORM=linux/arm64 /bin/bash -o pipefail -o errexit -c apt-get update;   apt-get dist-upgrade -yq;   apt-get install -y --no-install-recommends   curl   file   libjemalloc2   patchelf   procps   tini   tzdata   wget   libexpat1   libglib2.0-0t64   libicu76   libidn12   libpq5   libreadline8t64   libssl3t64   libyaml-0-2   libcgif0   libexif12   libheif1   libhwy1t64   libimagequant0   libjpeg62-turbo   liblcms2-2   libspng0   libtiff6   libwebp7   libwebpdemux2   libwebpmux3   libdav1d7   libmp3lame0   libopencore-amrnb0   libopencore-amrwb0   libopus0   libsnappy1v5   libtheora0   libvorbis0a   libvorbisenc2   libvorbisfile3   libvpx9   libx264-164   libx265-215   ;   patchelf --add-needed libjemalloc.so.2 /usr/local/bin/ruby;   apt-get purge -y   patchelf   ; # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:06:23.804224487Z",
+        "created_by": "ARG TARGETPLATFORM=linux/arm64",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:06:25.405574125Z",
+        "created_by": "COPY . /opt/mastodon/ # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:09:30.336681914Z",
+        "created_by": "COPY /opt/mastodon/public/packs /opt/mastodon/public/packs # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:09:30.413577818Z",
+        "created_by": "COPY /opt/mastodon/public/assets /opt/mastodon/public/assets # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:09:32.288502105Z",
+        "created_by": "COPY /usr/local/bundle/ /usr/local/bundle/ # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:09:32.414647484Z",
+        "created_by": "COPY /usr/local/libvips/bin /usr/local/bin # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:09:32.443641751Z",
+        "created_by": "COPY /usr/local/libvips/lib /usr/local/lib # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:11:23.160990379Z",
+        "created_by": "COPY /usr/local/ffmpeg/bin /usr/local/bin # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:11:23.256485657Z",
+        "created_by": "COPY /usr/local/ffmpeg/lib /usr/local/lib # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:11:23.320614877Z",
+        "created_by": "RUN |9 MASTODON_VERSION_PRERELEASE=nightly.2026-09-13 MASTODON_VERSION_METADATA= SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11 RAILS_SERVE_STATIC_FILES=true RUBY_YJIT_ENABLE=1 TZ=Etc/UTC UID=991 GID=991 TARGETPLATFORM=linux/arm64 /bin/bash -o pipefail -o errexit -c ldconfig;   vips -v;   ffmpeg -version;   ffprobe -version; # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:11:26.510391657Z",
+        "created_by": "RUN |9 MASTODON_VERSION_PRERELEASE=nightly.2026-09-13 MASTODON_VERSION_METADATA= SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11 RAILS_SERVE_STATIC_FILES=true RUBY_YJIT_ENABLE=1 TZ=Etc/UTC UID=991 GID=991 TARGETPLATFORM=linux/arm64 /bin/bash -o pipefail -o errexit -c bundle exec bootsnap precompile --gemfile app/ lib/ config/; # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:11:31.57596358Z",
+        "created_by": "RUN |9 MASTODON_VERSION_PRERELEASE=nightly.2026-09-13 MASTODON_VERSION_METADATA= SOURCE_COMMIT=a7cc70db674d79616597fcc1e67aafee6fcb2f11 RAILS_SERVE_STATIC_FILES=true RUBY_YJIT_ENABLE=1 TZ=Etc/UTC UID=991 GID=991 TARGETPLATFORM=linux/arm64 /bin/bash -o pipefail -o errexit -c mkdir -p /opt/mastodon/public/system;   chown mastodon:mastodon /opt/mastodon/public/system;   chown -R mastodon:mastodon /opt/mastodon/tmp; # buildkit",
+        "comment": "buildkit.dockerfile.v0"
+      },
+      {
+        "created": "2026-09-13T02:11:31.57596358Z",
+        "created_by": "USER mastodon",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:11:31.57596358Z",
+        "created_by": "EXPOSE \u0026{[{{414 0} {414 0}}] 0x40000b82c0}",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      },
+      {
+        "created": "2026-09-13T02:11:31.57596358Z",
+        "created_by": "ENTRYPOINT [\"/usr/bin/tini\" \"--\"]",
+        "comment": "buildkit.dockerfile.v0",
+        "empty_layer": true
+      }
+    ]
+  }
+}

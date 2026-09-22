@@ -1,0 +1,487 @@
+diff --git a/app/javascript/mastodon/actions/markers.ts b/app/javascript/mastodon/actions/markers.ts
+--- a/app/javascript/mastodon/actions/markers.ts
++++ b/app/javascript/mastodon/actions/markers.ts
+@@ -5,7 +5,7 @@ import { getAccessToken } from 'mastodon/initial_state';
+ import type { AppDispatch, RootState } from 'mastodon/store';
+ import { createAppAsyncThunk } from 'mastodon/store/typed_functions';
+ 
+-import api from '../api';
++import { readPreference, writePreference } from '../../teadeck/storage';
+ import { compareId } from '../compare_id';
+ 
+ export const synchronouslySubmitMarkers = createAppAsyncThunk(
+@@ -22,50 +22,7 @@ export const synchronouslySubmitMarkers = createAppAsyncThunk(
+       return;
+     }
+ 
+-    // The Fetch API allows us to perform requests that will be carried out
+-    // after the page closes. But that only works if the `keepalive` attribute
+-    // is supported.
+-    if ('fetch' in window && 'keepalive' in new Request('')) {
+-      await fetch('/api/v1/markers', {
+-        keepalive: true,
+-        method: 'POST',
+-        headers: {
+-          'Content-Type': 'application/json',
+-          Authorization: `Bearer ${accessToken}`,
+-        },
+-        body: JSON.stringify(params),
+-      });
+-
+-      return;
+-    } else if ('sendBeacon' in navigator) {
+-      // Failing that, we can use sendBeacon, but we have to encode the data as
+-      // FormData for DoorKeeper to recognize the token.
+-      const formData = new FormData();
+-
+-      formData.append('bearer_token', accessToken);
+-
+-      for (const [id, value] of Object.entries(params)) {
+-        if (value.last_read_id)
+-          formData.append(`${id}[last_read_id]`, value.last_read_id);
+-      }
+-
+-      if (navigator.sendBeacon('/api/v1/markers', formData)) {
+-        return;
+-      }
+-    }
+-
+-    // If neither Fetch nor sendBeacon worked, try to perform a synchronous
+-    // request.
+-    try {
+-      const client = new XMLHttpRequest();
+-
+-      client.open('POST', '/api/v1/markers', false);
+-      client.setRequestHeader('Content-Type', 'application/json');
+-      client.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+-      client.send(JSON.stringify(params));
+-    } catch {
+-      // Do not make the BeforeUnload handler error out
+-    }
++    writePreference('markers', { ...readPreference('markers', {}), ...params });
+   },
+ );
+ 
+@@ -105,7 +62,7 @@ export const submitMarkersAction = createAppAsyncThunk<{
+     return { home: undefined, notifications: undefined };
+   }
+ 
+-  await api().post<MarkerJSON>('/api/v1/markers', params);
++  writePreference('markers', { ...readPreference('markers', {}), ...params });
+ 
+   return {
+     home: params.home?.last_read_id,
+@@ -136,10 +93,5 @@ export const submitMarkers = createAppAsyncThunk(
+ );
+ 
+ export const fetchMarkers = createAppAsyncThunk('markers/fetch', async () => {
+-  const response = await api().get<Record<string, MarkerJSON>>(
+-    `/api/v1/markers`,
+-    { params: { timeline: ['notifications'] } },
+-  );
+-
+-  return { markers: response.data };
++  return { markers: readPreference<Record<string, MarkerJSON>>('markers', {}) };
+ });
+diff --git a/app/javascript/mastodon/actions/notifications.js b/app/javascript/mastodon/actions/notifications.js
+--- a/app/javascript/mastodon/actions/notifications.js
++++ b/app/javascript/mastodon/actions/notifications.js
+@@ -10,7 +10,6 @@ import {
+ } from './importer';
+ import { submitMarkers } from './markers';
+ import { notificationsUpdate } from "./notifications_typed";
+-import { register as registerPushNotifications } from './push_notifications';
+ 
+ export * from "./notifications_typed";
+ 
+@@ -95,9 +94,6 @@ export function requestBrowserPermission(callback = noOp) {
+       dispatch(setBrowserPermission(permission));
+       callback(permission);
+ 
+-      if (permission === 'granted') {
+-        dispatch(registerPushNotifications());
+-      }
+     });
+   };
+ }
+diff --git a/app/javascript/mastodon/actions/settings.js b/app/javascript/mastodon/actions/settings.js
+--- a/app/javascript/mastodon/actions/settings.js
++++ b/app/javascript/mastodon/actions/settings.js
+@@ -1,6 +1,4 @@
+-import { debounce } from 'lodash';
+-
+-import api from '../api';
++import { saveSettings as persistSettings } from '../../teadeck/storage';
+ 
+ import { showAlertForError } from './alerts';
+ 
+@@ -19,18 +17,21 @@ export function changeSetting(path, value) {
+   };
+ }
+ 
+-const debouncedSave = debounce((dispatch, getState) => {
++const persist = (dispatch, getState) => {
+   if (getState().getIn(['settings', 'saved']) || !getState().getIn(['meta', 'me'])) {
+     return;
+   }
+ 
+   const data = getState().get('settings').filter((_, path) => path !== 'saved').toJS();
+ 
+-  api().put('/api/web/settings', { data })
+-    .then(() => dispatch({ type: SETTING_SAVE }))
+-    .catch(error => dispatch(showAlertForError(error)));
+-}, 2000, { leading: true, trailing: true });
++  try {
++    persistSettings(data);
++    dispatch({ type: SETTING_SAVE });
++  } catch (error) {
++    dispatch(showAlertForError(error));
++  }
++};
+ 
+ export function saveSettings() {
+-  return (dispatch, getState) => debouncedSave(dispatch, getState);
++  return (dispatch, getState) => persist(dispatch, getState);
+ }
+diff --git a/app/javascript/mastodon/api.ts b/app/javascript/mastodon/api.ts
+--- a/app/javascript/mastodon/api.ts
++++ b/app/javascript/mastodon/api.ts
+@@ -8,7 +8,7 @@ import axios from 'axios';
+ import LinkHeader from 'http-link-header';
+ 
+ import { getAccessToken } from './initial_state';
+-import ready from './ready';
++import { apiUrl } from '../teadeck/session';
+ 
+ export const getLinks = (response: AxiosResponse) => {
+   const value = response.headers.link as string | undefined;
+@@ -64,20 +64,6 @@ export const getAsyncRefreshHeader = (
+   return null;
+ };
+ 
+-const csrfHeader: RawAxiosRequestHeaders = {};
+-
+-const setCSRFHeader = () => {
+-  const csrfToken = document.querySelector<HTMLMetaElement>(
+-    'meta[name=csrf-token]',
+-  );
+-
+-  if (csrfToken) {
+-    csrfHeader['X-CSRF-Token'] = csrfToken.content;
+-  }
+-};
+-
+-void ready(setCSRFHeader);
+-
+ const authorizationTokenFromInitialState = (): RawAxiosRequestHeaders => {
+   const accessToken = getAccessToken();
+ 
+@@ -91,11 +77,13 @@ const authorizationTokenFromInitialState = (): RawAxiosRequestHeaders => {
+ // eslint-disable-next-line import/no-default-export
+ export default function api(withAuthorization = true) {
+   const instance = axios.create({
++    adapter: 'fetch',
++    withCredentials: false,
++    fetchOptions: { redirect: 'error' },
+     transitional: {
+       clarifyTimeoutError: true,
+     },
+     headers: {
+-      ...csrfHeader,
+       ...(withAuthorization ? authorizationTokenFromInitialState() : {}),
+     },
+ 
+@@ -110,6 +98,12 @@ export default function api(withAuthorization = true) {
+     ],
+   });
+ 
++  instance.interceptors.request.use(config => {
++    config.url = apiUrl(config.url ?? '');
++    config.withCredentials = false;
++    return config;
++  });
++
+   instance.interceptors.response.use(
+     (response: AxiosResponse) => {
+       if (response.headers.deprecation) {
+diff --git a/app/javascript/mastodon/components/status_action_bar/index.jsx b/app/javascript/mastodon/components/status_action_bar/index.jsx
+--- a/app/javascript/mastodon/components/status_action_bar/index.jsx
++++ b/app/javascript/mastodon/components/status_action_bar/index.jsx
+@@ -277,7 +277,6 @@ class StatusActionBar extends ImmutablePureComponent {
+     }
+ 
+     if (publicStatus && !isRemote) {
+-      menu.push({ text: intl.formatMessage(messages.embed), action: this.handleEmbed });
+     }
+ 
+     if (quickBoosting && signedIn) {
+diff --git a/app/javascript/mastodon/containers/scroll_container/state_storage.ts b/app/javascript/mastodon/containers/scroll_container/state_storage.ts
+--- a/app/javascript/mastodon/containers/scroll_container/state_storage.ts
++++ b/app/javascript/mastodon/containers/scroll_container/state_storage.ts
+@@ -1,3 +1,5 @@
++import { storageKey } from '../../../teadeck/storage';
++
+ import type { LocationBase, ScrollPosition } from 'scroll-behavior';
+ 
+ const STATE_KEY_PREFIX = '@@scroll|';
+@@ -19,9 +21,9 @@ export class SessionStorage {
+     location: LocationBaseWithKey,
+     key: string | null,
+   ): ScrollPosition | null {
+-    const stateKey = this.getStateKey(location, key);
+-
++    // The account-scoped key throws once signed out; treat like unavailable storage.
+     try {
++      const stateKey = this.getStateKey(location, key);
+       const value = sessionStorage.getItem(stateKey);
+       return value ? (JSON.parse(value) as ScrollPosition) : null;
+     } catch {
+@@ -30,10 +32,10 @@ export class SessionStorage {
+   }
+ 
+   save(location: LocationBaseWithKey, key: string | null, value: unknown) {
+-    const stateKey = this.getStateKey(location, key);
+     const storedValue = JSON.stringify(value);
+ 
+     try {
++      const stateKey = this.getStateKey(location, key);
+       sessionStorage.setItem(stateKey, storedValue);
+     } catch {}
+   }
+@@ -41,6 +43,6 @@ export class SessionStorage {
+   getStateKey(location: LocationBaseWithKey, key: string | null) {
+     const locationKey = location.key;
+     const stateKeyBase = `${STATE_KEY_PREFIX}${locationKey}`;
+-    return key == null ? stateKeyBase : `${stateKeyBase}|${key}`;
++    return storageKey(key == null ? stateKeyBase : `${stateKeyBase}|${key}`);
+   }
+ }
+diff --git a/app/javascript/mastodon/features/status/components/action_bar.jsx b/app/javascript/mastodon/features/status/components/action_bar.jsx
+--- a/app/javascript/mastodon/features/status/components/action_bar.jsx
++++ b/app/javascript/mastodon/features/status/components/action_bar.jsx
+@@ -232,7 +232,6 @@ class ActionBar extends PureComponent {
+     }
+ 
+     if (publicStatus && (signedIn || !isRemote)) {
+-      menu.push({ text: intl.formatMessage(messages.embed), action: this.handleEmbed });
+     }
+ 
+     if (quickBoosting && signedIn) {
+diff --git a/app/javascript/mastodon/hooks/useStorage.ts b/app/javascript/mastodon/hooks/useStorage.ts
+--- a/app/javascript/mastodon/hooks/useStorage.ts
++++ b/app/javascript/mastodon/hooks/useStorage.ts
+@@ -1,3 +1,5 @@
++import { storageKey } from '../../teadeck/storage';
++
+ import { useCallback, useMemo, useState } from 'react';
+ 
+ interface StorageOptions {
+@@ -21,7 +23,7 @@ export function useStorage({
+         return null;
+       }
+       try {
+-        return window[storageType].getItem(prefix ? `${prefix};${key}` : key);
++        return window[storageType].getItem(storageKey(prefix ? `${prefix};${key}` : key));
+       } catch {
+         return null;
+       }
+@@ -35,7 +37,7 @@ export function useStorage({
+         return;
+       }
+       try {
+-        window[storageType].setItem(prefix ? `${prefix};${key}` : key, value);
++        window[storageType].setItem(storageKey(prefix ? `${prefix};${key}` : key), value);
+       } catch {}
+     },
+     [isAvailable, storageType, prefix],
+@@ -47,7 +49,7 @@ export function useStorage({
+         return;
+       }
+       try {
+-        window[storageType].removeItem(prefix ? `${prefix};${key}` : key);
++        window[storageType].removeItem(storageKey(prefix ? `${prefix};${key}` : key));
+       } catch {}
+     },
+     [isAvailable, storageType, prefix],
+diff --git a/app/javascript/mastodon/main.tsx b/app/javascript/mastodon/main.tsx
+--- a/app/javascript/mastodon/main.tsx
++++ b/app/javascript/mastodon/main.tsx
+@@ -6,11 +6,10 @@ import { Globals } from '@react-spring/web';
+ import * as perf from '@/mastodon/utils/performance';
+ import { setupBrowserNotifications } from 'mastodon/actions/notifications';
+ import Mastodon from 'mastodon/containers/mastodon';
+-import { me, reduceMotion } from 'mastodon/initial_state';
++import { reduceMotion } from 'mastodon/initial_state';
+ import ready from 'mastodon/ready';
+ import { store } from 'mastodon/store';
+ 
+-import { isDevelopment, isProduction } from './utils/environment';
+ 
+ function main() {
+   perf.start('main()');
+@@ -41,33 +40,6 @@ function main() {
+     );
+     store.dispatch(setupBrowserNotifications());
+ 
+-    if (
+-      me &&
+-      'serviceWorker' in navigator &&
+-      (isDevelopment() || isProduction()) // Disallow testing environment
+-    ) {
+-      let swPath = '/sw.js';
+-      if (isDevelopment()) {
+-        const { default: swDevUrl } =
+-          await import('@/mastodon/service_worker/sw?url');
+-        swPath = swDevUrl;
+-      }
+-
+-      await navigator.serviceWorker.register(swPath, {
+-        scope: '/',
+-        type: 'module',
+-      });
+-
+-      if (isProduction()) {
+-        if ('Notification' in window && Notification.permission === 'granted') {
+-          const registerPushNotifications =
+-            await import('mastodon/actions/push_notifications');
+-
+-          store.dispatch(registerPushNotifications.register());
+-        }
+-      }
+-    }
+-
+     perf.stop('main()');
+   });
+ }
+diff --git a/app/javascript/mastodon/selectors/statuses.ts b/app/javascript/mastodon/selectors/statuses.ts
+--- a/app/javascript/mastodon/selectors/statuses.ts
++++ b/app/javascript/mastodon/selectors/statuses.ts
+@@ -77,7 +77,13 @@ export const selectStatusLoadingState = createAppSelector(
+   [
+     (state, { statusId }: { statusId?: string | null }) =>
+       selectExpandedStatus(state, statusId ?? undefined),
+-    selectStatusFilters,
++    // Called lazily: statuses.ts and filters.ts import each other. Teadeck's
++    // single-entry bundle graph evaluates these modules in an order where a
++    // direct reference here is still undefined when createAppSelector runs,
++    // crashing every status render. Upstream's multi-entry Rails build
++    // happens not to hit this ordering.
++    (state, props: { statusId?: string | null; warnInsteadOfHide?: boolean }) =>
++      selectStatusFilters(state, props),
+     (_, { warnInsteadOfHide }: { warnInsteadOfHide?: boolean }) =>
+       warnInsteadOfHide,
+   ],
+@@ -176,7 +182,7 @@ export const selectStatusInteractions = createAppSelector(
+       delete: addAllowed({ isMine }),
+       edit: addAllowed({ isMine }),
+       editQuotePolicy: addAllowed({ isMine, isPublic }),
+-      embed: addAllowed({ isPublic, isLocal }),
++      embed: { allowed: false },
+       favourite: addAllowed({ isLoggedIn }),
+       filter: addAllowed({ isLoggedIn, isNotMine }),
+       mute: addAllowed({ isMine }),
+diff --git a/app/javascript/mastodon/settings.ts b/app/javascript/mastodon/settings.ts
+--- a/app/javascript/mastodon/settings.ts
++++ b/app/javascript/mastodon/settings.ts
+@@ -1,3 +1,5 @@
++import { storageKey } from '../teadeck/storage';
++
+ import type { RecentSearch } from './models/search';
+ 
+ export class Settings<T extends Record<string, unknown>> {
+@@ -9,12 +11,13 @@ export class Settings<T extends Record<string, unknown>> {
+ 
+   private generateKey(id: string | number | symbol): string {
+     const idStr = typeof id === 'string' ? id : String(id);
+-    return this.keyBase ? [this.keyBase, `id${idStr}`].join('.') : idStr;
++    return storageKey(this.keyBase ? [this.keyBase, `id${idStr}`].join('.') : idStr);
+   }
+ 
+   set<K extends keyof T>(id: K, data: T[K]): T[K] | null {
+-    const key = this.generateKey(id);
+     try {
++      // Inside the try: without an account session (e.g. Mastodon's component tests) nothing is stored.
++      const key = this.generateKey(id);
+       const encodedData = JSON.stringify(data);
+       localStorage.setItem(key, encodedData);
+       return data;
+@@ -24,8 +27,8 @@ export class Settings<T extends Record<string, unknown>> {
+   }
+ 
+   get<K extends keyof T>(id: K): T[K] | null {
+-    const key = this.generateKey(id);
+     try {
++      const key = this.generateKey(id);
+       const rawData = localStorage.getItem(key);
+       if (rawData === null) return null;
+       return JSON.parse(rawData) as T[K];
+diff --git a/app/javascript/mastodon/stream.js b/app/javascript/mastodon/stream.js
+--- a/app/javascript/mastodon/stream.js
++++ b/app/javascript/mastodon/stream.js
+@@ -1,5 +1,6 @@
+ // @ts-check
+ 
++import { keepStreamingAlive } from '@/teadeck/stream_keepalive';
+ import WebSocketClient from '@gamestdio/websocket';
+ 
+ import { getAccessToken } from './initial_state';
+@@ -156,6 +157,9 @@ export const connectStream = (channelName, params, callbacks) => (dispatch, getS
+ 
+   if(!accessToken) throw new Error("Trying to connect to the streaming server but no access token is available.");
+ 
++  // Streaming is optional; never send a token to the static host via EventSource.
++  if (!streamingAPIBaseURL) return () => {};
++
+   // If we cannot use a websockets connection, we must fall back
+   // to using individual connections for each channel
+   if (!streamingAPIBaseURL.startsWith('ws')) {
+@@ -243,8 +247,12 @@ const createConnection = (streamingAPIBaseURL, accessToken, channelName, { conne
+   channelName = params.shift();
+ 
+   if (streamingAPIBaseURL.startsWith('ws')) {
++    // No trailing slash: GoToSocial redirects it, and WebSockets cannot follow redirects.
+     // @ts-expect-error
+-    const ws = new WebSocketClient(`${streamingAPIBaseURL}/api/v1/streaming/?${params.join('&')}`, accessToken);
++    const ws = new WebSocketClient(`${streamingAPIBaseURL}/api/v1/streaming?${params.join('&')}`, accessToken);
++    // Bounded reconnect delays; reconnect after sleep or network changes.
++    // @ts-expect-error -- relies on the library's internals, see stream_keepalive.ts
++    keepStreamingAlive(ws);
+ 
+     ws.onopen = connected;
+     ws.onmessage = e => received(JSON.parse(e.data));
+diff --git a/app/javascript/mastodon/utils/log_out.ts b/app/javascript/mastodon/utils/log_out.ts
+--- a/app/javascript/mastodon/utils/log_out.ts
++++ b/app/javascript/mastodon/utils/log_out.ts
+@@ -1,20 +1 @@
+-import api from 'mastodon/api';
+-
+-export async function logOut() {
+-  try {
+-    const response = await api(false).delete<{ redirect_to?: string }>(
+-      '/auth/sign_out',
+-      { headers: { Accept: 'application/json' }, withCredentials: true },
+-    );
+-
+-    if (response.status === 200 && response.data.redirect_to)
+-      window.location.href = response.data.redirect_to;
+-    else
+-      console.error(
+-        'Failed to log out, got an unexpected non-redirect response from the server',
+-        response,
+-      );
+-  } catch (error) {
+-    console.error('Failed to log out, response was an error', error);
+-  }
+-}
++export { forgetAndLogout as logOut } from '../../teadeck/logout';
+diff --git a/tsconfig.json b/tsconfig.json
+--- a/tsconfig.json
++++ b/tsconfig.json
+@@ -4,6 +4,7 @@
+     "allowJs": true,
+     "resolveJsonModule": true,
+     "noEmit": true,
++    "allowImportingTsExtensions": true,
+     "strict": true,
+     "isolatedModules": true, // Required by Vite
+     "noImplicitReturns": true,

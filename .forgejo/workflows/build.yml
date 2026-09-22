@@ -1,0 +1,85 @@
+# Builds and tests every push that changes more than documentation; on main it also
+# packages what was tested as the image.
+# Runs on the self-hosted Forgejo runner (label `docker`). Deploying stays manual.
+#
+# One job on purpose: the image is built from the workspace this job just tested
+# (kaniko as a step container, context `dir://`), so the client is built once and
+# what is shipped cannot be a second, independently built copy.
+name: build
+
+# Pushes that only touch documentation start no run: nothing in them changes the
+# client. A push that also touches anything else builds as usual; a manual run
+# always builds.
+on:
+  push:
+    paths-ignore: ['**.md', 'docs/**']
+  pull_request:
+    paths-ignore: ['**.md', 'docs/**']
+  workflow_dispatch:
+
+# One run per branch at a time, so images for main are published in push order. Forgejo treats this
+# as best effort; `latest` additionally only moves to a commit that is still the head of main
+# (scripts/promote_image.mjs), so a slow older build cannot put `latest` back.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: docker
+    container:
+      image: node:24-bookworm
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import upstream and apply patches
+        run: node scripts/prepare.mjs
+      # No cache for the dependencies on purpose: measured on 18 September 2026,
+      # a cold install of all 1250 packages (543 MiB) takes 7.6 s of download,
+      # 14.5 s in total against 8.6 s with a full cache. Keeping half a gigabyte
+      # per upstream commit in the runner's store would buy about six seconds.
+      - name: Build
+        run: node scripts/build.mjs
+      - name: Install Chromium for the browser tests
+        run: node .work/upstream/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Install nginx for the tests against the production configuration
+        run: apt-get update && apt-get install -y --no-install-recommends nginx
+      - name: Type check and tests
+        env:
+          # tests/production.test.mjs must run here, not be skipped.
+          TEADECK_REQUIRE_NGINX: '1'
+        run: node scripts/verify.mjs
+
+      # Publishing the tested build; on main only, and only after the tests above.
+      - name: Image tag and registry credentials for the image step
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+        run: |
+          # The step below runs kaniko, not a shell: the tag has to be ready here.
+          echo "IMAGE_TAG=sha-$(echo "${{ github.sha }}" | cut -c1-12)" >> "$GITHUB_ENV"
+          mkdir -p "$GITHUB_WORKSPACE/.docker"
+          printf '{"auths":{"git.knubbel.me":{"username":"%s","password":"%s"}}}' \
+            "${{ github.repository_owner }}" "$REGISTRY_TOKEN" > "$GITHUB_WORKSPACE/.docker/config.json"
+      - name: Package the tested build as git.knubbel.me/knubbel/teadeck:sha-<commit>
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        # Daemonless image build (maintained fork of the archived Kaniko project); no Docker socket for jobs.
+        uses: docker://ghcr.io/osscontainertools/kaniko:v1.28.4-debug
+        env:
+          DOCKER_CONFIG: ${{ github.workspace }}/.docker
+        with:
+          args: >-
+            --context dir://${{ github.workspace }}
+            --dockerfile container/Dockerfile
+            --destination git.knubbel.me/knubbel/teadeck:${{ env.IMAGE_TAG }}
+            --label org.opencontainers.image.source=https://git.knubbel.me/${{ github.repository }}
+            --label org.opencontainers.image.revision=${{ github.sha }}
+      - name: Point latest at this build, if the commit is still the head of main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          REGISTRY_USER: ${{ github.repository_owner }}
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+        run: |
+          rm -rf "$GITHUB_WORKSPACE/.docker"
+          node scripts/promote_image.mjs --image git.knubbel.me/knubbel/teadeck \
+            --from "$IMAGE_TAG" --to latest \
+            --commit "${{ github.sha }}" --branch main

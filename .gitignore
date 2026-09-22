@@ -1,0 +1,13 @@
+.work/
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+# Browser network exports contain access tokens.
+*.har
+# Custom deployment logos (see compose.yml.example).
+/logo/
+
+# Each deployment keeps its own copy of compose.yml.example (its image, ports and volumes).
+/compose.yml

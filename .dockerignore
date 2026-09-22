@@ -1,0 +1,14 @@
+.git
+.work
+# The image packages what the Node build produced (scripts/build.mjs).
+!.work/image
+node_modules
+.env*
+!.env.example
+# Network exports and deployment-only files must never reach the build context.
+*.har
+**/*.har
+logo
+*.pem
+*.key
+npm-debug.log*
