@@ -56,14 +56,16 @@ jobs:
       - name: Push the tested lock update for review
         id: push
         if: steps.resolve.outputs.changed == 'true'
+        env:
+          RELEASE: ${{ steps.resolve.outputs.release }}
         run: |
-          branch="upstream/${{ steps.resolve.outputs.release }}"
+          branch="upstream/$RELEASE"
           git config user.name "Teadeck upstream update"
           git config user.email "actions@git.knubbel.me"
           git checkout -b "$branch"
           git add upstream.lock.json
           {
-            echo "chore: update Mastodon upstream to ${{ steps.resolve.outputs.release }}"
+            echo "chore: update Mastodon upstream to $RELEASE"
             echo
             echo "Patches applied; build, type check, Teadeck's and Mastodon's web client tests passed in CI."
             echo "Review the upstream changes at integration points below before merging."

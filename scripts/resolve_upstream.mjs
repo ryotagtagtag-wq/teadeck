@@ -32,7 +32,12 @@ export function candidateFromImageConfig(config, digest) {
   const labels = config.config?.Labels ?? {};
   const commit = env.SOURCE_COMMIT || labels['org.opencontainers.image.revision'];
   if (!/^[0-9a-f]{40}$/.test(commit ?? '')) throw new Error(`Image ${digest} does not name a source commit`);
-  return { commit, release: env.MASTODON_VERSION_PRERELEASE || undefined, imageDigest: digest };
+  // Ends up in a branch name and an image tag, so only allow what both accept.
+  const release = env.MASTODON_VERSION_PRERELEASE || undefined;
+  if (release !== undefined && !/^[0-9A-Za-z][0-9A-Za-z._-]{0,63}$/.test(release)) {
+    throw new Error(`Image ${digest} names an unexpected release`);
+  }
+  return { commit, release, imageDigest: digest };
 }
 
 async function resolve() {
