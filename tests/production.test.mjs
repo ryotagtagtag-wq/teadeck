@@ -144,6 +144,7 @@ test('nginx sends the production headers: CSP allowing embedded previews, immuta
     const csp = page.headers.get('content-security-policy');
     assert.match(csp, /default-src 'none'/);
     assert.match(csp, /frame-src https:/);
+    assert.equal(page.headers.get('strict-transport-security'), 'max-age=31536000');
 
     const hashed = (await readdir(buildA)).find((file) => /^main-[A-Za-z0-9_-]{8}\.js$/.test(file));
     assert.equal((await fetch(`${server.origin}/${hashed}`)).headers.get('cache-control'), 'public, max-age=31536000, immutable');
