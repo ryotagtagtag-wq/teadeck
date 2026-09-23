@@ -31,6 +31,8 @@ jobs:
       image: node:24-bookworm
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Import upstream and apply patches
         run: node scripts/prepare.mjs
       # No cache for the dependencies on purpose: measured on 18 September 2026,
@@ -78,8 +80,12 @@ jobs:
         env:
           REGISTRY_USER: ${{ github.repository_owner }}
           REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+          REPO_TOKEN: ${{ github.token }}
         run: |
           rm -rf "$GITHUB_WORKSPACE/.docker"
+          # Only this step gets repository access (not stored in .git/config for the whole job).
+          export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0="http.https://git.knubbel.me/.extraheader"
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$REPO_TOKEN" | base64 -w0)"
           node scripts/promote_image.mjs --image git.knubbel.me/knubbel/teadeck \
             --from "$IMAGE_TAG" --to latest \
             --commit "${{ github.sha }}" --branch main

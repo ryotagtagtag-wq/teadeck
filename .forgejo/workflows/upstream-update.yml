@@ -24,6 +24,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Resolve the newest nightly
         id: resolve
         run: |
@@ -58,7 +59,11 @@ jobs:
         if: steps.resolve.outputs.changed == 'true'
         env:
           RELEASE: ${{ steps.resolve.outputs.release }}
+          REPO_TOKEN: ${{ github.token }}
         run: |
+          # Only this step gets repository access (not stored in .git/config for the whole job).
+          export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0="http.https://git.knubbel.me/.extraheader"
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$REPO_TOKEN" | base64 -w0)"
           branch="upstream/$RELEASE"
           git config user.name "Teadeck upstream update"
           git config user.email "actions@git.knubbel.me"
