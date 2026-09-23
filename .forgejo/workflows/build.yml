@@ -30,7 +30,7 @@ jobs:
     container:
       image: node:24-bookworm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
       - name: Import upstream and apply patches
@@ -65,7 +65,7 @@ jobs:
       - name: Package the tested build as git.knubbel.me/knubbel/teadeck:sha-<commit>
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         # Daemonless image build (maintained fork of the archived Kaniko project); no Docker socket for jobs.
-        uses: docker://ghcr.io/osscontainertools/kaniko:v1.28.4-debug
+        uses: docker://ghcr.io/osscontainertools/kaniko:v1.28.4-debug@sha256:716ab47e2f730a52edec6ab75a2866668012eaaa9c2d09ffec319c4a349448e3
         env:
           DOCKER_CONFIG: ${{ github.workspace }}/.docker
         with:
