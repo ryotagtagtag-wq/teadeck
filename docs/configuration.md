@@ -27,7 +27,7 @@ TEADECK_COLOR_SCHEME=auto
 | `sencha` | Sencha | Jasmine |
 | `mastodon` | Mastodon dark | Mastodon light |
 
-With `auto`, the colour scheme follows the operating system. The favicon follows the selected theme. Fonts are served by the Teadeck installation, not an external font service.
+With `auto`, the colour scheme follows the operating system. The favicon follows the selected theme.
 
 ## Custom logo
 
@@ -41,20 +41,16 @@ Use a filename, not a path. The file must be readable by the container. If neith
 
 A regular SVG is shown as an image. To let its colours follow the theme, add `data-teadeck-logo` to the root `<svg>` element and use the CSS variables shown in [teacup-flat.svg](../integration/logos/teacup-flat.svg). Such files are sanitised and inserted into the page. Only use trusted logos.
 
-A logo or default-theme change does not need a new image build. The container reads these settings at startup; open pages need a reload to pick them up.
-
-For contributors: theme variables live in `integration/themes.css`, logo colour roles in `integration/shell.css`. The glass and ceramic drawings are generated with `node scripts/teacup.mjs --write`.
+The container reads these settings at startup; open pages need a reload to pick them up.
 
 ## Personal settings
 
 Open **Settings** to change layout, appearance, language and notification filters for the current account. These choices stay in this browser. Some apply immediately; others offer a reload because Mastodon reads them only at startup.
 
-The time-zone selection is currently saved but does not change displayed times, which still follow the browser's time zone.
-
 ## Markdown
 
 The Markdown button is next to the emoji picker below the compose field. It is highlighted when Markdown is selected; click it to switch between Markdown and plain text. Teadeck remembers an override per account. Choosing the account's default again clears that override so later changes to the server-side default can take effect.
 
-When editing a post, Teadeck uses its original format if the server supplies it. If the format is missing, it follows the account default.
+When editing a post, Teadeck keeps the post's original format.
 
-The button appears only if the server explicitly advertises both `text/plain` and `text/markdown` in `configuration.statuses.supported_mime_types`. The server's name alone does not enable it. If support is not advertised, Teadeck sends no format override, even if an old choice is saved locally.
+The button appears only if the server advertises both `text/plain` and `text/markdown`, as GoToSocial does.

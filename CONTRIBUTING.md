@@ -2,7 +2,7 @@
 
 ## Set up
 
-Use Linux with Node.js 24.2 or newer, npm, Corepack, Git and GNU tar. CI uses Node 24. On Windows, use a Linux environment such as WSL. On macOS, GNU tar must be available as `tar` on your PATH. The project Dockerfile packages an existing build; it is not a replacement for the build tools.
+Use Linux with Node.js 24.2 or newer, npm, Corepack, Git and GNU tar. On Windows, use WSL. On macOS, GNU tar must be available as `tar` on your PATH.
 
 If Corepack is missing, install it first:
 
@@ -17,7 +17,7 @@ npm run doctor
 npm run build:fresh
 ```
 
-The root project has no npm dependencies, so you do not need to run `npm install` here. The build uses the Yarn version in `upstream.lock.json` and Mastodon's dependency lockfile. The first build needs internet access and several GB of free disk space.
+The first build needs internet access and several GB of free disk space.
 
 ## Make changes
 
@@ -35,9 +35,7 @@ To write or update a patch, change the file in `.work/upstream`, then save the d
 git -C .work/upstream diff -- <file> | grep -v '^index ' > patches/<nn>-<name>.patch
 ```
 
-Those lines name the hashes of the file contents a diff was taken from. `git apply` matches patches by their context lines and ignores them, so they only go stale as Mastodon moves on. `tests/ci_scripts.test.mjs` keeps them out.
-
-`build` copies the current integration files, installs dependencies with `yarn install --immutable`, and creates `dist/`, the source archive and `.work/image/` assets. Changes to the patch set require a fresh preparation. The test command rejects a build whose recorded inputs no longer match the source files.
+`git apply` does not need those lines, and they go stale as Mastodon moves on.
 
 ## Tests
 
@@ -69,7 +67,7 @@ node tests/service_worker.test.mjs
 node tests/production.test.mjs
 ```
 
-Browser tests use simulated server APIs. They do not replace testing with a real account on a known server version. Never include access tokens, private posts or unredacted network captures in fixtures or issues.
+Never include access tokens, private posts or unredacted network captures in fixtures or issues.
 
 ## Package an image
 
@@ -79,10 +77,10 @@ After a successful build and test run:
 docker build -f container/Dockerfile -t teadeck:local .
 ```
 
-Keep both `dist/` and `.work/image/` in the checkout: the Dockerfile needs both. It does not run the build or tests itself. Rebuild after source changes before packaging an image.
+The Dockerfile packages the existing build, so build and test first.
 
 ## Submit a change
 
-Describe the problem, the resulting behaviour and the tests you ran. Optional server features should use evidence from the API; a server name alone is not enough to enable a posting option.
+Describe the problem, the resulting behaviour and the tests you ran. Detect optional server features from the API, not from the server's name.
 
 See [SECURITY.md](SECURITY.md) for security reports.

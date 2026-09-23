@@ -10,7 +10,7 @@ Teadeck is still in active development and has no stable release yet.
 
 Open a Teadeck installation, enter your server's address and sign in on your server. Choose **Stay signed in** if you want to save the account in this browser. You can add more accounts and switch between them, each with its own theme and settings.
 
-Your browser talks directly to your Mastodon or GoToSocial server. The Teadeck host only serves the web app; it needs no database or API proxy.
+Your browser talks directly to your Mastodon or GoToSocial server.
 
 Unsent posts are not saved across reloads or account switches. Copy anything you want to keep first.
 
@@ -21,13 +21,13 @@ The Teadeck host supplies the JavaScript running in your browser, and that code 
 - OAuth uses PKCE. Authenticated API requests are restricted to the selected server, and redirects are rejected.
 - Sign-in tokens stay in session storage, or also in IndexedDB when you choose **Stay signed in**. Preferences are saved in local storage. Code running on the same origin can read all of it.
 - Post HTML comes from your server. Its content sanitisation and Teadeck's Content Security Policy both matter.
-- The service worker caches application files, not API responses. Reverting a container does not automatically revert browser data or every open tab.
+- The service worker caches application files, not API responses.
 
 ## Deploying
 
 ### Docker Compose
 
-The easiest way to run Teadeck is with the published container image. You need Docker and Compose; Node and Yarn are not needed for this.
+The easiest way to run Teadeck is with the published container image. You need Docker and Compose.
 
 Download [compose.yml.example](compose.yml.example) and [.env.example](.env.example) into the same directory, then run:
 
@@ -51,9 +51,9 @@ With either method, serve Teadeck at the root of a domain, not under a path such
 
 ## Building
 
-Teadeck is not a fork. The build fetches the Mastodon commit pinned in [upstream.lock.json](upstream.lock.json), applies the changes in [patches/](patches/) on top and adds the integration code in [integration/](integration/).
+The build fetches the Mastodon commit pinned in [upstream.lock.json](upstream.lock.json), applies the changes in [patches/](patches/) on top and adds the integration code in [integration/](integration/).
 
-You need a full checkout, **Node.js 24.2 or newer**, npm, Corepack, Git and GNU tar. CI uses Node 24 on Linux. The first build downloads Mastodon and its dependencies, so allow several GB of disk space.
+You need a full checkout, **Node.js 24.2 or newer**, npm, Corepack, Git and GNU tar. The first build downloads Mastodon and its dependencies, so allow several GB of disk space.
 
 From the repository directory, run:
 
@@ -68,8 +68,6 @@ The finished web app is in `dist/`. To package your build in a container and run
 mkdir -p logo
 docker compose -f compose.yml.example -f compose.build.yml up -d --build
 ```
-
-Run the Node build first: the Dockerfile packages `dist/` and `.work/image/`, which the build creates.
 
 For development and tests, see [Contributing](CONTRIBUTING.md).
 
