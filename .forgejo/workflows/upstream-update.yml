@@ -1,7 +1,8 @@
 # Weekly: does Teadeck still build and pass its tests on Mastodon's newest nightly?
-# If so, the updated upstream.lock.json is pushed to a branch `upstream/<release>` for review and an
-# image tagged with the release (e.g. `nightly.2026-09-15`, never `latest`) is published to try it;
+# If so, the updated upstream.lock.json is pushed to a branch `upstream/<release>` for review;
 # if patches no longer apply or tests fail, the run fails (and nothing is pushed).
+# This job runs code nobody has reviewed yet, so it never gets the registry token: images are
+# published only by build.yml, after the update is merged.
 # Tests include Mastodon's own web client tests. A green run does not prove that security fixes
 # reach Teadeck: the commit message lists upstream changes at Teadeck's integration points
 # (scripts/upstream_report.mjs) for review before merging. Security advisories are checked
@@ -54,7 +55,6 @@ jobs:
           node scripts/upstream_report.mjs "${{ steps.resolve.outputs.previous }}" "$(node -p 'require("./upstream.lock.json").commit')" > /tmp/upstream-report.md
           cat /tmp/upstream-report.md
       - name: Push the tested lock update for review
-        id: push
         if: steps.resolve.outputs.changed == 'true'
         env:
           RELEASE: ${{ steps.resolve.outputs.release }}
@@ -74,30 +74,3 @@ jobs:
           } > /tmp/commit-message
           git commit -F /tmp/commit-message
           git push origin "$branch"
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-      # The Dockerfile packages dist/ and .work/image/ from the build above.
-      # A separate Git checkout would not contain either directory.
-      - name: Prepare registry credentials for the candidate image
-        if: steps.resolve.outputs.changed == 'true'
-        env:
-          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
-        run: |
-          mkdir -p "$GITHUB_WORKSPACE/.docker"
-          printf '{"auths":{"git.knubbel.me":{"username":"%s","password":"%s"}}}' \
-            "${{ github.repository_owner }}" "$REGISTRY_TOKEN" > "$GITHUB_WORKSPACE/.docker/config.json"
-      - name: Package the tested candidate image
-        if: steps.resolve.outputs.changed == 'true'
-        uses: docker://ghcr.io/osscontainertools/kaniko:v1.28.4-debug
-        env:
-          DOCKER_CONFIG: ${{ github.workspace }}/.docker
-        with:
-          args: >-
-            --context dir://${{ github.workspace }}
-            --dockerfile container/Dockerfile
-            --destination git.knubbel.me/knubbel/teadeck:${{ steps.resolve.outputs.release }}
-            --label org.opencontainers.image.source=https://git.knubbel.me/${{ github.repository }}
-            --label org.opencontainers.image.revision=${{ steps.push.outputs.sha }}
-      - name: Remove candidate registry credentials
-        if: always()
-        run: rm -rf "$GITHUB_WORKSPACE/.docker"
