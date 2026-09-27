@@ -87,3 +87,62 @@ test('posts for a "#tag" search come from the hashtag timeline and page by max_i
   assert.deepEqual(pageErrors, []);
   await context.close();
 });
+
+test('a link pasted into the compose form is looked up without an error', { timeout: 60_000 }, async () => {
+  const context = await browser.newContext({ locale: 'de-DE' });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  // Exceptions only: 404s for resources the fake server doesn't have are expected.
+  page.on('console', (message) => {
+    if (message.type() === 'error' && !message.text().startsWith('Failed to load resource')) errors.push(message.text());
+  });
+  const searches = [];
+
+  await context.route('https://mastodon.test/**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const cors = { 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
+    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
+    if (url.pathname === '/oauth/authorize') {
+      const callback = new URL('/oauth/callback', origin);
+      callback.search = new URLSearchParams({ code: 'browser-code', state: url.searchParams.get('state') ?? '' });
+      return route.fulfill({ contentType: 'text/html', body: `<script>location.replace(${JSON.stringify(callback.href)})</script>` });
+    }
+    const json = (body, statusCode = 200) => route.fulfill({ status: statusCode, contentType: 'application/json', headers: cors, body: JSON.stringify(body) });
+    if (url.pathname === '/api/v1/apps') return json({ client_id: 'browser-client', client_secret: 'browser-secret' });
+    if (url.pathname === '/oauth/token') return json({ access_token: 'browser-token', token_type: 'Bearer', scope: 'read write follow' });
+    if (url.pathname === '/api/v2/instance') return json(instance);
+    if (url.pathname === '/api/v1/accounts/verify_credentials') return json(account);
+    if (url.pathname === '/api/v1/preferences') return json({});
+    if (url.pathname === '/api/v1/timelines/home') return json([status]);
+    if (url.pathname === '/api/v2/notifications') return json({ notification_groups: [], accounts: [], statuses: [] });
+    if (url.pathname === '/api/v2/notifications/policy') return json(null, 404);
+    if (url.pathname === '/api/v2/search') {
+      searches.push(url.searchParams.get('q'));
+      return json({ accounts: [], statuses: [], hashtags: [] });
+    }
+    return json([]);
+  });
+
+  await page.goto(origin);
+  await page.locator('#teadeck-instance').fill('mastodon.test');
+  await page.locator('#teadeck-login button[type=submit]').click();
+  await page.getByText(timelineText).waitFor();
+
+  // Upstream's compose form hands the search a URL object, not a string.
+  const link = 'https://git.knubbel.me/knubbel/teadeck';
+  const compose = page.getByPlaceholder('Was gibts Neues?');
+  await compose.click();
+  await compose.evaluate((field, text) => {
+    const data = new DataTransfer();
+    data.setData('text/plain', text);
+    field.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+  }, link);
+
+  for (let attempt = 0; attempt < 100 && searches.length === 0; attempt++) await new Promise((r) => setTimeout(r, 50));
+  assert.deepEqual(searches, [link]);
+  await page.waitForTimeout(1000); // the answer is processed after the request
+  assert.deepEqual(errors, []);
+  await context.close();
+});
