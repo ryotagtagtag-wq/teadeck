@@ -6,7 +6,8 @@ import { account, instance, status, timelineText } from './fixtures.mjs';
 import { createStaticServer } from './server.mjs';
 
 const replyText = 'A reply shown in the thread 5c1e';
-const reply = { ...status, id: '101', in_reply_to_id: status.id, in_reply_to_account_id: account.id, content: `<p>${replyText}</p>` };
+const longParagraphs = Array.from({ length: 60 }, (_, index) => `<p>Line ${index} of a long reply</p>`).join('');
+const reply = { ...status, id: '101', in_reply_to_id: status.id, in_reply_to_account_id: account.id, content: `<p>${replyText}</p>${longParagraphs}` };
 
 let server;
 let origin;
@@ -43,6 +44,8 @@ test('a post opens with its thread in an overlay, from its own button or, when c
     else if (url.pathname === '/api/v1/timelines/home') body = [status];
     else if (url.pathname === `/api/v1/statuses/${status.id}`) body = status;
     else if (url.pathname === `/api/v1/statuses/${status.id}/context`) body = { ancestors: [], descendants: [reply] };
+    else if (url.pathname === `/api/v1/statuses/${reply.id}`) body = reply;
+    else if (url.pathname === `/api/v1/statuses/${reply.id}/context`) body = { ancestors: [status], descendants: [] };
     else if (url.pathname === '/api/v2/notifications') body = { notification_groups: [], accounts: [], statuses: [] };
     else if (url.pathname === '/api/v2/notifications/policy') body = {
       for_not_following: 'accept', for_not_followers: 'accept', for_new_accounts: 'accept',
@@ -68,6 +71,12 @@ test('a post opens with its thread in an overlay, from its own button or, when c
   await overlay.getByText(replyText).waitFor();
   assert.equal(await overlay.getByText(timelineText).count() > 0, true);
   assert.equal(new URL(page.url()).pathname, home);
+
+  // A long reply in the thread is shown in full in the overlay, not in the post view behind it.
+  await overlay.locator('.status__content__read-more-button').first().click();
+  await overlay.locator('.detailed-status').getByText('Line 59 of a long reply').waitFor();
+  assert.equal(new URL(page.url()).pathname, home);
+
   await overlay.getByRole('button', { name: 'Close' }).click();
   await overlay.waitFor({ state: 'detached' });
   assert.equal(new URL(page.url()).pathname, home);

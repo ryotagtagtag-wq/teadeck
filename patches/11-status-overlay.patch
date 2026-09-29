@@ -55,3 +55,25 @@ diff --git a/app/javascript/mastodon/features/ui/components/modal_root.jsx b/app
  };
  
  /** @param {keyof import('@/mastodon/features/account_edit/modals')} type */
+diff --git a/app/javascript/mastodon/components/status.jsx b/app/javascript/mastodon/components/status.jsx
+--- a/app/javascript/mastodon/components/status.jsx
++++ b/app/javascript/mastodon/components/status.jsx
+@@ -34,6 +34,7 @@ import { StatusThreadLabel } from './status_thread_label';
+ import { CollectionPreviewCard } from '../features/collections/components/collection_preview_card';
+ import { compareUrls } from '../utils/compare_urls';
+ import { FOCUS_TARGET } from './navigation_focus_target';
++import { openInActiveStatusOverlay } from '@/teadeck/status_overlay';
+ 
+ const domParser = new DOMParser();
+ 
+@@ -302,6 +303,10 @@ class Status extends ImmutablePureComponent {
+     const { history } = this.props;
+     const status = this._properStatus();
+ 
++    if (!newTab && openInActiveStatusOverlay(status.get('id'))) {
++      return;
++    }
++
+     if (!history) {
+       return;
+     }

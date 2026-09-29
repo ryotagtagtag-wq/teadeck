@@ -43,13 +43,29 @@ function subscribe(listener: () => void) {
   return () => { listeners.delete(listener); };
 }
 
-export function useStatusOverlayEnabled(): boolean {
+function useStatusOverlayEnabled(): boolean {
   return useSyncExternalStore(subscribe, statusOverlayEnabled);
 }
 
-export function useOpenStatusOverlay() {
+// Set while an overlay is open: posts opened meanwhile are shown in it.
+let showInOverlay: ((statusId: string) => void) | undefined;
+
+export function registerStatusOverlay(show: (statusId: string) => void) {
+  showInOverlay = show;
+  return () => { if (showInOverlay === show) showInOverlay = undefined; };
+}
+
+/** Shows the post in the open overlay; `false` when none is open. */
+export function openInActiveStatusOverlay(statusId: string): boolean {
+  if (!showInOverlay) return false;
+  showInOverlay(statusId);
+  return true;
+}
+
+function useOpenStatusOverlay() {
   const dispatch = useAppDispatch();
   return useCallback((statusId: string) => {
+    if (openInActiveStatusOverlay(statusId)) return;
     dispatch(openModal({ modalType: 'TEADECK_STATUS', modalProps: { statusId } }));
   }, [dispatch]);
 }

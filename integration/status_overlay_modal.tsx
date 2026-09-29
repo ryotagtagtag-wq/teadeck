@@ -3,7 +3,7 @@
  * in the middle of the window. Opened through status_overlay.tsx.
  */
 
-import { forwardRef, useCallback, useEffect } from 'react';
+import { forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { useHistory } from 'react-router-dom';
 
@@ -12,15 +12,18 @@ import { IconButton } from '@/mastodon/components/icon_button';
 import Status from '@/mastodon/features/status';
 
 import { currentUiTextLocale, t } from './settings_strings';
+import { registerStatusOverlay } from './status_overlay';
 
 // Upstream's post view takes the post from its route; here it is given directly.
 const StatusView = Status as unknown as React.ComponentType<{ params: { statusId: string }; multiColumn: boolean }>;
 
-const StatusOverlayModal = forwardRef<HTMLDivElement, { statusId: string; onClose: () => void }>(({ statusId, onClose }, ref) => {
+const StatusOverlayModal = forwardRef<HTMLDivElement, { statusId: string; onClose: () => void }>(({ statusId: openedId, onClose }, ref) => {
   const history = useHistory();
+  // Posts opened from inside the overlay ("Read more", the thread) are shown here too.
+  const [statusId, setStatusId] = useState(openedId);
+  useEffect(() => registerStatusOverlay(setStatusId), []);
 
-  // Modals close by themselves only when going back. Following a link inside
-  // the overlay (a profile, a hashtag, another post) leaves it behind instead.
+  // Modals close by themselves only when going back; following a link leaves the overlay too.
   useEffect(() => {
     const opened = history.location.pathname;
     return history.listen((location) => {
