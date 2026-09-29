@@ -60,6 +60,12 @@ test('a post opens with its thread in an overlay, from its own button or, when c
   await page.waitForURL(`${origin}/@${account.acct}/${status.id}`);
   assert.equal(await overlay.count(), 0);
 
+  // Opened from a post view that is already on screen: both show a thread.
+  await page.locator('.status').filter({ hasText: replyText }).getByRole('button', { name: 'Open in overlay' }).click();
+  await overlay.locator('.detailed-status').getByText(replyText).waitFor();
+  await page.keyboard.press('Escape');
+  await overlay.waitFor({ state: 'detached' });
+
   // On: the time opens the overlay, and the extra button is gone.
   await page.locator('a[href="/preferences"]').first().click();
   await page.locator('#teadeck-settings-status-overlay').check();

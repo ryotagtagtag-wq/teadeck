@@ -77,3 +77,23 @@ diff --git a/app/javascript/mastodon/components/status.jsx b/app/javascript/mast
      if (!history) {
        return;
      }
+diff --git a/app/javascript/mastodon/features/status/index.jsx b/app/javascript/mastodon/features/status/index.jsx
+--- a/app/javascript/mastodon/features/status/index.jsx
++++ b/app/javascript/mastodon/features/status/index.jsx
+@@ -144,6 +144,7 @@ class Status extends ImmutablePureComponent {
+     intl: PropTypes.object.isRequired,
+     askReplyConfirmation: PropTypes.bool,
+     multiColumn: PropTypes.bool,
++    scrollKey: PropTypes.string,
+     domain: PropTypes.string.isRequired,
+     pictureInPicture: ImmutablePropTypes.contains({
+       inUse: PropTypes.bool,
+@@ -612,7 +613,7 @@ class Status extends ImmutablePureComponent {
+           />
+         )}
+ 
+-        <ScrollContainer scrollKey='thread' shouldUpdateScroll={this.shouldUpdateScroll} childRef={this.setContainerRef}>
++        <ScrollContainer scrollKey={this.props.scrollKey ?? 'thread'} shouldUpdateScroll={this.shouldUpdateScroll} childRef={this.setContainerRef}>
+           <div className={classNames('item-list scrollable scrollable--flex', { fullscreen })} ref={this.setContainerRef}>
+             {ancestors}
+ 

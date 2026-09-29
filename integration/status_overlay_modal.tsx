@@ -15,7 +15,7 @@ import { currentUiTextLocale, t } from './settings_strings';
 import { registerStatusOverlay } from './status_overlay';
 
 // Upstream's post view takes the post from its route; here it is given directly.
-const StatusView = Status as unknown as React.ComponentType<{ params: { statusId: string }; multiColumn: boolean }>;
+const StatusView = Status as unknown as React.ComponentType<{ params: { statusId: string }; multiColumn: boolean; scrollKey: string }>;
 
 const StatusOverlayModal = forwardRef<HTMLDivElement, { statusId: string; onClose: () => void }>(({ statusId: openedId, onClose }, ref) => {
   const history = useHistory();
@@ -36,7 +36,8 @@ const StatusOverlayModal = forwardRef<HTMLDivElement, { statusId: string; onClos
 
   return (
     <div ref={ref} className='modal-root__modal teadeck-status-overlay' role='dialog' aria-modal='true'>
-      <StatusView params={{ statusId }} multiColumn />
+      {/* Its own scroll key: a post view may already be open behind the overlay. */}
+      <StatusView params={{ statusId }} multiColumn scrollKey='teadeck-status-overlay' />
       <IconButton className='teadeck-status-overlay__close' title={t('close', currentUiTextLocale())} icon='times' iconComponent={CloseIcon} onClick={close} />
     </div>
   );
