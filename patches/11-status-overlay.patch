@@ -1,0 +1,57 @@
+diff --git a/app/javascript/mastodon/components/status/header.tsx b/app/javascript/mastodon/components/status/header.tsx
+--- a/app/javascript/mastodon/components/status/header.tsx
++++ b/app/javascript/mastodon/components/status/header.tsx
+@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
+ import type { Account, AccountShapeFull } from '@/mastodon/models/account';
+ import { selectAccountStatus } from '@/mastodon/selectors/statuses';
+ import { useAppSelector } from '@/mastodon/store';
++import { useStatusTimeClick } from '@/teadeck/status_overlay';
+ 
+ import { Avatar } from '../avatar';
+ import { AvatarOverlay } from '../avatar_overlay';
+@@ -44,6 +45,7 @@ export const StatusHeader: FC<StatusHeaderProps> = ({
+   const status = useAppSelector((state) =>
+     selectAccountStatus(state, statusId),
+   );
++  const handleTimeClick = useStatusTimeClick(statusId);
+   if (!status) {
+     return null;
+   }
+@@ -70,6 +72,7 @@ export const StatusHeader: FC<StatusHeaderProps> = ({
+       <Link
+         to={`/@${statusAccount.acct}/${status.id}`}
+         className='status__relative-time'
++        onClick={handleTimeClick}
+       >
+         <span className='status__visibility-icon'>
+           <VisibilityIcon visibility={status.visibility} />
+diff --git a/app/javascript/mastodon/components/status_action_bar/index.jsx b/app/javascript/mastodon/components/status_action_bar/index.jsx
+--- a/app/javascript/mastodon/components/status_action_bar/index.jsx
++++ b/app/javascript/mastodon/components/status_action_bar/index.jsx
+@@ -28,6 +28,7 @@ import { BoostButton } from '../status/boost_button';
+ import { RemoveQuoteHint } from './remove_quote_hint';
+ import { quoteItemState } from '../status/boost_button_utils';
+ import { selectStatusConditions } from '@/mastodon/selectors/statuses';
++import { StatusOverlayButton } from '@/teadeck/status_overlay';
+ 
+ 
+ const messages = defineMessages({
+@@ -403,6 +404,7 @@ class StatusActionBar extends ImmutablePureComponent {
+         <div className='status__action-bar__button-wrapper'>
+           <IconButton className='status__action-bar__button bookmark-icon' disabled={!signedIn} active={status.get('bookmarked')} title={bookmarkTitle} icon='bookmark' iconComponent={status.get('bookmarked') ? BookmarkIcon : BookmarkBorderIcon} onClick={this.handleBookmarkClick} />
+         </div>
++        <StatusOverlayButton statusId={status.get('id')} />
+         <RemoveQuoteHint className='status__action-bar__button-wrapper' canShowHint={shouldShowQuoteRemovalHint}>
+           {(dismissQuoteHint) => (
+             <Dropdown
+diff --git a/app/javascript/mastodon/features/ui/components/modal_root.jsx b/app/javascript/mastodon/features/ui/components/modal_root.jsx
+--- a/app/javascript/mastodon/features/ui/components/modal_root.jsx
++++ b/app/javascript/mastodon/features/ui/components/modal_root.jsx
+@@ -112,6 +112,7 @@ export const MODAL_COMPONENTS = {
+   'COMPOSER_ADD_QUOTE': () => import('@/mastodon/features/compose/redesign/modal_quote'),
+   'NOTIFICATION_SETTINGS': () => import('@/mastodon/features/notifications_v2/components/notification_settings_modal'),
+   'HASHTAG_SETTINGS': () => import('@/mastodon/features/hashtag_timeline/components/column_settings_modal'),
++  'TEADECK_STATUS': () => import('@/teadeck/status_overlay_modal'),
+ };
+ 
+ /** @param {keyof import('@/mastodon/features/account_edit/modals')} type */

@@ -26,6 +26,13 @@ export const settingsStrings = {
   layout: { de: 'Layout', en: 'Layout' },
   layoutSimple: { de: 'Einspaltig', en: 'Single column' },
   layoutAdvanced: { de: 'Mehrspaltig', en: 'Multiple columns' },
+  statusOverlay: { de: 'Beiträge im Overlay öffnen', en: 'Open posts in an overlay' },
+  statusOverlayHint: {
+    de: 'Ein Klick auf die Zeit eines Beitrags zeigt ihn mit seinem Verlauf groß in der Fenstermitte. Ausgeschaltet öffnet die Zeit die Beitragsansicht wie bisher, und jeder Beitrag bekommt einen eigenen Knopf für das Overlay.',
+    en: "Clicking a post's time shows it and its thread large in the middle of the window. When off, the time opens the post view as before, and each post gets a button of its own for the overlay.",
+  },
+  openInOverlay: { de: 'Im Overlay öffnen', en: 'Open in overlay' },
+  close: { de: 'Schließen', en: 'Close' },
 
   displayMedia: { de: 'Medien', en: 'Media' },
   displayMediaDefault: { de: 'Als heikel markierte ausblenden', en: 'Hide media marked as sensitive' },

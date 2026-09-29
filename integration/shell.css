@@ -53,3 +53,23 @@ body > [hidden], #teadeck-shell [hidden] { display: none !important; }
 /* Bottom right, clear of Mastodon's own alerts at the bottom left. Unlike those, the
    update notice stays until the page is reloaded; upstream's disappear after five seconds. */
 #teadeck-update { inset-inline-start: auto; inset-inline-end: 1rem; }
+/* A post with its thread, large in the middle of the window (status_overlay_modal.tsx). */
+.teadeck-status-overlay {
+  position: relative;
+  flex-direction: column;
+  width: min(960px, calc(100vw - 32px));
+  height: calc(100dvh - 64px);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  background: var(--color-bg-primary);
+}
+.teadeck-status-overlay > .column { flex: 1; width: 100%; max-width: none; min-height: 0; }
+.teadeck-status-overlay > .column > .scrollable,
+.teadeck-status-overlay .scrollable { overflow-y: auto; }
+.teadeck-status-overlay .column-header__back-button { display: none; }
+.teadeck-status-overlay .column-header { padding-inline-end: 48px; }
+.teadeck-status-overlay__close.icon-button { position: absolute; top: 12px; inset-inline-end: 12px; z-index: 10; }
+@media (width <= 630px) {
+  .teadeck-status-overlay { width: 100vw; height: 100dvh; border: 0; border-radius: 0; }
+}

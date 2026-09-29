@@ -34,6 +34,7 @@ import { frontendSettingsKey, resolveFrontendSettings } from './frontend_setting
 import type { NotificationShows } from './notification_settings';
 import { readNotificationShows } from './notification_settings';
 import { t, uiTextLocale } from './settings_strings';
+import { setStatusOverlayEnabled, statusOverlayEnabled } from './status_overlay';
 import { readSettings, readPreference, writePreference } from './storage';
 import { availableLocales } from './ui_locale';
 
@@ -102,6 +103,7 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
   const [advancedLayout, setAdvancedLayout] = useState(() => readPreference('advancedLayout', !forceSingleColumn));
   const [uiLocale, setUiLocale] = useState(() => document.documentElement.lang || 'en');
   const locale = uiTextLocale(uiLocale);
+  const [statusOverlay, setStatusOverlay] = useState(statusOverlayEnabled);
   const [timezone, setTimezone] = useState(() => readPreference('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone));
   const [notifications, setNotifications] = useState<NotificationShows>(() => readNotificationShows(readSettings()));
 
@@ -217,6 +219,12 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
     setReloadNeeded(true);
   }, []);
 
+  // Takes effect at once, in every post already on screen.
+  const handleStatusOverlay = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setStatusOverlay(event.target.checked);
+    setStatusOverlayEnabled(event.target.checked);
+  }, []);
+
   const reloadNow = useCallback(() => {
     location.assign(advancedLayout ? '/deck/preferences' : '/preferences');
   }, [advancedLayout]);
@@ -239,6 +247,15 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
             <option value='simple'>{t('layoutSimple', locale)}</option>
             <option value='advanced'>{t('layoutAdvanced', locale)}</option>
           </SelectField>
+
+          <ToggleField
+            id='teadeck-settings-status-overlay'
+            name='statusOverlay'
+            label={t('statusOverlay', locale)}
+            hint={t('statusOverlayHint', locale)}
+            checked={statusOverlay}
+            onChange={handleStatusOverlay}
+          />
 
           <SelectField id='teadeck-settings-locale' label={t('language', locale)} value={uiLocale} onChange={handleLocale}>
             {availableLocales.map(code => (
