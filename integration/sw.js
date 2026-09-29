@@ -1,31 +1,11 @@
 /*
- * Teadeck offline service worker. Once installed, the app starts and runs
- * without the Teadeck web server: only the chosen instance must be reachable.
- *
- * scripts/build.mjs copies this file to dist/sw.js and replaces the version
- * placeholder; the file list lives in dist/offline-<version>.json
- * (see scripts/offline_manifest.mjs for what goes into which list). The
- * version covers every listed file, this worker and the web server's header
- * configuration, so a deploy that only changes headers (e.g. the CSP) still
- * installs a new worker, which stores index.html with its new headers.
- * - core: cached per version during install; the new version only takes over
- *   once complete.
- * - background: emoji images and illustrations, filled after the app has
- *   started (the page asks for it), a few requests at a time.
- * - onDemand: per-language files (translations, emoji data), OCR, legacy
- *   fonts; cached the first time they are used. Files the page loaded before
- *   this worker controlled it (first start) are reported by the page and
- *   cached before the background list.
- * Every file is checked against its content hash from the manifest before it
- * is stored, so a changed file under an unchanged name (e.g. emoji/1f600.svg)
- * is replaced, and a deploy that happens mid-install cannot mix two builds:
- * the install fails and is retried instead.
- *
- * Tabs keep running on the version they started with: a new worker takes
- * over all tabs (the one that asked reloads, the others offer "Neu laden"),
- * but an older version's files stay cached while a tab that started with it
- * is still open, so its lazily loaded views keep working after the web server
- * dropped them. Each page load records which version it got.
+ * Offline service worker: once installed, the app starts without the Teadeck
+ * web server. scripts/offline_manifest.mjs decides which files are cached when:
+ * - core: during install; a new version takes over only once complete.
+ * - background: emoji and illustrations, after the app has started.
+ * - onDemand: languages, emoji data, OCR; cached on first use.
+ * Every file is checked against its hash in the manifest, so two builds are
+ * never mixed. Open tabs keep the version they started with until reloaded.
  */
 
 const VERSION = '__TEADECK_OFFLINE_VERSION__';
@@ -76,7 +56,7 @@ async function hashOf(buffer) {
  * stored under the previous version's hash and mix two builds.
  */
 async function verified(response, path, hash) {
-  if (!hash) return response; // A manifest without hashes (a build from before this check).
+  if (!hash) return response;
   const buffer = await response.arrayBuffer();
   const actual = await hashOf(buffer);
   if (actual !== hash) throw new Error(`${path}: content ${actual} does not match ${hash} from the manifest (deployed while loading?)`);
@@ -92,7 +72,6 @@ async function storeResponse(cache, path, hash, requestInit = requestInitFor(pat
 }
 
 function hashMatches(response, hash) {
-  // Entries of manifests without hashes (older builds) match by name only.
   return Boolean(response) && (!hash || response.headers.get(HASH_HEADER) === hash);
 }
 
