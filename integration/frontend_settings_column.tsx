@@ -35,16 +35,12 @@ import type { NotificationShows } from './notification_settings';
 import { readNotificationShows } from './notification_settings';
 import { t, uiTextLocale } from './settings_strings';
 import { setStatusOverlayEnabled, statusOverlayEnabled } from './status_overlay';
-import { readSettings, readPreference, writePreference } from './storage';
+import { readObjectPreference, readSettings, readPreference, writePreference } from './storage';
 import { availableLocales } from './ui_locale';
 
 type BooleanSettingKey = Exclude<keyof FrontendSettings, 'displayMedia' | 'colorScheme' | 'contrast' | 'emojiStyle' | 'theme'>;
 
-/** A stored object, or nothing if what is stored is not one. */
-function storedChoices(): Record<string, unknown> {
-  const stored = readPreference<unknown>(frontendSettingsKey, {});
-  return stored && typeof stored === 'object' && !Array.isArray(stored) ? stored as Record<string, unknown> : {};
-}
+const storedChoices = () => readObjectPreference(frontendSettingsKey);
 
 /**
  * The settings as they are when the page opens - not as they were when this

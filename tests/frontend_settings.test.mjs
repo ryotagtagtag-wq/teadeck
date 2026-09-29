@@ -8,7 +8,7 @@ import {
   layoutStartPath,
   resolveFrontendSettings,
 } from '../integration/frontend_settings.ts';
-import { defaultNotificationShows, readNotificationShows, withNotificationShows } from '../integration/notification_settings.ts';
+import { defaultNotificationShows, readNotificationShows } from '../integration/notification_settings.ts';
 import { detectLocale, isRtlLocale, resolveLocale } from '../integration/ui_locale.ts';
 import { account, instance, status, timelineText } from './fixtures.mjs';
 import { createStaticServer } from './server.mjs';
@@ -76,20 +76,11 @@ test('the UI language list resolves the closest available translation, else Engl
   assert.equal(isRtlLocale('de'), false);
 });
 
-test('notification shows default to upstream\'s own local settings and merge without clobbering other keys', () => {
+test('notification shows default to upstream\'s own local settings', () => {
   assert.deepEqual(readNotificationShows({}), defaultNotificationShows);
   assert.deepEqual(readNotificationShows({ notifications: { shows: { follow: false, bogus: true } } }), {
     ...defaultNotificationShows, follow: false,
   });
-
-  const merged = withNotificationShows(
-    { columns: ['HOME'], notifications: { shows: { follow: true }, sounds: { follow: true } } },
-    { ...defaultNotificationShows, mention: false },
-  );
-  assert.deepEqual(merged.columns, ['HOME']);
-  assert.deepEqual(merged.notifications.sounds, { follow: true });
-  assert.equal(merged.notifications.shows.mention, false);
-  assert.equal(merged.notifications.shows.follow, true);
 });
 
 let server;

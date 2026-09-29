@@ -1,5 +1,6 @@
 // Explicit extension: lets tests import this module directly under plain
 // `node --test`, which (unlike Vite) does not resolve extensionless .ts specifiers.
+import { asRecord } from './frontend_settings.ts';
 import { getSession } from './session.ts';
 import { ShellError } from './shell_strings.ts';
 
@@ -25,17 +26,17 @@ export function writePreference(key: string, value: unknown) {
   localStorage.setItem(storageKey(key), JSON.stringify(value));
 }
 
+/** A stored object, or an empty one if what is stored is not an object. */
+export function readObjectPreference(key: string): Record<string, unknown> {
+  return asRecord(readPreference<unknown>(key, {}));
+}
+
 export function readSettings(): Record<string, unknown> {
-  const settings = readPreference<unknown>('settings', {});
-  return settings && typeof settings === 'object' && !Array.isArray(settings) ? settings as Record<string, unknown> : {};
+  return readObjectPreference('settings');
 }
 export function saveSettings(settings: unknown) { writePreference('settings', settings); }
 
-/**
- * Opt-in "stay signed in" account store. One IndexedDB row per (origin, accountId),
- * holding the same OAuth credentials as the tab-scoped session. Never written to
- * unless the user checks "Angemeldet bleiben" during login.
- */
+/** Accounts signed in with "Stay signed in", one IndexedDB row per origin and account. */
 export interface RememberedAccount {
   origin: string;
   accountId: string;

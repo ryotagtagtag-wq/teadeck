@@ -1,9 +1,6 @@
 /**
- * Display and behaviour settings of this web client. Stored per account in
- * the browser only; nothing here is sent to the instance. Upstream Mastodon
- * keeps these in the server-rendered /settings/preferences pages and passes
- * them in via initial state, which a standalone client cannot use (and
- * servers like GoToSocial do not have).
+ * Display and behaviour settings, stored per account in this browser. Mastodon
+ * renders them into its page from the server; a standalone client keeps them itself.
  */
 
 export type DisplayMedia = 'default' | 'show_all' | 'hide_all';
@@ -53,9 +50,14 @@ export interface DeploymentDefaults {
   colorScheme?: ColorScheme;
 }
 
-/** Only values this client knows; anything else is ignored rather than trusted. */
+/** A plain object, or an empty one for anything else stored or received. */
+export function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+/** Only values this client knows; anything else is ignored. */
 export function readDeploymentDefaults(value: unknown): DeploymentDefaults {
-  const source = value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+  const source = asRecord(value);
   const defaults: DeploymentDefaults = {};
   if (themeValues.includes(source.theme as Theme)) defaults.theme = source.theme as Theme;
   if (colorSchemeValues.includes(source.colorScheme as ColorScheme)) defaults.colorScheme = source.colorScheme as ColorScheme;
