@@ -30,7 +30,7 @@ import { useAppDispatch } from '@/mastodon/store';
 
 import { appliedAppearance, applyAppearance } from './appearance';
 import type { ColorScheme, Contrast, DisplayMedia, EmojiStyle, FrontendSettings, Theme } from './frontend_settings';
-import { frontendSettingsKey } from './frontend_settings';
+import { frontendSettingsKey, resolveFrontendSettings } from './frontend_settings';
 import type { NotificationShows } from './notification_settings';
 import { readNotificationShows } from './notification_settings';
 import { t, uiTextLocale } from './settings_strings';
@@ -39,11 +39,24 @@ import { availableLocales } from './ui_locale';
 
 type BooleanSettingKey = Exclude<keyof FrontendSettings, 'displayMedia' | 'colorScheme' | 'contrast' | 'emojiStyle' | 'theme'>;
 
-const storedFrontendSettings = readPreference<Partial<FrontendSettings>>(frontendSettingsKey, {});
-const applied = appliedAppearance();
+/** A stored object, or nothing if what is stored is not one. */
+function storedChoices(): Record<string, unknown> {
+  const stored = readPreference<unknown>(frontendSettingsKey, {});
+  return stored && typeof stored === 'object' && !Array.isArray(stored) ? stored as Record<string, unknown> : {};
+}
 
-// Initial state already holds the resolved settings this page was loaded with.
-const current: FrontendSettings = {
+/**
+ * The settings as they are when the page opens - not as they were when this
+ * module first loaded. The page can be opened many times in one session, and
+ * settings change in between, here or in another tab. Stored choices win;
+ * anything never chosen is what this tab is running with.
+ */
+function settingsNow(): FrontendSettings {
+  return resolveFrontendSettings(storedChoices(), appliedAppearance() ?? settingsAtStart());
+}
+
+/** Only needed before boot() applied anything: what the page was started with. */
+const settingsAtStart = (): FrontendSettings => ({
   autoPlayGif: Boolean(autoPlayGif),
   displayMedia: (displayMedia as DisplayMedia | undefined) ?? 'default',
   expandSpoilers: Boolean(expandSpoilers),
@@ -53,20 +66,16 @@ const current: FrontendSettings = {
   boostModal: Boolean(boostModal),
   deleteModal: Boolean(deleteModal),
   missingAltTextModal: Boolean(missingAltTextModal),
-  // Not read from meta: applied to <html> directly by appearance.ts. Taken from
-  // what boot() applied, so these fields show what is on screen - including the
-  // design this installation starts with, which the client's own default does not know.
-  theme: applied?.theme ?? storedFrontendSettings.theme ?? 'mastodon',
-  colorScheme: applied?.colorScheme ?? storedFrontendSettings.colorScheme ?? 'auto',
-  contrast: applied?.contrast ?? storedFrontendSettings.contrast ?? 'auto',
-  useSystemFont: applied?.useSystemFont ?? storedFrontendSettings.useSystemFont ?? false,
-  useSystemScrollbars: applied?.useSystemScrollbars ?? storedFrontendSettings.useSystemScrollbars ?? false,
+  // Not in meta: appearance.ts applies these to <html>. Stored choices replace them.
+  theme: 'assam',
+  colorScheme: 'auto',
+  contrast: 'auto',
+  useSystemFont: false,
+  useSystemScrollbars: false,
   emojiStyle: (emojiStyle as EmojiStyle | undefined) ?? 'auto',
   disableSwiping: Boolean(disableSwiping),
   disableHoverCards: Boolean(disableHoverCards),
-};
-
-const currentLocale = document.documentElement.lang || 'en';
+});
 
 // Matches upstream's own `.simple_form h3` (forms.scss) used for section
 // headings on the real settings pages; this form isn't a Rails simple_form,
@@ -88,10 +97,11 @@ function localeNameLookup() {
 }
 
 const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
-  const locale = uiTextLocale(currentLocale);
-  const [settings, setSettings] = useState(current);
-  const [advancedLayout, setAdvancedLayout] = useState(!forceSingleColumn);
-  const [uiLocale, setUiLocale] = useState(currentLocale);
+  // Everything is read when the page opens, not when the module first loaded.
+  const [settings, setSettings] = useState(settingsNow);
+  const [advancedLayout, setAdvancedLayout] = useState(() => readPreference('advancedLayout', !forceSingleColumn));
+  const [uiLocale, setUiLocale] = useState(() => document.documentElement.lang || 'en');
+  const locale = uiTextLocale(uiLocale);
   const [timezone, setTimezone] = useState(() => readPreference('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone));
   const [notifications, setNotifications] = useState<NotificationShows>(() => readNotificationShows(readSettings()));
 
@@ -109,8 +119,12 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
    */
   const change = useCallback((patch: Partial<FrontendSettings>, { instant = false } = {}) => {
     setSettings((previous) => {
-      const next = { ...previous, ...patch };
-      writePreference(frontendSettingsKey, next);
+      // Only this change is written, on top of what is stored now: a choice made
+      // in another tab meanwhile survives, and settings never chosen keep
+      // following the defaults instead of being frozen at today's values.
+      const chosen = { ...storedChoices(), ...patch };
+      writePreference(frontendSettingsKey, chosen);
+      const next = resolveFrontendSettings(chosen, previous);
       applyAppearance(next, document.documentElement.lang || 'en');
       return next;
     });

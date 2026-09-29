@@ -293,3 +293,30 @@ test('the settings page shows the design that is on screen, not the client\'s ow
     await context.close();
   }
 });
+
+test('a setting changed after reopening the settings keeps the one changed before', { timeout: 120_000 }, async () => {
+  const { context, page, pageErrors } = await signedInPage({ deployment: { theme: 'sencha' } });
+  try {
+    await page.locator('a[href="/preferences"]').first().click();
+    await page.locator('#teadeck-settings-theme').selectOption('assam');
+    await page.locator('a[href="/home"]').first().click();
+    await page.getByText(timelineText).first().waitFor();
+
+    // Opened again, it shows the earlier choice and saving another setting keeps it.
+    await page.locator('a[href="/preferences"]').first().click();
+    assert.equal(await page.locator('#teadeck-settings-theme').inputValue(), 'assam');
+    await page.locator('#teadeck-settings-contrast').selectOption('high');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.teadeckTheme), 'assam');
+
+    // Only what was chosen is stored, so later deployment defaults still apply to the rest.
+    const stored = await page.evaluate(() => JSON.parse(localStorage[Object.keys(localStorage).find((key) => key.endsWith(':frontendSettings'))]));
+    assert.deepEqual(stored, { theme: 'assam', contrast: 'high' });
+
+    await page.reload();
+    await page.locator('#teadeck-settings-theme').waitFor();
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.teadeckTheme), 'assam');
+    assert.deepEqual(pageErrors, []);
+  } finally {
+    await context.close();
+  }
+});
