@@ -1,9 +1,4 @@
-/**
- * Every interface language upstream Mastodon ships a translation for
- * (`app/javascript/mastodon/locales/*.json`), so `loadLocale()` can already
- * load any of them without further work here. Keep this list in sync with
- * that directory when `upstream.lock.json` moves to a newer commit.
- */
+/** Mastodon's interface languages (app/javascript/mastodon/locales); update with upstream. */
 export const availableLocales = [
   'af', 'an', 'ar', 'ast', 'az', 'be', 'bg', 'bn', 'br', 'bs', 'ca', 'ckb', 'co',
   'cs', 'cy', 'da', 'de', 'el', 'en', 'en-GB', 'eo', 'es', 'es-AR', 'es-MX', 'et',
@@ -42,7 +37,7 @@ export function detectLocale(preferredLanguages: readonly string[]): UiLocale {
   return 'en';
 }
 
-/** The stored choice if it is still a real locale, otherwise the browser's own preference. */
+/** The stored choice if it is still available, otherwise the browser's preference. */
 export function resolveLocale(stored: unknown, preferredLanguages: readonly string[]): UiLocale {
   if (typeof stored === 'string' && (availableLocales as readonly string[]).includes(stored)) {
     return stored as UiLocale;

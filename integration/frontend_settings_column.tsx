@@ -42,17 +42,12 @@ type BooleanSettingKey = Exclude<keyof FrontendSettings, 'displayMedia' | 'color
 
 const storedChoices = () => readObjectPreference(frontendSettingsKey);
 
-/**
- * The settings as they are when the page opens - not as they were when this
- * module first loaded. The page can be opened many times in one session, and
- * settings change in between, here or in another tab. Stored choices win;
- * anything never chosen is what this tab is running with.
- */
+/** Read each time the page opens: settings may have changed since, here or in another tab. */
 function settingsNow(): FrontendSettings {
   return resolveFrontendSettings(storedChoices(), appliedAppearance() ?? settingsAtStart());
 }
 
-/** Only needed before boot() applied anything: what the page was started with. */
+/** What the page started with, before boot() applied anything. */
 const settingsAtStart = (): FrontendSettings => ({
   autoPlayGif: Boolean(autoPlayGif),
   displayMedia: (displayMedia as DisplayMedia | undefined) ?? 'default',
@@ -74,10 +69,7 @@ const settingsAtStart = (): FrontendSettings => ({
   disableHoverCards: Boolean(disableHoverCards),
 });
 
-// Matches upstream's own `.simple_form h3` (forms.scss) used for section
-// headings on the real settings pages; this form isn't a Rails simple_form,
-// so a bare <h3> would otherwise pick up no styling at all (reset.scss zeroes
-// heading styles globally) and read as plain body text.
+// Like upstream's `.simple_form h3`; a bare <h3> has no styling.
 const sectionHeadingStyle: React.CSSProperties = { fontSize: '20px', fontWeight: 600, marginBottom: '16px' };
 
 function timeZones(): string[] {
@@ -94,7 +86,6 @@ function localeNameLookup() {
 }
 
 const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
-  // Everything is read when the page opens, not when the module first loaded.
   const [settings, setSettings] = useState(settingsNow);
   const [advancedLayout, setAdvancedLayout] = useState(() => readPreference('advancedLayout', !forceSingleColumn));
   const [uiLocale, setUiLocale] = useState(() => document.documentElement.lang || 'en');
@@ -109,17 +100,11 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
   const localeNames = useMemo(localeNameLookup, []);
   const zones = useMemo(timeZones, []);
 
-  /**
-   * Keeps a change right away. Colours, contrast, fonts, scrollbars and motion
-   * are applied to the page at the same moment; the rest upstream reads once at
-   * startup, so those only show after a reload - offered as a button instead of
-   * reloading under the reader's hands.
-   */
+  // Saved at once. Settings upstream reads only at startup offer a reload.
   const change = useCallback((patch: Partial<FrontendSettings>, { instant = false } = {}) => {
     setSettings((previous) => {
-      // Only this change is written, on top of what is stored now: a choice made
-      // in another tab meanwhile survives, and settings never chosen keep
-      // following the defaults instead of being frozen at today's values.
+      // Only the change is written on top of what is stored, so settings never
+      // chosen keep following the defaults.
       const chosen = { ...storedChoices(), ...patch };
       writePreference(frontendSettingsKey, chosen);
       const next = resolveFrontendSettings(chosen, previous);
@@ -153,7 +138,7 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
     { key: 'quote' as const, label: t('notifyQuote', locale) },
   ], [locale]);
 
-  // These two are only a class or an attribute on <html>, so they take effect at once.
+  // Only a class on <html>, so they apply at once.
   const instantKeys = new Set<BooleanSettingKey>(['useSystemFont', 'useSystemScrollbars']);
 
   const handleToggle = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,11 +146,7 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
     change({ [name]: checked } as Partial<FrontendSettings>, { instant: instantKeys.has(name as BooleanSettingKey) });
   }, [change]);
 
-  /**
-   * Which notifications appear is upstream's own setting, so it goes through
-   * upstream's own action: the column follows immediately, and it is stored in
-   * the same place as before.
-   */
+  // Upstream's own setting, so it goes through upstream's action.
   const handleNotificationToggle = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = event.target;
     setNotifications(previous => ({ ...previous, [name as keyof NotificationShows]: checked }));
@@ -203,7 +184,6 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
     const value = event.target.value;
     setUiLocale(value);
     writePreference('locale', value);
-    // This page's own texts follow at once; upstream's translations are loaded at startup.
     document.documentElement.lang = value;
     setReloadNeeded(true);
   }, []);
@@ -215,7 +195,6 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
     setReloadNeeded(true);
   }, []);
 
-  // Takes effect at once, in every post already on screen.
   const handleStatusOverlay = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setStatusOverlay(event.target.checked);
     setStatusOverlayEnabled(event.target.checked);

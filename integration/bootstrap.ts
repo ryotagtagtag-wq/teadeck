@@ -26,8 +26,7 @@ import './shell.css';
 // Teadeck's own designs; only active with data-teadeck-theme (see appearance.ts).
 import './themes.css';
 
-// Must run before any api()-based request (mastodon/api.ts uses axios's fetch
-// adapter, whose default User-Agent header breaks CORS against real instances).
+// Before the first API request.
 window.fetch = stripAxiosUserAgent(window.fetch.bind(window));
 reloadOnStaleChunks();
 
@@ -50,13 +49,12 @@ function offerUpdate(apply: () => void) {
   document.getElementById('teadeck-update-reload')!.onclick = apply;
 }
 
-/** What this installation configured, read once and shared by both paths through boot(). */
+/** What this installation configured. */
 const deploymentLogo = () => fetch('/logo.svg').then((response) => (response.ok ? response.text() : null), () => null);
 const deploymentDefaults = () => fetch('/teadeck.json')
   .then((response) => (response.ok ? response.json() : null), () => null)
   .then((value: unknown) => readDeploymentDefaults(value));
 
-/** The configured logo on the sign-in page; nothing is shown without one. */
 function showShellLogo() {
   const container = document.getElementById('teadeck-shell-logo');
   const markup = brandLogoMarkup('teadeck-shell-logo');
@@ -65,9 +63,8 @@ function showShellLogo() {
   container.hidden = false;
 }
 
-/** The sign-in page is its own address, like Mastodon's /auth/sign_in: shown only without a usable session. */
+/** The sign-in page, at its own address like Mastodon's /auth/sign_in. */
 async function showLogin() {
-  // Its texts first, so the page is not shown in English and translated a moment later.
   await shellText;
   if (location.pathname !== loginPath) history.replaceState(null, '', loginPath);
   loading.hidden = true;
@@ -75,32 +72,26 @@ async function showLogin() {
   shell.hidden = false;
 }
 
-/** Mastodon's flash message styles: `alert` for errors, `warning`/`notice` for everything else. */
 function setStatus(text: string, kind: 'alert' | 'warning' | 'notice') {
   status.className = `flash-message ${kind}`;
   status.textContent = text;
   delete status.dataset.teadeckText;
 }
 
-/**
- * A status from Teadeck's own catalogue. It is marked with its message id, so
- * it is translated again should the language arrive after it was shown.
- * `detail` (a status code) is the same in every language and stays appended.
- */
+/** Marked with its message id, so it is translated once the language has loaded. */
 function setStatusMessage(id: ShellMessageId, kind: 'alert' | 'warning' | 'notice', detail?: string) {
   setStatus(detail ? `${t(id)} (${detail})` : t(id), kind);
   if (!detail) status.dataset.teadeckText = id;
 }
 
 function showError(error: unknown) {
-  // Teadeck's own errors carry a message id, so they appear in the reader's language.
   if (error instanceof ShellError) setStatusMessage(error.id, 'alert', error.detail);
   else setStatus(error instanceof Error ? error.message : String(error), 'alert');
   form.querySelector('button')!.disabled = false;
   void showLogin();
 }
 
-/** The sign-in is still valid, only the server failed: offer to try again, not to sign in, and keep the address. */
+/** The sign-in is still valid, only the server failed: offer to try again. */
 async function showStartFailed(error: unknown) {
   setStatusMessage('errorStartFailed', 'alert', error instanceof ShellError ? error.detail : undefined);
   await shellText;
@@ -131,7 +122,7 @@ for (const button of document.querySelectorAll('.teadeck-sign-out')) {
 }
 document.getElementById('teadeck-retry')!.addEventListener('click', () => location.reload());
 
-/** Renders one-click entries for remembered accounts on the login shell, so returning after a soft switch/logout doesn't require a fresh OAuth round trip. */
+/** One-click entries for remembered accounts. */
 function renderAccountList(accounts: RememberedAccount[]) {
   accountItems.replaceChildren();
   accountList.hidden = accounts.length === 0;
@@ -153,11 +144,8 @@ function renderAccountList(accounts: RememberedAccount[]) {
 
 async function boot() {
   if (location.pathname === '/logout') return logout();
-  // A new version installed while an older tab was open: start that one instead.
   if (await applyWaitingUpdate().catch(() => false)) return;
-  // The page's own texts, in the language chosen here before, else the browser's.
-  // Started now and awaited where something is shown; a signed-in account's own
-  // language replaces it below.
+  // Awaited where something is shown; a signed-in account's language replaces it below.
   shellText = translateShell(shellLocale(lastLocale()));
   const notice = sessionStorage.getItem('teadeck.notice');
   if (notice) { setStatusMessage(notice as ShellMessageId, 'warning'); sessionStorage.removeItem('teadeck.notice'); }
@@ -169,7 +157,7 @@ async function boot() {
     .catch(() => new Promise((resolve) => setTimeout(resolve, 250)).then(listRememberedAccounts))
     .catch(() => null);
   if (!session) {
-    // A fresh tab with no session yet: silently resume "stay signed in" if one is set.
+    // A new tab: resume a "stay signed in" account.
     const activeKey = getActiveAccountKey();
     const account = activeKey ? remembered?.find(a => accountKey(a.origin, a.accountId) === activeKey) : undefined;
     if (account) {
@@ -181,8 +169,6 @@ async function boot() {
     }
   }
   if (!session) {
-    // No account yet, so no stored preference: the sign-in page follows the
-    // design this installation starts with, and shows its logo.
     const [deployment, logo] = await Promise.all([deploymentDefaults(), deploymentLogo()]);
     setBrandLogo(logo);
     showShellLogo();
@@ -200,7 +186,6 @@ async function boot() {
     request('/api/v2/instance'),
     request('/api/v1/accounts/verify_credentials'),
     request('/api/v1/preferences').catch(() => ({})),
-    // What this installation configured: its logo and the design it starts with.
     deploymentLogo(),
     deploymentDefaults(),
   ]);
@@ -225,15 +210,13 @@ async function boot() {
   );
   const locale = resolveLocale(readPreference('locale', null), navigator.languages ?? [navigator.language]);
   applyDocumentLanguage(locale);
-  // This account's own language, in case it differs from what the page started with:
-  // the update notice below is shown in the running application, too.
+  // The update notice is shown in the running app too, so it follows the account's language.
   shellText = translateShell(locale);
   applyAppearance(frontendSettings, locale);
   setBrandLogo(logo);
 
   initCapabilities(session.origin, instance);
-  // GoToSocial: the account's default interaction policies, so restricting replies on a post
-  // keeps its favourite/boost defaults. Loaded now; a post restricting replies waits for them.
+  // GoToSocial: a post restricting replies copies the other defaults from these.
   if (detectGoToSocial(instance) && support('interactionPolicies.defaults') !== 'unsupported') {
     loadAccountInteractionDefaults(() => request('/api/v1/interaction_policies/defaults').then((defaults: DefaultInteractionPolicies) => {
       setSupport('interactionPolicies.defaults', 'supported');
@@ -289,7 +272,7 @@ async function boot() {
       teadeck_status_format: supportsStatusFormat(instance),
       // GoToSocial: what this account writes posts in unless a post says otherwise.
       teadeck_status_content_type: typeof account.source?.status_content_type === 'string' ? account.source.status_content_type : '',
-      // Links only to pages the instance has (Mastodon lists them in configuration.urls; GoToSocial has neither).
+      // Only link to pages the instance has.
       teadeck_privacy_policy: Boolean(instance.configuration?.urls?.privacy_policy),
     },
   };
@@ -312,7 +295,6 @@ async function boot() {
   loading.hidden = true;
   shell.hidden = true;
   if (!streamingUrl) startHomeTimelinePolling(store.dispatch, expandHomeTimeline);
-  // Only now, so caching the app for offline use never delays its start.
   void enableOffline(offerUpdate).catch((error: unknown) => console.warn('Offline mode unavailable', error));
 }
 

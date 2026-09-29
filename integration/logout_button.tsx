@@ -7,11 +7,7 @@ import { openModal } from '@/mastodon/actions/modal';
 import { Icon } from '@/mastodon/components/icon';
 import { useAppDispatch } from '@/mastodon/store';
 
-/**
- * "Abmelden" in the navigation list, below "Einstellungen" and "Mehr", in both
- * layouts; looks like the entries above it and confirms first, like upstream's
- * own sign-out item in the "Mehr" menu.
- */
+/** Sign-out entry at the end of the navigation list; asks for confirmation first. */
 export const LogoutNavigationLink: React.FC = () => {
   const dispatch = useAppDispatch();
   const handleClick = useCallback(() => {

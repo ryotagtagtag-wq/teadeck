@@ -135,12 +135,12 @@ export async function finishLogin() {
     remember: !!transaction.remember } satisfies Session));
 }
 
-/** Adopts a previously remembered account as this tab's active session (account switch, or restoring "stay signed in" on a fresh tab). No network calls. */
+/** Makes a remembered account this tab's session. */
 export function adoptSession(account: { origin: string; accessToken: string; clientId: string; clientSecret: string }) {
   sessionStorage.setItem(sessionKey, JSON.stringify({ ...account, remember: true } satisfies Session));
 }
 
-/** Clears only this tab's active session, keeping any remembered accounts intact. Used to switch accounts or add another one. */
+/** Clears this tab's session and keeps remembered accounts. */
 export function switchAccounts() {
   sessionStorage.removeItem(sessionKey);
   sessionStorage.removeItem(transactionKey);
