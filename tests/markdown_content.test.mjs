@@ -29,10 +29,11 @@ after(async () => {
   await new Promise((resolve) => server?.close(resolve));
 });
 
-test('Markdown in a post keeps its structure and follows the theme', { timeout: 90_000 }, async () => {
+/** Signs in with the given design and returns the page with the post on screen. */
+async function openPost(design) {
   const context = await browser.newContext({ locale: 'en-US', colorScheme: 'dark', viewport: { width: 1280, height: 900 } });
   await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin });
-  await context.route(`${origin}/teadeck.json`, (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ theme: 'assam', colorScheme: 'dark' }) }));
+  await context.route(`${origin}/teadeck.json`, (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(design) }));
   await context.route('https://mastodon.test/**', async (route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -67,13 +68,19 @@ test('Markdown in a post keeps its structure and follows the theme', { timeout: 
   await page.locator('#teadeck-login button[type=submit]').click();
   const post = page.locator('.status__content__text').filter({ hasText: timelineText }).first();
   await post.waitFor();
+  return { context, page, pageErrors, post };
+}
+
+const style = (locator, property) => locator.evaluate((element, name) => getComputedStyle(element)[name], property);
+
+test('Markdown in a post keeps its structure and follows the theme', { timeout: 90_000 }, async () => {
+  const { context, page, pageErrors, post } = await openPost({ theme: 'assam', colorScheme: 'dark' });
 
   // Headings, rules and footnotes are no longer dropped along with their text.
   assert.equal(await post.locator('h1').textContent(), 'Release notes');
   assert.equal(await post.locator('hr').count(), 2);
   assert.equal(await post.getByText('Footnote text').count(), 1);
 
-  const style = (locator, property) => locator.evaluate((element, name) => getComputedStyle(element)[name], property);
   // Inline code in the theme's colours, not Mastodon's pink.
   assert.equal(await style(post.locator('p > code'), 'color'), 'rgb(236, 195, 154)');
   assert.equal(await style(post.locator('p > code'), 'backgroundColor'), 'rgba(194, 129, 79, 0.16)');
@@ -95,6 +102,26 @@ test('Markdown in a post keeps its structure and follows the theme', { timeout: 
   assert.equal(await page.evaluate(() => navigator.clipboard.readText()), 'const a = 1; // note\nfetch(a)');
   assert.equal(page.url(), address);
 
+  assert.deepEqual(pageErrors, []);
+  await context.close();
+});
+
+test('Mastodon\'s dark theme shows Markdown in colours of its own', { timeout: 90_000 }, async () => {
+  const { context, pageErrors, post } = await openPost({ theme: 'mastodon', colorScheme: 'dark' });
+  assert.equal(await style(post.locator('p > code'), 'color'), 'rgb(205, 198, 240)');
+  assert.equal(await style(post.locator('h1'), 'color'), 'rgb(233, 233, 237)');
+  const block = post.locator('.teadeck-code');
+  assert.equal(await style(block, 'backgroundColor'), 'rgb(18, 20, 31)');
+  assert.equal(await style(block.locator('.teadeck-code__keyword').first(), 'color'), 'rgb(167, 156, 223)');
+  assert.match(await style(block.locator('code'), 'fontFamily'), /Teadeck JetBrains Mono/);
+  assert.deepEqual(pageErrors, []);
+  await context.close();
+});
+
+test('Mastodon\'s light theme shows Markdown in colours of its own, not pink', { timeout: 90_000 }, async () => {
+  const { context, pageErrors, post } = await openPost({ theme: 'mastodon', colorScheme: 'light' });
+  assert.equal(await style(post.locator('p > code'), 'color'), 'rgb(67, 56, 158)');
+  assert.equal(await style(post.locator('.teadeck-code'), 'backgroundColor'), 'rgb(242, 242, 249)');
   assert.deepEqual(pageErrors, []);
   await context.close();
 });

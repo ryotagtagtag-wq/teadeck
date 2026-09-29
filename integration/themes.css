@@ -47,6 +47,18 @@
   font-display: swap;
 }
 @font-face {
+  font-family: 'Teadeck JetBrains Mono';
+  src: url('./fonts/jetbrains-mono-latin-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Teadeck JetBrains Mono';
+  src: url('./fonts/jetbrains-mono-latin-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
   font-family: 'Teadeck IBM Plex Mono';
   src: url('./fonts/ibm-plex-mono-latin-400.woff2') format('woff2');
   font-weight: 400;
@@ -263,7 +275,8 @@ html[data-teadeck-theme] #teadeck-shell .btn:focus {
 /*
  * Post content: Markdown as GoToSocial renders it (headings, lists, quotes,
  * code). Each half of each tea has its own colours; Mastodon's own rich-text
- * colours (a pink) are replaced by them.
+ * colours (a pink) are replaced by them. Mastodon's own theme gets colours of
+ * its own and keeps its fonts, apart from JetBrains Mono for code.
  */
 html[data-teadeck-theme='assam'][data-color-scheme='dark'] {
   --md-heading: #ece3da;
@@ -329,17 +342,59 @@ html[data-teadeck-theme='sencha'][data-color-scheme='light'] {
   --md-code-number: #a24f3a;
   --md-code-comment: #737562;
 }
-html[data-teadeck-theme] {
+html:not([data-teadeck-theme])[data-color-scheme='dark'] {
+  --md-font-mono: 'Teadeck JetBrains Mono', mastodon-font-monospace, monospace;
+  --md-heading-weight: 500;
+  --md-h1: 26px;
+  --md-h2: 20px;
+  --md-h3: 16px;
+  --md-heading: #e9e9ed;
+  --md-text: #c6c8d6;
+  --md-muted: #9a9db5;
+  --md-accent: #9184d9;
+  --md-link: #a79cdf;
+  --md-border: #2c3150;
+  --md-surface-raised: #232740;
+  --md-code-inline: #cdc6f0;
+  --md-code-inline-bg: rgb(145 132 217 / 14%);
+  --md-code-bg: #12141f;
+  --md-code-function: #8fb8de;
+  --md-code-string: #b5c99a;
+  --md-code-number: #e0b27f;
+  --md-code-comment: #7d809f;
+}
+html:not([data-teadeck-theme])[data-color-scheme='light'] {
+  --md-font-mono: 'Teadeck JetBrains Mono', mastodon-font-monospace, monospace;
+  --md-heading-weight: 500;
+  --md-h1: 26px;
+  --md-h2: 20px;
+  --md-h3: 16px;
+  --md-heading: #1f2033;
+  --md-text: #3d4058;
+  --md-muted: #62667f;
+  --md-accent: #6a5fc4;
+  --md-link: #5347b0;
+  --md-border: #dcdcea;
+  --md-surface-raised: #e9e8f5;
+  --md-code-inline: #43389e;
+  --md-code-inline-bg: rgb(106 95 196 / 12%);
+  --md-code-bg: #f2f2f9;
+  --md-code-function: #2f5f8a;
+  --md-code-string: #52692b;
+  --md-code-number: #9c5028;
+  --md-code-comment: #686b86;
+}
+html[data-color-scheme] {
   --md-code-keyword: var(--md-link);
   --rich-text-container-color: var(--md-code-inline-bg);
   --rich-text-text-color: var(--md-code-inline);
   --rich-text-decorations-color: var(--md-accent);
 }
 
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) {
   color: var(--md-text);
 }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(h1, h2, h3, h4, h5, h6) {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(h1, h2, h3, h4, h5, h6) {
   margin: 18px 0 8px;
   font-family: var(--font-heading);
   font-weight: var(--md-heading-weight);
@@ -347,55 +402,55 @@ html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator
   letter-spacing: -0.015em;
   color: var(--md-heading);
 }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(h1, h2, h3, h4, h5, h6):first-child {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(h1, h2, h3, h4, h5, h6):first-child {
   margin-top: 0;
 }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) h1 { font-size: var(--md-h1); }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) h2 { font-size: var(--md-h2); }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(h3, h4, h5, h6) { font-size: var(--md-h3); }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(b, strong) {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) h1 { font-size: var(--md-h1); }
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) h2 { font-size: var(--md-h2); }
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(h3, h4, h5, h6) { font-size: var(--md-h3); }
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(b, strong) {
   font-weight: 600;
   color: var(--md-heading);
 }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(del, s) {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(del, s) {
   text-decoration: line-through;
   color: var(--md-muted);
 }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) a:not(.mention) {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) a:not(.mention) {
   color: var(--md-link);
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-color: var(--md-accent);
 }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :not(pre) > code {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :not(pre) > code {
   padding: 2px 6px;
   border-radius: 5px;
-  font-family: var(--font-monospace);
+  font-family: var(--md-font-mono, var(--font-monospace));
   font-size: 0.88em;
   color: var(--md-code-inline);
   background: var(--md-code-inline-bg);
 }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(ul, ol) {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(ul, ol) {
   padding-inline-start: 16px;
 }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) li {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) li {
   padding-inline-start: 10px;
   line-height: 1.6;
 }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) li + li {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) li + li {
   margin-top: 4px;
 }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) li::marker {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) li::marker {
   color: var(--md-accent);
 }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote {
   padding-inline-start: 16px;
   font-style: italic;
   line-height: 1.65;
   color: var(--md-text);
 }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote::before,
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote blockquote::before {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote::before,
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote blockquote::before {
   display: block;
   width: 2px;
   height: auto;
@@ -404,17 +459,17 @@ html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator
   mask-image: none;
   background-color: var(--md-accent);
 }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote blockquote {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote blockquote {
   border-inline-start: 0;
   padding-inline-start: 16px;
 }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) hr {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) hr {
   height: 1px;
   margin: 16px 0;
   border: 0;
   background: linear-gradient(90deg, transparent, var(--md-border) 48px, var(--md-border) calc(100% - 48px), transparent);
 }
-html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(sup, sub) {
+html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(sup, sub) {
   font-size: 0.75em;
 }
 
@@ -445,7 +500,7 @@ html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator
 }
 
 .teadeck-code__language {
-  font-family: var(--font-monospace);
+  font-family: var(--md-font-mono, var(--font-monospace));
   font-size: 11px;
   letter-spacing: 0.04em;
   color: var(--md-muted, var(--color-text-secondary));
@@ -476,7 +531,7 @@ html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator
 .teadeck-code__body {
   display: flex;
   padding: 14px 0;
-  font-family: var(--font-monospace);
+  font-family: var(--md-font-mono, var(--font-monospace));
   font-size: 13px;
   line-height: 1.7;
 }
@@ -488,7 +543,7 @@ html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator
   white-space: pre;
   color: var(--md-code-comment, var(--color-text-secondary));
   user-select: none;
-  font-family: var(--font-monospace);
+  font-family: var(--md-font-mono, var(--font-monospace));
 }
 
 .status__content__text .teadeck-code pre {
@@ -507,7 +562,7 @@ html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator
   padding: 0;
   background: transparent;
   color: inherit;
-  font-family: var(--font-monospace);
+  font-family: var(--md-font-mono, var(--font-monospace));
   font-size: inherit;
 }
 
