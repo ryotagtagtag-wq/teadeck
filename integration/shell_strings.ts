@@ -1,34 +1,13 @@
 /**
- * The texts of the sign-in page, in every interface language Teadeck offers.
- *
- * The page runs before Mastodon's application - and therefore before its
- * translations - is loaded, so it carries its own small catalogue. Two sources
- * fill it (scripts/shell_locales.mjs, at build time):
- *
- * - `upstream`: the key of a message Mastodon itself already ships translated
- *   into every one of its locales ("Log in", "Domain", "Refresh", …). Anything
- *   that exists there is taken from there, so these words read exactly as they
- *   do in the rest of the interface and follow upstream when it changes.
- * - `de`/`en`: the sentences that are Teadeck's own. English is the source text
- *   and also the fallback: a language without a translation shows English
- *   rather than an empty page.
- *
- * `en` is what index.html contains literally, so the page reads correctly
- * before any translation is loaded (and without JavaScript at all).
+ * Texts of the sign-in page, which runs before Mastodon's translations load.
+ * `upstream` names a message Mastodon already translates; `en` and `de` are
+ * Teadeck's own. English is the fallback and what index.html contains.
  */
 
 export type ShellMessage = {
-  /** Source text; also the fallback for every language without a translation. */
   en: string;
-  /** Teadeck's own German translation, where the text is not upstream's. */
   de?: string;
-  /**
-   * A message upstream already translates, as `js:<key>` for
-   * app/javascript/mastodon/locales/*.json or `yml:<key>` for
-   * config/locales/*.yml. Checked against upstream's English files by
-   * tests/shell_i18n.test.mjs, so a renamed key fails the tests instead of
-   * silently leaving the page English.
-   */
+  /** `js:<key>` in Mastodon's locales/*.json or `yml:<key>` in config/locales/*.yml. */
   upstream?: string;
 };
 

@@ -1,12 +1,7 @@
 /**
- * API normalizations and fallbacks for Mastodon-API servers that implement
- * less than the pinned Mastodon web client expects (found against GoToSocial,
- * useful for any server): fill fields the client dereferences without checks,
- * convert between API generations (v1 notifications → v2 groups, profile API →
- * account credentials), and turn server-specific stubs into "no data".
- *
- * Pure functions. Whether a server offers an optional API is decided in
- * api_capabilities.ts; GoToSocial-only extensions live in gotosocial.ts.
+ * Fallbacks for servers that implement less of the Mastodon API than the web
+ * client expects, such as GoToSocial: missing fields, older API versions and
+ * stub responses.
  */
 
 interface AccountLike { id: string }
@@ -41,11 +36,8 @@ interface CredentialAccountLike {
 }
 
 /**
- * Mastodon's `/api/v1/profile` (used by its "Edit profile" page) built from
- * `/api/v1/accounts/verify_credentials`, for servers without it (GoToSocial).
- * Bio and field values come from `source` (the editable plain text, not
- * rendered HTML). Mastodon-only settings get Mastodon's defaults; the page
- * hides their controls (capabilities profile.featuredTags / profile.tabSettings).
+ * `/api/v1/profile` built from `verify_credentials`, for servers without it.
+ * Bio and fields come from `source`, the editable plain text.
  */
 export function profileFromCredentialAccount(account: CredentialAccountLike) {
   const rendered = account.fields ?? [];
@@ -79,11 +71,8 @@ export function profileFromCredentialAccount(account: CredentialAccountLike) {
 const credentialsUpdateKeys = ['display_name', 'note', 'locked', 'bot', 'discoverable', 'indexable', 'hide_collections', 'avatar_description', 'header_description'];
 
 /**
- * `PATCH /api/v1/profile` parameters as a `PATCH /api/v1/accounts/update_credentials`
- * JSON body for GoToSocial: its JSON binding wants `fields_attributes` as an
- * index-keyed object (`{"0": {name, value}}`, internal/api/model/account.go),
- * Mastodon's page sends a list. Settings GoToSocial doesn't have are dropped;
- * `null` when nothing is left (GoToSocial rejects an empty update).
+ * Profile parameters as an `update_credentials` body. GoToSocial wants
+ * `fields_attributes` keyed by index and rejects an empty update, hence `null`.
  */
 export function credentialsUpdateFromProfileParams(params: Record<string, unknown>) {
   const body: Record<string, unknown> = {};
@@ -107,12 +96,7 @@ export function applyStatusDefaults<T extends StatusLike>(status: T): T {
 
 interface TagHistoryDay { accounts?: unknown; uses?: unknown }
 
-/**
- * Usage numbers for a hashtag row. Mastodon sends at least a week of daily
- * history; GoToSocial's `history` is a stub (empty or absent). Without data,
- * `people` is `null` ("no statistics", nothing shown) instead of 0 or a
- * loading placeholder, and no graph is drawn.
- */
+/** Usage numbers for a hashtag row; `people` is `null` when the server sends no history. */
 export function hashtagStats(history: TagHistoryDay[] | null | undefined) {
   if (!Array.isArray(history) || history.length === 0) return { people: null, history: undefined, withGraph: false };
   const count = (value: unknown) => Number(value ?? 0);
@@ -125,11 +109,7 @@ export function hashtagStats(history: TagHistoryDay[] | null | undefined) {
 
 interface SearchResultsLike { accounts?: unknown[]; statuses?: unknown[]; hashtags?: unknown[]; collections?: unknown[] }
 
-/**
- * Search results: Mastodon added `collections`, which GoToSocial does not
- * send, and the client reads every list's length. Missing lists are empty.
- * Mutates and returns `results`.
- */
+/** Missing result lists are empty. Mutates and returns `results`. */
 export function applySearchDefaults<T extends SearchResultsLike>(results: T): T {
   results.accounts ??= [];
   results.statuses ??= [];
@@ -139,9 +119,8 @@ export function applySearchDefaults<T extends SearchResultsLike>(results: T): T 
 }
 
 /**
- * The tag name if a search query is exactly one hashtag (`#neuhier`), else undefined.
- * GoToSocial (and Mastodon without full-text search) answer such a query with
- * hashtags only, never with posts; see apiGetSearch.
+ * The tag name if the query is exactly one hashtag. Servers without full-text
+ * search answer such a query without posts; see apiGetSearch.
  */
 export function hashtagFromQuery(query: string) {
   const match = /^#([\p{L}\p{M}\p{N}_]+)$/u.exec(query.trim());
@@ -154,13 +133,7 @@ export function applyNotificationDefaults<T extends NotificationLike>(notificati
   return notification;
 }
 
-/**
- * Builds a `/api/v2/notifications` (grouped) response body from a plain
- * `/api/v1/notifications` list, with every notification as its own group.
- * Mirrors app/serializers/rest/notification_group_serializer.rb for a group
- * of one; the v1 `status` object is replaced by `status_id` plus the
- * top-level `statuses` list, exactly like the v2 endpoint does.
- */
+/** A grouped v2 notifications response built from a v1 list, one group per notification. */
 export function notificationGroupsFromNotifications<T extends NotificationLike>(notifications: T[]) {
   const accounts = new Map<string, AccountLike>();
   const statuses = new Map<string, StatusLike>();
@@ -197,11 +170,8 @@ export function notificationParamsForV1<T extends { grouped_types?: string[] }>(
 interface IdLike { id: string }
 
 /**
- * Remembers which "#tag" searches are answered from the hashtag's timeline, so
- * the source is fixed per search: decided on its first page (the server's
- * search returned no posts), never switched by a later empty page. Further
- * pages continue with `max_id` after the last post shown, so new posts
- * arriving in the meantime cannot shift pages (no duplicates or gaps).
+ * Which "#tag" searches are answered from the hashtag timeline. Decided on the
+ * first page; later pages continue after the last post shown.
  */
 export function createHashtagSearchPages() {
   const searches = new Map<string, { tag: string; maxId?: string; done: boolean }>();
@@ -209,13 +179,10 @@ export function createHashtagSearchPages() {
     searches.set(query, { tag, maxId: statuses.at(-1)?.id, done: statuses.length < limit });
   };
   return {
-    /** A new search starts: forget whatever was decided for this query before. */
     reset(query: string) { searches.delete(query); },
-    /** The first page came from the hashtag timeline. */
     start(query: string, tag: string, statuses: IdLike[], limit: number) { record(query, tag, statuses, limit); },
-    /** Where the next page of this search comes from: undefined = the server's search. */
+    /** `undefined`: the next page comes from the server's search. */
     next(query: string) { return searches.get(query); },
-    /** A further page from the hashtag timeline arrived. */
     continue(query: string, statuses: IdLike[], limit: number) {
       const search = searches.get(query);
       if (search) record(query, search.tag, statuses, limit);
