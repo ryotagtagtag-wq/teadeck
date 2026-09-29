@@ -10,7 +10,7 @@ diff --git a/app/javascript/mastodon/api/accounts.ts b/app/javascript/mastodon/a
  import {
    apiRequestPost,
    apiRequestGet,
-@@ -60,21 +65,71 @@ export const apiPostFeaturedTag = (name: string) =>
+@@ -60,21 +65,67 @@ export const apiPostFeaturedTag = (name: string) =>
  export const apiDeleteFeaturedTag = (id: string) =>
    apiRequestDelete(`v1/featured_tags/${id}`);
  
@@ -41,11 +41,7 @@ diff --git a/app/javascript/mastodon/api/accounts.ts b/app/javascript/mastodon/a
 +  );
  
 -export const apiGetProfile = () => apiRequestGet<ApiProfileJSON>('v1/profile');
-+// Servers without /api/v1/profile (e.g. GoToSocial) edit the profile through
-+// verify_credentials and update_credentials instead; see api_compat.ts.
-+// Reading and writing are separate capabilities, and so are the parts of the
-+// page that only Mastodon's profile API carries: they are shown exactly when
-+// the server's profile response contains them.
++// Servers without /api/v1/profile edit it through update_credentials; see api_compat.ts.
 +const profileFromCredentials = async () => {
 +  setSupport('profile.featuredTags', 'unsupported');
 +  setSupport('profile.tabSettings', 'unsupported');

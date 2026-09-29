@@ -356,16 +356,12 @@ diff --git a/app/javascript/mastodon/main.tsx b/app/javascript/mastodon/main.tsx
 diff --git a/app/javascript/mastodon/selectors/statuses.ts b/app/javascript/mastodon/selectors/statuses.ts
 --- a/app/javascript/mastodon/selectors/statuses.ts
 +++ b/app/javascript/mastodon/selectors/statuses.ts
-@@ -77,7 +77,13 @@ export const selectStatusLoadingState = createAppSelector(
+@@ -77,7 +77,9 @@ export const selectStatusLoadingState = createAppSelector(
    [
      (state, { statusId }: { statusId?: string | null }) =>
        selectExpandedStatus(state, statusId ?? undefined),
 -    selectStatusFilters,
-+    // Called lazily: statuses.ts and filters.ts import each other. Teadeck's
-+    // single-entry bundle graph evaluates these modules in an order where a
-+    // direct reference here is still undefined when createAppSelector runs,
-+    // crashing every status render. Upstream's multi-entry Rails build
-+    // happens not to hit this ordering.
++    // Called lazily: statuses.ts and filters.ts import each other.
 +    (state, props: { statusId?: string | null; warnInsteadOfHide?: boolean }) =>
 +      selectStatusFilters(state, props),
      (_, { warnInsteadOfHide }: { warnInsteadOfHide?: boolean }) =>

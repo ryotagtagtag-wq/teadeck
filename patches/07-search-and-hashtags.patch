@@ -1,7 +1,7 @@
 diff --git a/app/javascript/mastodon/api/search.ts b/app/javascript/mastodon/api/search.ts
 --- a/app/javascript/mastodon/api/search.ts
 +++ b/app/javascript/mastodon/api/search.ts
-@@ -1,10 +1,33 @@
+@@ -1,10 +1,30 @@
 +import {
 +  applySearchDefaults,
 +  createHashtagSearchPages,
@@ -15,10 +15,7 @@ diff --git a/app/javascript/mastodon/api/search.ts b/app/javascript/mastodon/api
 +import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
  
 -export const apiGetSearch = (
-+// A search for "#tag" returns only hashtags on GoToSocial (and on Mastodon
-+// without full-text search). If the first page of such a search has no posts,
-+// all post pages of that search come from the hashtag's timeline, paged by
-+// max_id; a search that returned posts itself never switches source.
++// A "#tag" search without posts continues on the hashtag timeline.
 +const hashtagSearches = createHashtagSearchPages();
 +
 +const tagTimeline = (
@@ -103,7 +100,7 @@ diff --git a/app/javascript/mastodon/components/hashtag.tsx b/app/javascript/mas
  import type { JSX } from 'react';
  import { Component } from 'react';
  
-@@ -61,48 +62,51 @@ interface ImmutableHashtagProps {
+@@ -61,48 +62,49 @@ interface ImmutableHashtagProps {
    hashtag: Immutable.Map<string, unknown>;
  }
  
@@ -120,7 +117,6 @@ diff --git a/app/javascript/mastodon/components/hashtag.tsx b/app/javascript/mas
 -        Immutable.Map<string, number>
 -      >
 +export const ImmutableHashtag = ({ hashtag }: ImmutableHashtagProps) => {
-+  // GoToSocial sends no usage history; see hashtagStats.
 +  const stats = hashtagStats(
 +    (
 +      hashtag.get('history') as
@@ -163,7 +159,6 @@ diff --git a/app/javascript/mastodon/components/hashtag.tsx b/app/javascript/mas
 -  />
 -);
 +}> = ({ hashtag }) => {
-+  // GoToSocial sends no usage history; see hashtagStats.
 +  const stats = hashtagStats(hashtag.history as HashtagType['history'] | undefined);
 +  return (
 +    <Hashtag
@@ -207,14 +202,13 @@ diff --git a/app/javascript/mastodon/features/followed_tags/index.tsx b/app/java
  import { useEffect, useCallback } from 'react';
  
  import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
-@@ -42,9 +43,8 @@ const FollowedTag: React.FC<{
+@@ -42,9 +43,7 @@ const FollowedTag: React.FC<{
      });
    }, [dispatch, onUnfollow, tagId]);
  
 -  const people =
 -    parseInt(tag.history[0].accounts) +
 -    parseInt(tag.history[1]?.accounts ?? '');
-+  // GoToSocial sends no usage history; see hashtagStats.
 +  const { people } = hashtagStats(tag.history as typeof tag.history | undefined);
  
    return (
@@ -227,7 +221,7 @@ diff --git a/app/javascript/mastodon/features/hashtag_timeline/components/hashta
    }
  
 -  const [uses, people] = tag.history.reduce(
-+  // GoToSocial's tag history is an empty or absent stub: show no statistics then.
++  // Servers without usage history get no statistics.
 +  const tagHistory = tag.history as typeof tag.history | undefined;
 +  const hasStats = Array.isArray(tagHistory) && tagHistory.length > 0;
 +  const [uses, people] = (tagHistory ?? []).reduce(
