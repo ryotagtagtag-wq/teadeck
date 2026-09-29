@@ -89,14 +89,12 @@ export async function forgetAccount(origin: string, id: string): Promise<void> {
   await withAccountsStore('readwrite', store => store.delete(accountKey(origin, id)));
 }
 
+/**
+ * Rejects when the store cannot be read. Callers must not take that for "no
+ * accounts": the account is still there, it just could not be read this time.
+ */
 export async function listRememberedAccounts(): Promise<RememberedAccount[]> {
-  try {
-    return await withAccountsStore<RememberedAccount[]>('readonly', store => store.getAll());
-  } catch {
-    // IndexedDB can be unavailable (private browsing in some browsers); "stay
-    // signed in" degrades to the tab-scoped session instead of failing boot.
-    return [];
-  }
+  return withAccountsStore<RememberedAccount[]>('readonly', store => store.getAll());
 }
 
 const activeAccountKeyName = 'teadeck.activeAccount';

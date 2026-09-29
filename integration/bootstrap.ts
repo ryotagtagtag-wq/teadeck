@@ -144,15 +144,19 @@ async function boot() {
   if (location.pathname === '/oauth/callback') await finishLogin();
 
   let session = getSession();
-  const remembered = await listRememberedAccounts();
+  // null: the store could not be read, which says nothing about which accounts it holds.
+  const remembered = await listRememberedAccounts()
+    .catch(() => new Promise((resolve) => setTimeout(resolve, 250)).then(listRememberedAccounts))
+    .catch(() => null);
   if (!session) {
     // A fresh tab with no session yet: silently resume "stay signed in" if one is set.
     const activeKey = getActiveAccountKey();
-    const account = activeKey ? remembered.find(a => accountKey(a.origin, a.accountId) === activeKey) : undefined;
+    const account = activeKey ? remembered?.find(a => accountKey(a.origin, a.accountId) === activeKey) : undefined;
     if (account) {
       adoptSession(account);
       session = getSession();
-    } else if (activeKey) {
+    } else if (activeKey && remembered) {
+      // Only an account that is really gone is forgotten.
       clearActiveAccountKey();
     }
   }
@@ -165,7 +169,7 @@ async function boot() {
     // The design last used here, otherwise the one this installation starts with.
     const appearance = { ...deployment, ...readDeploymentDefaults(lastAppearance()) };
     applyAppearance(defaultFrontendSettings({}, matchMedia('(prefers-reduced-motion: reduce)').matches, appearance), shellLocale(lastLocale()));
-    renderAccountList(remembered);
+    renderAccountList(remembered ?? []);
     await showLogin();
     void enableOffline(offerUpdate).catch(() => {});
     return;
