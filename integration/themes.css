@@ -1,25 +1,7 @@
 /*
- * Teadeck's own designs, as a layer over Mastodon's theme. Two teas, each with a
- * dark and a light half; the colour scheme setting decides which half you see.
- * Each half carries the colour of the tea it is named after:
- *
- *   Assam (dark)  / Silver Needle (light)  warm brown ground, copper accent
- *                                          ivory and silver, pale straw gold
- *   Sencha (dark) / Jasmine (light)        charcoal ground, yellow-green accent
- *                                          warm rice paper, pale golden green
- *
- * Selected in Teadeck's settings (frontend_settings.ts, applied by appearance.ts
- * as data-teadeck-theme); a deployment can set the starting design in its .env.
- *
- * Mastodon builds every colour from two ramps (grey and indigo) and derives its
- * semantic tokens from them, so replacing the two ramps recolours the whole
- * interface consistently. Only the ramps, the fonts, the radii, the primary
- * button and the logo's tea colour are touched here - no component is restyled.
- *
- * Contrast comes from the tone values, not from saturation; the accent appears
- * as a line, an icon or a tint, never as a filled surface. The typeface follows
- * the half, not the tea: Space Grotesk over IBM Plex Sans in the dark ones,
- * Newsreader over Public Sans in the light ones.
+ * Teadeck's themes, layered over Mastodon's: Assam and Sencha, each with a dark
+ * and a light half. They replace Mastodon's grey and indigo colour ramps, the
+ * fonts, the radii and the primary button; components are not restyled.
  */
 
 @font-face {

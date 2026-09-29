@@ -4,11 +4,8 @@
 //   glass     a glass cup: the tea shows through the wall
 //   ceramic   an opaque cup: the tea shows at the surface
 //
-// Colour is not decided here. Every fill, stroke and gradient stop names a role
-// (contour, body, steam, tea …) as a CSS variable, which integration/shell.css
-// derives from the theme's own colours; a design or an administrator can override
-// single roles. The values behind the commas are the fallback, so the files also
-// work on their own, outside Teadeck.
+// Colours are CSS variables set in integration/shell.css, with fallbacks so the
+// files also work on their own.
 //
 // Run `node scripts/teacup.mjs --write` after changing anything here;
 // tests/teacup.test.mjs checks the files match.

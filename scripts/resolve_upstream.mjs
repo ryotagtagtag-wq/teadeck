@@ -1,8 +1,5 @@
 /**
- * Resolves Mastodon's moving `nightly` image to the source commit it was built
- * from (read-only registry requests, no Docker needed): manifest list →
- * linux/amd64 image → config → SOURCE_COMMIT. Then reads the commit's
- * packageManager.
+ * Resolves Mastodon's `nightly` image to the source commit it was built from.
  *
  *   node scripts/resolve_upstream.mjs            # print the candidate as JSON
  *   node scripts/resolve_upstream.mjs --write    # also update upstream.lock.json

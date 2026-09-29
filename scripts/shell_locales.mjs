@@ -7,15 +7,8 @@ import { availableLocales } from '../integration/ui_locale.ts';
 
 /**
  * Writes the sign-in page's texts for every interface language to
- * dist/shell-locales/<locale>.json.
- *
- * Each text is either one Mastodon already translates - then it is read out of
- * upstream's own locale files, so it reads like the rest of the interface and
- * follows upstream when it changes its wording - or one of Teadeck's own, which
- * exist in German and English (integration/shell_strings.ts). Anything without
- * a translation for a language stays English; the page never shows an empty
- * label. Every language gets a file, so the page's own request either finds its
- * language or is a plain 404 for one Teadeck does not offer.
+ * dist/shell-locales/<locale>.json, from Mastodon's translations and
+ * integration/shell_strings.ts. Missing translations stay English.
  */
 
 /** js-yaml comes with upstream; Node has no YAML parser of its own. */

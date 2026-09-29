@@ -3,13 +3,7 @@ import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 
-/**
- * Vite minifies everything it bundles, but the service worker is copied rather
- * than bundled, so its comments would otherwise be served to every browser.
- * terser comes from the pinned upstream, like playwright in scripts/verify.mjs.
- * Only comments and whitespace go: no renaming or rewriting in the one file
- * that decides whether the app starts offline at all.
- */
+/** The service worker is copied, not bundled: strip its comments, but do not rewrite it. */
 async function stripComments(source) {
   const upstream = path.resolve(import.meta.dirname, '../.work/upstream/package.json');
   const { minify } = createRequire(upstream)('terser');
@@ -26,15 +20,9 @@ function isExcluded(file) {
 }
 
 /**
- * Sorts a dist file into the service worker's lists:
- * - core: everything needed to start and use the app, cached at install.
- * - background: large but commonly shown (emoji images, illustrations),
- *   cached asynchronously after the app started.
- * - onDemand: per interface language (translations of the application and of
- *   the sign-in page, emoji data; the UI offers ~100 languages but uses one)
- *   or rarely used (OCR, legacy font formats), cached when first requested,
- *   i.e. the language in use is cached on the first start.
- * `emojiDataFiles` are the emoji data files from Vite's manifest.
+ * core: needed to start, cached at install. background: emoji and
+ * illustrations, cached after start. onDemand: per-language and rarely used
+ * files, cached on first use.
  */
 export function classifyOfflineFile(file, emojiDataFiles) {
   if (isExcluded(file)) return null;
@@ -66,12 +54,8 @@ async function listFiles(dir, prefix = '') {
 const contentHash = (data) => createHash('sha256').update(data).digest('hex').slice(0, 16);
 
 /**
- * Writes dist/offline-<version>.json and dist/sw.js. The version hashes every
- * listed file, the service worker source and `releaseInputs` (the web server's
- * header configuration): any of them changing installs a new service worker,
- * which also re-fetches index.html with its current response headers.
- * The manifest carries each file's content hash, so the worker can replace a
- * changed file whose name stayed the same.
+ * Writes dist/offline-<version>.json and dist/sw.js. The version covers every
+ * listed file, the worker and `releaseInputs` (the web server's headers).
  */
 export async function writeOfflineFiles(dist, viteManifest, serviceWorkerSource, releaseInputs = []) {
   const emojiData = emojiDataFiles(viteManifest);

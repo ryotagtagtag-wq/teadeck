@@ -1,31 +1,9 @@
 #!/bin/sh
-# Puts the configured logo where nginx serves it as /logo.svg, then starts nginx.
-#
-# Two settings, one for each kind of logo (see compose.yml and the .env):
-#
-#   TEADECK_LOGO        one of the logos shipped in this image; the teacups take their
-#                        colours from the chosen design, only the material differs:
-#                          flat       the teacup, flat
-#                          glass      the teacup in glass (the tea shows through)
-#                          ceramic    the teacup opaque
-#                          mastodon   Mastodon's own logo
-#   TEADECK_LOGO_FILE   the name of your own SVG file in the logo directory
-#                        (./logo next to compose.yml); wins if both are set
-#
-# Neither set means no logo at all: /logo.svg stays a 404 and the interface shows none.
-#
-# The design this deployment starts with, for anyone who has not chosen one yet
-# (a reader's own choice always wins and is kept in their browser):
-#
-#   TEADECK_THEME          mastodon | assam | sencha
-#   TEADECK_COLOR_SCHEME   auto | light | dark
-#
-# They are served as /teadeck.json; unset means Teadeck's own defaults.
-#
-# A logo is decoration: anything wrong with it is reported here and the site is
-# then served without one. It must never keep Teadeck from starting.
+# Puts the configured logo where nginx serves it as /logo.svg, writes the
+# deployment defaults to /teadeck.json, then starts nginx. Settings: see
+# docs/configuration.md. A broken logo is reported and left out; it never keeps
+# Teadeck from starting.
 set -e
-
 
 # Overridable for tests; in the image these are the real locations.
 logo_dir=${TEADECK_LOGO_DIR:-/config}

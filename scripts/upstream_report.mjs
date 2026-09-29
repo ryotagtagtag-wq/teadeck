@@ -1,11 +1,5 @@
-// Which upstream changes between two Mastodon commits touch Teadeck's integration
-// points, for the review of an upstream update (.forgejo/workflows/upstream-update.yml).
-//
-// Build, type check and tests show that patches still apply and the app works;
-// they do not show whether a security assumption changed. This lists, from the
-// upstream diff: files patches/ modify, files in security/upstream-watch.json
-// (security headers, sanitizing, components Teadeck replaces), and upstream
-// tests that changed (scripts/verify.mjs runs them).
+// Lists upstream changes between two Mastodon commits that need review: files
+// the patches modify, files in security/upstream-watch.json and changed tests.
 //
 // Usage: node scripts/upstream_report.mjs <old-commit> <new-commit> [repository]
 import { spawnSync } from 'node:child_process';

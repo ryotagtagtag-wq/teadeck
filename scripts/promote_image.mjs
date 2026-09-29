@@ -1,11 +1,5 @@
-// Points an image tag (e.g. `latest`) at the image already pushed for a commit
-// (`sha-<12>`), but only while that commit is still the head of the branch.
-//
-// Builds of successive pushes can finish in any order; without this check a
-// slower build of an older commit could move `latest` back after a newer one
-// (say, a security fix) was published. The registry copy is one manifest PUT,
-// right after the check. Deployments that must not move at all can use the
-// printed digest (image@sha256:…) or the sha tag instead of `latest`.
+// Points a tag such as `latest` at a commit's image, but only while that commit
+// is still the head of the branch, so a slower older build cannot move it back.
 //
 // Usage (CI, in a checkout of the repository): node scripts/promote_image.mjs
 //   --image git.knubbel.me/knubbel/teadeck --from sha-<12> --to latest --commit <sha> --branch main

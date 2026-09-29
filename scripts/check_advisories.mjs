@@ -1,15 +1,6 @@
-// Lists Mastodon security advisories that have not been assessed for Teadeck yet.
-//
-// A green upstream build says nothing about security fixes: a fix in code
-// Teadeck imports unchanged arrives with the next upstream update, but one in
-// a component Teadeck replaces (login, API layer, service worker, the web
-// server's security headers) or one that relies on Mastodon's server (HTML
-// sanitizing, its CSP) needs its own assessment. Every advisory therefore gets
-// an entry in security/mastodon-advisories.json; this script fails while an
-// advisory has no entry, while an entry says Teadeck is affected, and when an
-// advisory changed after it was assessed (advisories are edited, e.g. details
-// added after admins had time to update).
-// Run daily by .forgejo/workflows/security-advisories.yml.
+// Fails while a Mastodon security advisory has no assessment in
+// security/mastodon-advisories.json, is assessed as affecting Teadeck, or
+// changed after it was assessed. Run daily by the security-advisories workflow.
 //
 // Usage: node scripts/check_advisories.mjs [--from-file advisories.json]
 import { readFile } from 'node:fs/promises';
