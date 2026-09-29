@@ -84,6 +84,12 @@ test('a post opens with its thread in an overlay, from its own button or, when c
   await post.locator('.status__relative-time').click();
   await overlay.getByText(replyText).waitFor();
 
+  // Replying leaves the overlay: the post opens in the main view and the compose form takes the reply.
+  await overlay.getByRole('button', { name: 'Reply', exact: true }).first().click();
+  await overlay.waitFor({ state: 'detached' });
+  await page.waitForURL(`${origin}/@${account.acct}/${status.id}`);
+  await page.waitForFunction(() => document.activeElement?.closest('.compose-form') !== null);
+
   assert.deepEqual(pageErrors, []);
   await context.close();
 });
