@@ -46,6 +46,18 @@
   font-weight: 400 700;
   font-display: swap;
 }
+@font-face {
+  font-family: 'Teadeck IBM Plex Mono';
+  src: url('./fonts/ibm-plex-mono-latin-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Teadeck IBM Plex Mono';
+  src: url('./fonts/ibm-plex-mono-latin-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
 
 /* Assam: warm brown ground, the copper of its liquor as the only accent. */
 html[data-teadeck-theme='assam'][data-color-scheme='dark'] {
@@ -176,13 +188,22 @@ html[data-teadeck-theme='sencha'][data-color-scheme='light'] {
 html[data-teadeck-theme][data-color-scheme='dark'] {
   --font-heading: 'Teadeck Space Grotesk', system-ui, sans-serif;
   --font-body: 'Teadeck IBM Plex Sans', system-ui, sans-serif;
+  --md-heading-weight: 500;
+  --md-h1: 26px;
+  --md-h2: 20px;
+  --md-h3: 16px;
 }
 html[data-teadeck-theme][data-color-scheme='light'] {
   --font-heading: 'Teadeck Newsreader', Georgia, serif;
   --font-body: 'Teadeck Public Sans', system-ui, sans-serif;
+  --md-heading-weight: 400;
+  --md-h1: 30px;
+  --md-h2: 23px;
+  --md-h3: 18px;
 }
 
 html[data-teadeck-theme] {
+  --font-monospace: 'Teadeck IBM Plex Mono', mastodon-font-monospace, monospace;
   /* 8px radii: flatter than Mastodon's, and the same everywhere. */
   --radius-xs: 8px;
   --radius-sm: 8px;
@@ -238,3 +259,260 @@ html[data-teadeck-theme] #teadeck-shell .btn:focus {
   background-color: color-mix(in oklab, transparent, var(--color-bg-brand-base) 14%);
   color: var(--color-text-brand);
 }
+
+/*
+ * Post content: Markdown as GoToSocial renders it (headings, lists, quotes,
+ * code). Each half of each tea has its own colours; Mastodon's own rich-text
+ * colours (a pink) are replaced by them.
+ */
+html[data-teadeck-theme='assam'][data-color-scheme='dark'] {
+  --md-heading: #ece3da;
+  --md-text: #d6c8bb;
+  --md-muted: #a1907f;
+  --md-accent: #c2814f;
+  --md-link: #dda274;
+  --md-border: #33261f;
+  --md-surface-raised: #251c17;
+  --md-code-inline: #ecc39a;
+  --md-code-inline-bg: rgb(194 129 79 / 16%);
+  --md-code-bg: #0d0a08;
+  --md-code-function: #d6b877;
+  --md-code-string: #b9c08a;
+  --md-code-number: #d98a7a;
+  --md-code-comment: #86705f;
+}
+html[data-teadeck-theme='assam'][data-color-scheme='light'] {
+  --md-heading: #262520;
+  --md-text: #454138;
+  --md-muted: #6a655a;
+  --md-accent: #8a7d52;
+  --md-link: #5f5636;
+  --md-border: #ddd8cd;
+  --md-surface-raised: #eae5da;
+  --md-code-inline: #4e4630;
+  --md-code-inline-bg: rgb(138 125 82 / 14%);
+  --md-code-bg: #f3f0e9;
+  --md-code-function: #3f5a6e;
+  --md-code-string: #66652a;
+  --md-code-number: #9a4f3a;
+  --md-code-comment: #77726a;
+}
+html[data-teadeck-theme='sencha'][data-color-scheme='dark'] {
+  --md-heading: #e8ece6;
+  --md-text: #c9d3c8;
+  --md-muted: #9aa89c;
+  --md-accent: #9cc17c;
+  --md-link: #b2d295;
+  --md-border: #2e3833;
+  --md-surface-raised: #242d29;
+  --md-code-inline: #c5dda8;
+  --md-code-inline-bg: rgb(156 193 124 / 14%);
+  --md-code-bg: #101413;
+  --md-code-function: #9cc4c0;
+  --md-code-string: #d9c07f;
+  --md-code-number: #d89a78;
+  --md-code-comment: #76887c;
+}
+html[data-teadeck-theme='sencha'][data-color-scheme='light'] {
+  --md-heading: #25281f;
+  --md-text: #414436;
+  --md-muted: #6b6d5c;
+  --md-accent: #5f7d4e;
+  --md-link: #4a6a3c;
+  --md-border: #ded9c6;
+  --md-surface-raised: #ebe8d8;
+  --md-code-inline: #3a5730;
+  --md-code-inline-bg: rgb(95 125 78 / 12%);
+  --md-code-bg: #f3f1e6;
+  --md-code-function: #3d5f7a;
+  --md-code-string: #7f6118;
+  --md-code-number: #a24f3a;
+  --md-code-comment: #737562;
+}
+html[data-teadeck-theme] {
+  --md-code-keyword: var(--md-link);
+  --rich-text-container-color: var(--md-code-inline-bg);
+  --rich-text-text-color: var(--md-code-inline);
+  --rich-text-decorations-color: var(--md-accent);
+}
+
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) {
+  color: var(--md-text);
+}
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(h1, h2, h3, h4, h5, h6) {
+  margin: 18px 0 8px;
+  font-family: var(--font-heading);
+  font-weight: var(--md-heading-weight);
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--md-heading);
+}
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(h1, h2, h3, h4, h5, h6):first-child {
+  margin-top: 0;
+}
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) h1 { font-size: var(--md-h1); }
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) h2 { font-size: var(--md-h2); }
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(h3, h4, h5, h6) { font-size: var(--md-h3); }
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(b, strong) {
+  font-weight: 600;
+  color: var(--md-heading);
+}
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(del, s) {
+  text-decoration: line-through;
+  color: var(--md-muted);
+}
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) a:not(.mention) {
+  color: var(--md-link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--md-accent);
+}
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :not(pre) > code {
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-family: var(--font-monospace);
+  font-size: 0.88em;
+  color: var(--md-code-inline);
+  background: var(--md-code-inline-bg);
+}
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(ul, ol) {
+  padding-inline-start: 16px;
+}
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) li {
+  padding-inline-start: 10px;
+  line-height: 1.6;
+}
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) li + li {
+  margin-top: 4px;
+}
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) li::marker {
+  color: var(--md-accent);
+}
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote {
+  padding-inline-start: 16px;
+  font-style: italic;
+  line-height: 1.65;
+  color: var(--md-text);
+}
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote::before,
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote blockquote::before {
+  display: block;
+  width: 2px;
+  height: auto;
+  inset-block: 0;
+  border-radius: 1px;
+  mask-image: none;
+  background-color: var(--md-accent);
+}
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote blockquote {
+  border-inline-start: 0;
+  padding-inline-start: 16px;
+}
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) hr {
+  height: 1px;
+  margin: 16px 0;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--md-border) 48px, var(--md-border) calc(100% - 48px), transparent);
+}
+html[data-teadeck-theme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(sup, sub) {
+  font-size: 0.75em;
+}
+
+/*
+ * A code block (code_block.tsx). Also used with Mastodon's own themes, so its
+ * colours fall back to theirs.
+ */
+.status__content__text .teadeck-code {
+  margin-bottom: 22px;
+  border: 1px solid var(--md-border, var(--color-border-primary));
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--md-code-bg, var(--rich-text-container-color));
+  color: var(--md-text, var(--rich-text-text-color));
+  font-style: normal;
+
+}
+.status__content__text .teadeck-code:last-child {
+  margin-bottom: 0;
+}
+
+.teadeck-code__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--md-border, var(--color-border-primary));
+}
+
+.teadeck-code__language {
+  font-family: var(--font-monospace);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--md-muted, var(--color-text-secondary));
+}
+
+.teadeck-code__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: var(--md-muted, var(--color-text-secondary));
+  cursor: pointer;
+}
+.teadeck-code__copy:hover,
+.teadeck-code__copy:focus-visible {
+  color: var(--md-link, var(--color-text-brand));
+}
+.teadeck-code__copy .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.teadeck-code__body {
+  display: flex;
+  padding: 14px 0;
+  font-family: var(--font-monospace);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.teadeck-code__lines {
+  flex: none;
+  padding: 0 14px;
+  text-align: end;
+  white-space: pre;
+  color: var(--md-code-comment, var(--color-text-secondary));
+  user-select: none;
+  font-family: var(--font-monospace);
+}
+
+.status__content__text .teadeck-code pre {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0 14px 0 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  white-space: pre;
+  overflow-x: auto;
+  unicode-bidi: normal;
+}
+.status__content__text .teadeck-code pre code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-monospace);
+  font-size: inherit;
+}
+
+.teadeck-code__keyword { color: var(--md-code-keyword); }
+.teadeck-code__function { color: var(--md-code-function); }
+.teadeck-code__string { color: var(--md-code-string); }
+.teadeck-code__number { color: var(--md-code-number); }
+.teadeck-code__comment { color: var(--md-code-comment); }

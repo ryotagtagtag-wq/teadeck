@@ -1,0 +1,43 @@
+diff --git a/app/javascript/config/html-tags.json b/app/javascript/config/html-tags.json
+--- a/app/javascript/config/html-tags.json
++++ b/app/javascript/config/html-tags.json
+@@ -56,6 +56,18 @@
+     },
+     "ruby": {},
+     "rt": {},
+-    "rp": {}
++    "rp": {},
++    "h1": {},
++    "h2": {},
++    "h3": {},
++    "h4": {},
++    "h5": {},
++    "h6": {},
++    "hr": {
++      "children": false
++    },
++    "sub": {},
++    "sup": {},
++    "div": {}
+   }
+ }
+diff --git a/app/javascript/mastodon/components/status_content.jsx b/app/javascript/mastodon/components/status_content.jsx
+--- a/app/javascript/mastodon/components/status_content.jsx
++++ b/app/javascript/mastodon/components/status_content.jsx
+@@ -13,6 +13,7 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
+ import { Icon }  from 'mastodon/components/icon';
+ import { Poll } from 'mastodon/components/poll';
+ import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
++import { CodeBlock } from '@/teadeck/code_block';
+ import { languages as preloadedLanguages } from 'mastodon/initial_state';
+ 
+ import { EmojiHTML } from './emoji/html';
+@@ -178,6 +179,8 @@ class StatusContent extends PureComponent {
+       );
+     } else if (element.classList.contains('quote-inline') && this.props.status.get('quote')) {
+       return null;
++    } else if (element instanceof HTMLPreElement) {
++      return <CodeBlock element={element} key={key} />;
+     }
+     return undefined;
+   }
