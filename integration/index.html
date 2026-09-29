@@ -19,6 +19,12 @@
       </header>
       <main class="form-container">
         <p id="teadeck-status" class="flash-message alert" role="status" aria-live="polite"></p>
+        <div id="teadeck-start-failed" class="simple_form" hidden>
+          <div class="actions">
+            <button id="teadeck-retry" type="button" class="btn" data-teadeck-text="retry">Try again</button>
+            <button type="button" class="btn button-secondary teadeck-sign-out" data-teadeck-text="signOut">Logout</button>
+          </div>
+        </div>
         <div id="teadeck-account-list" class="simple_form" hidden>
           <h1 class="title" data-teadeck-text="continueAs">Continue as</h1>
           <ul></ul>
@@ -49,7 +55,7 @@
           </div>
           <div class="actions">
             <button type="submit" class="btn" data-teadeck-text="signIn">Log in</button>
-            <button id="teadeck-reset" type="button" class="btn button-secondary" hidden data-teadeck-text="signOut">Logout</button>
+            <button id="teadeck-reset" type="button" class="btn button-secondary teadeck-sign-out" hidden data-teadeck-text="signOut">Logout</button>
           </div>
         </form>
         <p class="teadeck-shell-footer"><a href="https://git.knubbel.me/knubbel/teadeck" rel="noopener" target="_blank" data-teadeck-text="sourceCode">View source code</a></p>

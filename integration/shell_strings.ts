@@ -50,6 +50,7 @@ export const shellMessages = {
   sourceCode: { en: 'View source code', upstream: 'js:footer.source_code' },
 
   connecting: { en: 'Connecting…', de: 'Verbinde …' },
+  retry: { en: 'Try again', upstream: 'js:bundle_column_error.retry' },
 
   updateTitle: { en: 'New version', de: 'Neue Version' },
   updateBody: { en: 'A new version of Teadeck is ready.', de: 'Eine neue Version von Teadeck ist bereit.' },
@@ -96,6 +97,10 @@ export const shellMessages = {
   errorServer: {
     en: 'The server answered with an error. Please try again.',
     de: 'Die Instanz antwortete mit einem Fehler. Bitte erneut versuchen.',
+  },
+  errorStartFailed: {
+    en: 'Your server could not be reached. You are still signed in.',
+    de: 'Deine Instanz ist nicht erreichbar. Du bist weiterhin angemeldet.',
   },
   errorNoSession: { en: 'No active account session.', de: 'Keine aktive Kontositzung.' },
   errorAccountStore: { en: 'Account storage unavailable.', de: 'Kontospeicher nicht verfügbar.' },

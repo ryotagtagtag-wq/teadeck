@@ -100,6 +100,25 @@ function showError(error: unknown) {
   void showLogin();
 }
 
+/** The sign-in is still valid, only the server failed: offer to try again, not to sign in, and keep the address. */
+async function showStartFailed(error: unknown) {
+  setStatusMessage('errorStartFailed', 'alert', error instanceof ShellError ? error.detail : undefined);
+  await shellText;
+  form.hidden = true;
+  accountList.hidden = true;
+  document.getElementById('teadeck-start-failed')!.hidden = false;
+  loading.hidden = true;
+  document.getElementById('mastodon')!.hidden = true;
+  shell.hidden = false;
+}
+
+function failStart(error: unknown) {
+  // Unreachable, timed out or a server error; a rejected token is errorSessionInvalid.
+  const serverFailed = !(error instanceof ShellError) || error.id === 'errorServer';
+  if (getSession() && serverFailed) void showStartFailed(error);
+  else showError(error);
+}
+
 form.addEventListener('submit', (event) => {
   event.preventDefault();
   form.querySelector('button')!.disabled = true;
@@ -107,9 +126,10 @@ form.addEventListener('submit', (event) => {
   void login(instanceInput.value, { remember: rememberInput.checked }).catch(showError);
 });
 
-document.getElementById('teadeck-reset')!.addEventListener('click', () => {
-  void forgetAndLogout().catch(showError);
-});
+for (const button of document.querySelectorAll('.teadeck-sign-out')) {
+  button.addEventListener('click', () => { void forgetAndLogout().catch(showError); });
+}
+document.getElementById('teadeck-retry')!.addEventListener('click', () => location.reload());
 
 /** Renders one-click entries for remembered accounts on the login shell, so returning after a soft switch/logout doesn't require a fresh OAuth round trip. */
 function renderAccountList(accounts: RememberedAccount[]) {
@@ -296,4 +316,4 @@ async function boot() {
   void enableOffline(offerUpdate).catch((error: unknown) => console.warn('Offline mode unavailable', error));
 }
 
-void boot().catch(showError);
+void boot().catch(failStart);
