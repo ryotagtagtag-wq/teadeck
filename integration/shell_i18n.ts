@@ -1,20 +1,7 @@
 /**
- * The sign-in page in the reader's language.
- *
- * Which language: the one chosen in Teadeck's settings when this browser has
- * already been signed in (remembered next to the design, see appearance.ts),
- * otherwise the browser's own preference - the same rule the application
- * itself follows once it runs (`resolveLocale`).
- *
- * The texts come from `/shell-locales/<locale>.json`, written at build time
- * from Mastodon's own translations plus Teadeck's own sentences
- * (scripts/shell_locales.mjs). English is compiled in, so the page is readable
- * before that file arrives, if it cannot be loaded at all, and offline on the
- * very first start; the service worker caches the language in use afterwards,
- * exactly as it does for the application's own translations.
- *
- * Applied to the markup through `data-teadeck-text` attributes, so index.html
- * stays a readable English page rather than a set of empty placeholders.
+ * The sign-in page in the language last chosen here, else the browser's.
+ * Translations come from /shell-locales/<locale>.json (scripts/shell_locales.mjs);
+ * English is built in and used whenever a translation cannot be loaded.
  */
 
 import { englishShellMessages, shellMessages } from './shell_strings.ts';
@@ -24,20 +11,15 @@ import type { UiLocale } from './ui_locale.ts';
 
 let messages: Record<string, string> = englishShellMessages();
 
-/** One text of the sign-in page; English where the language has no translation. */
 export function t(id: ShellMessageId): string {
   return messages[id] ?? shellMessages[id]?.en ?? id;
 }
 
-/** The language the sign-in page should use: the one last chosen here, else the browser's. */
 export function shellLocale(lastChosen: unknown): UiLocale {
   return resolveLocale(lastChosen, navigator.languages ?? [navigator.language]);
 }
 
-/**
- * Loads the translations for `locale`. Never rejects: any failure leaves the
- * page in English rather than without text.
- */
+/** Never rejects: on any failure the page stays in English. */
 export async function loadShellMessages(locale: UiLocale): Promise<void> {
   if (locale === 'en') return;
   try {
@@ -50,15 +32,10 @@ export async function loadShellMessages(locale: UiLocale): Promise<void> {
       if (id in shellMessages && typeof text === 'string' && text !== '') translated[id] = text;
     }
     messages = { ...englishShellMessages(), ...translated };
-  } catch {
-    /* offline or blocked: English stays */
-  }
+  } catch { /* English stays */ }
 }
 
-/**
- * Puts the loaded texts into the page: `data-teadeck-text` names the message,
- * `data-teadeck-text-attr` the attribute to fill instead of the element's text.
- */
+/** `data-teadeck-text` names the message, `data-teadeck-text-attr` an attribute to fill instead of the text. */
 export function applyShellText(root: ParentNode = document): void {
   for (const element of root.querySelectorAll<HTMLElement>('[data-teadeck-text]')) {
     const id = element.dataset.teadeckText as ShellMessageId;
@@ -68,13 +45,11 @@ export function applyShellText(root: ParentNode = document): void {
   }
 }
 
-/** The language of the document, for screen readers, hyphenation and RTL scripts. */
 export function applyDocumentLanguage(locale: UiLocale): void {
   document.documentElement.lang = locale;
   document.documentElement.dir = isRtlLocale(locale) ? 'rtl' : 'ltr';
 }
 
-/** Everything the sign-in page needs, in one step: load, translate, mark the document. */
 export async function translateShell(locale: UiLocale): Promise<void> {
   await loadShellMessages(locale);
   applyDocumentLanguage(locale);
