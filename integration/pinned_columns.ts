@@ -1,12 +1,6 @@
-/**
- * In the multi-column layout upstream always renders the current route as an
- * extra column on the right, and prefixes every in-app link with `/deck`. So
- * following e.g. "Startseite" in the navigation panel opened `/deck/home` next
- * to the pinned home column: the same column twice.
- */
-
-// Routes from features/ui/index.jsx that render the same component as a pinned column type
-// (see componentMap in multi_column_content.tsx). Columns needing params (hashtag, list) are left out.
+// In the multi-column layout the current route is shown as an extra column, so
+// following a link to a pinned column's route showed that column twice.
+// Routes per pinned column type; columns with parameters (hashtag, list) are left out.
 const columnRoutes: Record<string, string[]> = {
   HOME: ['/home', '/timelines/home'],
   NOTIFICATIONS: ['/notifications'],

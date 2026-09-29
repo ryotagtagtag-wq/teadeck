@@ -2,12 +2,9 @@ const reloadKey = 'teadeck.reloadedForUpdate';
 const retryAfterMs = 30_000;
 
 /**
- * After a redeploy an open tab still references the previous build's lazily
- * loaded chunks (e.g. the profile view), which no longer exist on the server:
- * nginx answers with its HTML 404 page and the dynamic import fails. Vite
- * reports that as `vite:preloadError`; reloading picks up the new build.
- * At most one reload per 30 seconds, so a chunk that is really missing shows
- * the upstream error instead of reloading forever.
+ * After a redeploy, an open tab may request chunks of the previous build that
+ * are gone. Reloading picks up the new build; at most once per 30 seconds, so a
+ * really missing chunk does not reload forever.
  */
 export function shouldReloadForUpdate(lastReloadAt: number, now: number) {
   return now - lastReloadAt >= retryAfterMs;
@@ -18,8 +15,6 @@ export function reloadOnStaleChunks() {
     const lastReloadAt = Number(sessionStorage.getItem(reloadKey) ?? 0);
     if (!shouldReloadForUpdate(lastReloadAt, Date.now())) return;
     sessionStorage.setItem(reloadKey, String(Date.now()));
-    // Not preventDefault(): the import still fails normally until the reload
-    // replaces the page, instead of resolving to an empty module.
     location.reload();
   });
 }
