@@ -10,16 +10,9 @@ import ContentCopyIcon from '@/material-icons/400-24px/content_copy.svg?react';
 import { Icon } from '@/mastodon/components/icon';
 
 import { codeLanguage, highlightCode } from './code_highlight';
-import type { UiTextLocale } from './settings_strings';
-import { uiTextLocale } from './settings_strings';
-
-const texts: Record<UiTextLocale, { copy: string; copied: string }> = {
-  de: { copy: 'Kopieren', copied: 'Kopiert' },
-  en: { copy: 'Copy', copied: 'Copied' },
-};
+import { currentUiTextLocale, t } from './settings_strings';
 
 export const CodeBlock: React.FC<{ element: HTMLPreElement }> = ({ element }) => {
-  const locale = uiTextLocale(document.documentElement.lang || 'en');
   const language = codeLanguage(element.querySelector('code')?.className);
   // A trailing line break ends the last line; it does not start another one.
   const code = (element.textContent ?? '').replace(/\n$/, '');
@@ -42,7 +35,7 @@ export const CodeBlock: React.FC<{ element: HTMLPreElement }> = ({ element }) =>
         <span className='teadeck-code__language monospace'>{language}</span>
         <button type='button' className='teadeck-code__copy' onClick={copy}>
           <Icon id='copy' icon={ContentCopyIcon} />
-          {texts[locale][copied ? 'copied' : 'copy']}
+          {t(copied ? 'copied' : 'copy', currentUiTextLocale())}
         </button>
       </div>
       <div className='teadeck-code__body'>

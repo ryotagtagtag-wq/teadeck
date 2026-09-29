@@ -9,9 +9,8 @@ import type { ReplyAudience } from './gotosocial';
 import { effectiveReplyAudience, isReplyAudienceFeasible, replyAudiences } from './gotosocial';
 import { saveReplyAudience } from './reply_audience';
 import type { UiTextLocale } from './settings_strings';
-import { uiTextLocale } from './settings_strings';
+import { currentUiTextLocale } from './settings_strings';
 
-// Follows the interface language like the settings page (German or English; see settings_strings.ts).
 // GoToSocial always lets mentioned accounts reply, whatever the policy says.
 const labels: Record<UiTextLocale, Record<ReplyAudience, { short: string; long: string }>> = {
   de: {
@@ -45,17 +44,16 @@ const texts = {
 
 /** Shown when a post restricting replies was held back (see interactionPolicyFor). */
 export function interactionDefaultsUnavailableMessage() {
-  return texts[uiTextLocale(document.documentElement.lang || 'en')].defaultsUnavailable;
+  return texts[currentUiTextLocale()].defaultsUnavailable;
 }
 
-/** Same pill-and-menu look as the visibility and language buttons next to it. */
 export const ReplyAudiencePicker: React.FC<{
   value: ReplyAudience;
   onChange: (value: ReplyAudience) => void;
 }> = ({ value, onChange }) => {
   const visibility = useAppSelector((state) => state.compose.get('privacy') as string);
-  const locale = uiTextLocale(document.documentElement.lang || 'en');
-  // Shown and sent: the remembered choice, or its fallback while the visibility rules it out.
+  const locale = currentUiTextLocale();
+  // The remembered choice, or its fallback while the visibility rules it out.
   const effective = effectiveReplyAudience(value, visibility);
   const items = useMemo(
     () => replyAudiences.map((audience) => {

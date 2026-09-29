@@ -1,19 +1,14 @@
-/**
- * Teadeck has no i18n pipeline of its own for the shell it writes itself
- * (see `reply_audience_picker.tsx`); the settings page used to be German
- * only. Adding a language picker without translating at least the strings
- * on that same page would leave it half-English, half-German, so this is a
- * small, self-contained dictionary for exactly those strings — German and
- * English only, matching the two content languages Teadeck already offers
- * in `bootstrap.ts`'s `languages` list. Any other interface language falls
- * back to English here; the much larger upstream Mastodon UI around this
- * page already has full translations for every locale in `ui_locale.ts`.
- */
+/** Texts of Teadeck's own interface in German and English; other languages get English. */
 
 export type UiTextLocale = 'de' | 'en';
 
 export function uiTextLocale(locale: string): UiTextLocale {
   return locale.toLowerCase().startsWith('de') ? 'de' : 'en';
+}
+
+/** The language the interface is shown in right now. */
+export function currentUiTextLocale(): UiTextLocale {
+  return uiTextLocale(document.documentElement.lang || 'en');
 }
 
 type Text = Record<UiTextLocale, string>;
@@ -33,6 +28,8 @@ export const settingsStrings = {
   },
   openInOverlay: { de: 'Im Overlay öffnen', en: 'Open in overlay' },
   close: { de: 'Schließen', en: 'Close' },
+  copy: { de: 'Kopieren', en: 'Copy' },
+  copied: { de: 'Kopiert', en: 'Copied' },
 
   displayMedia: { de: 'Medien', en: 'Media' },
   displayMediaDefault: { de: 'Als heikel markierte ausblenden', en: 'Hide media marked as sensitive' },

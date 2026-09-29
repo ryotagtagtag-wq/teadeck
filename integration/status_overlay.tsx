@@ -14,7 +14,7 @@ import { openModal } from '@/mastodon/actions/modal';
 import { IconButton } from '@/mastodon/components/icon_button';
 import { useAppDispatch } from '@/mastodon/store';
 
-import { t, uiTextLocale } from './settings_strings';
+import { currentUiTextLocale, t } from './settings_strings';
 import { readPreference, writePreference } from './storage';
 
 const preferenceKey = 'statusOverlay';
@@ -76,7 +76,7 @@ export const StatusOverlayButton: React.FC<{ statusId: string }> = ({ statusId }
   const open = useOpenStatusOverlay();
   const handleClick = useCallback(() => { open(statusId); }, [open, statusId]);
   if (enabled) return null;
-  const title = t('openInOverlay', uiTextLocale(document.documentElement.lang || 'en'));
+  const title = t('openInOverlay', currentUiTextLocale());
   return (
     <div className='status__action-bar__button-wrapper'>
       <IconButton className='status__action-bar__button teadeck-status-overlay-button' title={title} icon='fullscreen' iconComponent={FullscreenIcon} onClick={handleClick} />
