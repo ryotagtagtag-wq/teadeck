@@ -10,7 +10,8 @@ import {
 } from '../integration/frontend_settings.ts';
 import { defaultNotificationShows, readNotificationShows } from '../integration/notification_settings.ts';
 import { detectLocale, isRtlLocale, resolveLocale } from '../integration/ui_locale.ts';
-import { account, instance, status, timelineText } from './fixtures.mjs';
+import { account, instance, timelineText } from './fixtures.mjs';
+import { mockMastodon } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 test('defaults follow the account reading preferences and the system motion setting', () => {
@@ -106,31 +107,7 @@ test('settings buttons open a local frontend settings page; the multi-column lay
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
 
-  await context.route('https://mastodon.test/**', async (route) => {
-    const request = route.request();
-    const url = new URL(request.url());
-    const cors = { 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
-    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    if (url.pathname === '/oauth/authorize') {
-      const callback = new URL('/oauth/callback', origin);
-      callback.search = new URLSearchParams({ code: 'browser-code', state: url.searchParams.get('state') ?? '' });
-      return route.fulfill({ contentType: 'text/html', body: `<script>location.replace(${JSON.stringify(callback.href)})</script>` });
-    }
-    let body = [];
-    if (url.pathname === '/api/v1/apps') body = { client_id: 'browser-client', client_secret: 'browser-secret' };
-    else if (url.pathname === '/oauth/token') body = { access_token: 'browser-token', token_type: 'Bearer', scope: 'read write follow' };
-    else if (url.pathname === '/api/v2/instance') body = instance;
-    else if (url.pathname === '/api/v1/accounts/verify_credentials') body = account;
-    else if (url.pathname === '/api/v1/preferences') body = {};
-    else if (url.pathname === '/api/v1/timelines/home') body = [status];
-    else if (url.pathname === '/api/v2/notifications') body = { notification_groups: [], accounts: [], statuses: [] };
-    else if (url.pathname === '/api/v2/notifications/policy') body = {
-      for_not_following: 'accept', for_not_followers: 'accept', for_new_accounts: 'accept',
-      for_private_mentions: 'accept', for_limited_accounts: 'filter', for_bots: 'accept',
-      summary: { pending_requests_count: 0, pending_notifications_count: 0 },
-    };
-    return route.fulfill({ status: 200, contentType: 'application/json', headers: cors, body: JSON.stringify(body) });
-  });
+  await mockMastodon(context, origin);
 
   // Records whether the sign-in page ever becomes visible on a page load.
   await page.addInitScript(() => {

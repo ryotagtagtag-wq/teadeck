@@ -93,7 +93,7 @@ test('after the first start the app runs without the Teadeck web server', { time
     const emojiStatus = await page.evaluate(() => fetch('/emoji/1f600.svg').then((response) => response.status));
     assert.equal(emojiStatus, 200);
 
-    // A new tab starts offline as well (without "Angemeldet bleiben" it has no session: the sign-in page).
+    // A new tab starts offline as well (without "Stay signed in" it has no session: the sign-in page).
     const secondTab = await context.newPage();
     await secondTab.goto(`${origin}/home`);
     await secondTab.locator('#teadeck-login').waitFor();

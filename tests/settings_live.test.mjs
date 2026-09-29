@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
-import { account, instance, status, timelineText } from './fixtures.mjs';
+import { account, instance, timelineText } from './fixtures.mjs';
+import { mockMastodon, signIn } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 // The settings page keeps and applies a change the moment it is made: no reload,
@@ -27,38 +28,11 @@ async function signedInPage({ deployment } = {}) {
     // What container/entrypoint.sh writes from TEADECK_THEME / TEADECK_COLOR_SCHEME.
     await context.route(`${origin}/teadeck.json`, (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(deployment) }));
   }
-  await context.route('https://mastodon.test/**', async (route) => {
-    const request = route.request();
-    const url = new URL(request.url());
-    const cors = { 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
-    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    if (url.pathname === '/oauth/authorize') {
-      const callback = new URL('/oauth/callback', origin);
-      callback.search = new URLSearchParams({ code: 'browser-code', state: url.searchParams.get('state') ?? '' });
-      return route.fulfill({ contentType: 'text/html', body: `<script>location.replace(${JSON.stringify(callback.href)})</script>` });
-    }
-    let body = [];
-    if (url.pathname === '/api/v1/apps') body = { client_id: 'browser-client', client_secret: 'browser-secret' };
-    else if (url.pathname === '/oauth/token') body = { access_token: 'browser-token', token_type: 'Bearer', scope: 'read write follow' };
-    else if (url.pathname === '/api/v2/instance') body = instance;
-    else if (url.pathname === '/api/v1/accounts/verify_credentials') body = account;
-    else if (url.pathname === '/api/v1/preferences') body = {};
-    else if (url.pathname === '/api/v1/timelines/home') body = [status];
-    else if (url.pathname === '/api/v2/notifications') body = { notification_groups: [], accounts: [], statuses: [] };
-    else if (url.pathname === '/api/v2/notifications/policy') body = {
-      for_not_following: 'accept', for_not_followers: 'accept', for_new_accounts: 'accept',
-      for_private_mentions: 'accept', for_limited_accounts: 'filter', for_bots: 'accept',
-      summary: { pending_requests_count: 0, pending_notifications_count: 0 },
-    };
-    return route.fulfill({ status: 200, contentType: 'application/json', headers: cors, body: JSON.stringify(body) });
-  });
+  await mockMastodon(context, origin);
   const page = await context.newPage();
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
-  await page.getByText(timelineText).waitFor();
+  await signIn(page, origin);
   return { context, page, pageErrors };
 }
 

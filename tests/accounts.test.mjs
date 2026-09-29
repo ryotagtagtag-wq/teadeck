@@ -95,7 +95,7 @@ test('"stay signed in" resumes the account in a new tab without OAuth; signing o
   assert.equal(server.tokenExchanges, 1);
   await freshPage.close();
 
-  // Signing out ("Abmelden" below "Einstellungen" and "Mehr", then confirm) revokes the token and forgets the account.
+  // Signing out from the navigation list revokes the token and forgets the account.
   await page.locator('.teadeck-logout').click();
   await page.locator('.modal-root').getByRole('button', { name: /^(Abmelden|Log out)$/ }).click();
   await page.waitForURL(`${origin}/login`);
