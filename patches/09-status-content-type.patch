@@ -1,7 +1,7 @@
 diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodon/actions/compose.js
 --- a/app/javascript/mastodon/actions/compose.js
 +++ b/app/javascript/mastodon/actions/compose.js
-@@ -4,7 +4,8 @@ import axios from 'axios';
+@@ -4,7 +4,8 @@ import { isCancel } from 'axios';
  import { throttle } from 'lodash';
  
  import api from '@/mastodon/api';
@@ -11,7 +11,7 @@ diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodo
  import { interactionDefaultsUnavailableMessage } from '@/teadeck/reply_audience_picker';
  import { browserHistory } from '@/mastodon/components/router';
  import { countableText } from '@/mastodon/features/compose/util/counter';
-@@ -100,7 +101,7 @@ export const ensureComposeIsVisible = (getState) => {
+@@ -103,7 +104,7 @@ export const ensureComposeIsVisible = (getState) => {
    }
  };
  
@@ -20,7 +20,7 @@ diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodo
    return (dispatch, getState) => {
      const maxOptions = getState().server.server.item?.configuration.polls.max_options;
  
-@@ -109,6 +110,9 @@ export function setComposeToStatus(status, text, spoiler_text) {
+@@ -112,6 +113,9 @@ export function setComposeToStatus(status, text, spoiler_text) {
        status,
        text,
        spoiler_text,
@@ -30,7 +30,7 @@ diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodo
        maxOptions,
      });
    }
-@@ -276,6 +280,7 @@ export function submitCompose(successCallback) {
+@@ -267,6 +271,7 @@ export function submitCompose(successCallback) {
          quoted_status_id: getState().getIn(['compose', 'quoted_status_id']),
          quote_approval_policy: visibility === 'private' || visibility === 'direct' ? 'nobody' : getState().getIn(['compose', 'quote_policy']),
          interaction_policy: interactionPolicy,
@@ -48,9 +48,9 @@ diff --git a/app/javascript/mastodon/actions/compose_typed.ts b/app/javascript/m
 -import type { ReplyAudience } from '@/teadeck/gotosocial';
 +import type { ReplyAudience, StatusFormat } from '@/teadeck/gotosocial';
  import type { MediaAttachment } from '@/mastodon/models/media_attachment';
- import type { Status, StatusVisibility } from '@/mastodon/models/status';
- import type { RootState } from '@/mastodon/store';
-@@ -298,6 +298,10 @@ export const setComposeReplyAudience = createAction<ReplyAudience>(
+ import type {
+   MediaAttachmentShape,
+@@ -342,6 +342,10 @@ export const setComposeReplyAudience = createAction<ReplyAudience>(
    'compose/setReplyAudience',
  );
  
@@ -152,6 +152,26 @@ diff --git a/app/javascript/mastodon/features/compose/containers/compose_form_co
  });
  
  export default connect(mapStateToProps, mapDispatchToProps)(ComposeForm);
+diff --git a/app/javascript/mastodon/features/compose/redesign/footer.tsx b/app/javascript/mastodon/features/compose/redesign/footer.tsx
+--- a/app/javascript/mastodon/features/compose/redesign/footer.tsx
++++ b/app/javascript/mastodon/features/compose/redesign/footer.tsx
+@@ -28,6 +28,7 @@ import {
+   selectComposeType,
+ } from './selectors';
+ import classes from './styles.module.scss';
++import { StatusFormatToggleButton } from '@/teadeck/status_format_toggle';
+ 
+ export const ComposeFooter: React.FC<{ onEmojiPick: OnEmojiPick }> = ({
+   onEmojiPick,
+@@ -65,6 +66,8 @@ export const ComposeFooter: React.FC<{ onEmojiPick: OnEmojiPick }> = ({
+ 
+       <ComposeEmojiButton onPick={onEmojiPick} />
+ 
++      <StatusFormatToggleButton />
++
+       <IconButton
+         size='sm'
+         icon={ChartBarHorizontalIcon}
 diff --git a/app/javascript/mastodon/reducers/compose.js b/app/javascript/mastodon/reducers/compose.js
 --- a/app/javascript/mastodon/reducers/compose.js
 +++ b/app/javascript/mastodon/reducers/compose.js
@@ -169,7 +189,7 @@ diff --git a/app/javascript/mastodon/reducers/compose.js b/app/javascript/mastod
    pasteLinkCompose,
    cancelPasteLinkCompose,
    setDragUploadEnabled,
-@@ -109,6 +111,11 @@ const initialState = ImmutableMap({
+@@ -110,6 +112,11 @@ const initialState = ImmutableMap({
    // Remembered per account: new posts keep the last choice.
    reply_audience: loadReplyAudience(),
    default_reply_audience: loadReplyAudience(),
@@ -181,7 +201,7 @@ diff --git a/app/javascript/mastodon/reducers/compose.js b/app/javascript/mastod
  });
  
  const initialPoll = ImmutableMap({
-@@ -150,6 +157,7 @@ function clearAll(state) {
+@@ -152,6 +159,7 @@ function clearAll(state) {
      map.set('quoted_status_id', null);
      map.set('quote_policy', state.get('default_quote_policy'));
      map.set('reply_audience', state.get('default_reply_audience'));
@@ -189,7 +209,7 @@ diff --git a/app/javascript/mastodon/reducers/compose.js b/app/javascript/mastod
      map.set('isDragDisabled', false);
    });
  }
-@@ -391,6 +399,8 @@ export const composeReducer = (state = initialState, action) => {
+@@ -393,6 +401,8 @@ export const composeReducer = (state = initialState, action) => {
      return state.set('quote_policy', action.payload);
    } else if (setComposeReplyAudience.match(action)) {
      return state.set('reply_audience', action.payload).set('default_reply_audience', action.payload);
@@ -198,7 +218,7 @@ diff --git a/app/javascript/mastodon/reducers/compose.js b/app/javascript/mastod
    } else if (pasteLinkCompose.pending.match(action)) {
      return state.set('fetching_link', action.meta.requestId);
    } else if (pasteLinkCompose.fulfilled.match(action) || pasteLinkCompose.rejected.match(action)) {
-@@ -646,6 +656,9 @@ export const composeReducer = (state = initialState, action) => {
+@@ -648,6 +658,9 @@ export const composeReducer = (state = initialState, action) => {
        map.set('quoted_status_id', action.status.getIn(['quote', 'quoted_status'], null));
        // Mastodon-authored posts can be expected to have at most one automatic approval policy
        map.set('quote_policy', action.status.getIn(['quote_approval', 'automatic', 0]) || 'nobody');

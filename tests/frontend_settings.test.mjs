@@ -11,7 +11,7 @@ import {
 import { defaultNotificationShows, readNotificationShows } from '../integration/notification_settings.ts';
 import { detectLocale, isRtlLocale, resolveLocale } from '../integration/ui_locale.ts';
 import { account, instance, timelineText } from './fixtures.mjs';
-import { mockMastodon } from './mastodon_mock.mjs';
+import { mockMastodon, openPreferences } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 test('defaults follow the account reading preferences and the system motion setting', () => {
@@ -53,7 +53,7 @@ test('maps onto the initial-state fields upstream reads', () => {
     'display_media', 'emoji_style', 'expand_spoilers', 'missing_alt_text_modal', 'reduce_motion',
     'use_blurhash', 'use_pending_items',
   ]);
-  assert.equal(layoutStartPath(true), '/deck/getting-started');
+  assert.equal(layoutStartPath(true), '/deck/home');
   assert.equal(layoutStartPath(false), '/home');
 });
 
@@ -131,7 +131,7 @@ test('settings buttons open a local frontend settings page; the multi-column lay
 
   // No settings entry leads to the instance's server-rendered settings any more.
   assert.equal(await page.locator('a[href*="/settings/preferences"]').count(), 0);
-  await page.locator('a[href="/preferences"]').first().click();
+  await openPreferences(page);
   await page.waitForURL(`${origin}/preferences`);
   await page.getByText('An die Instanz wird nichts übertragen.').waitFor();
 
@@ -149,24 +149,28 @@ test('settings buttons open a local frontend settings page; the multi-column lay
   assert.equal(meta.advanced_layout, true);
   assert.equal(await page.getByLabel('Inhaltswarnungen immer ausklappen').isChecked(), true);
 
-  // The drawer's cog in the multi-column layout opens the same page.
-  assert.equal(await page.locator('.drawer__tab[href="/preferences"]').count(), 1);
-
   // Its column has a back arrow, also right after the reload (no in-app history to go back to).
   await page.locator('.column-header__back-button').click();
-  await page.waitForURL(`${origin}/deck/getting-started`);
+  // Back to the start of the layout: Mastodon's redesign opens it at /deck/.
+  await page.waitForURL(`${origin}/deck/`);
   assert.equal(await page.getByText('An die Instanz wird nichts übertragen.').count(), 0);
 
   await page.goto(origin);
-  await page.waitForURL(`${origin}/deck/getting-started`);
+  await page.waitForURL(`${origin}/deck/home`);
   await page.getByText(timelineText).first().waitFor();
-  assert.equal(await page.locator('.column-header__title', { hasText: 'Startseite' }).count(), 1);
+  // Home is pinned, so its route shows Mastodon's placeholder beside it, not a second copy.
+  const homePosts = page.locator('article:not(:has(article))').filter({ hasText: timelineText });
+  assert.equal(await homePosts.count(), 1);
 
-  // Links in the navigation column to already pinned columns must not open them a second time.
-  for (const label of ['Startseite', 'Benachrichtigungen']) {
-    await page.locator('.navigation-panel').getByRole('link', { name: label }).first().click();
-    await page.waitForURL(`${origin}/deck/getting-started`);
-    assert.equal(await page.locator('.column-header__title', { hasText: label }).count(), 1, label);
+  // Links in the navigation to already pinned columns must not open them a second time.
+  const notificationTitles = page.locator('[id^="skip-link-target-content-"]').filter({ hasText: /^Benachrichtigungen$/ });
+  assert.equal(await notificationTitles.count(), 1);
+  for (const [label, path] of [['Startseite', '/deck/home'], ['Benachrichtigungen', '/deck/notifications']]) {
+    await page.getByRole('link', { name: label, exact: true }).first().click();
+    await page.waitForURL(`${origin}${path}`);
+    await page.getByText('Beiträge und andere Seiten werden in dieser Spalte geöffnet.').or(page.getByText('Posts and other pages will open in this column.')).waitFor();
+    assert.equal(await homePosts.count(), 1, label);
+    assert.equal(await notificationTitles.count(), 1, label);
   }
 
   assert.deepEqual(pageErrors, []);

@@ -15,6 +15,7 @@ type Text = Record<UiTextLocale, string>;
 
 export const settingsStrings = {
   title: { de: 'Einstellungen', en: 'Settings' },
+  serverSettings: { de: 'Einstellungen auf dem Server', en: 'Settings on the server' },
   intro: { de: 'Diese Einstellungen gelten nur für Teadeck in diesem Browser und für dieses Konto. An die Instanz wird nichts übertragen.', en: 'These settings apply only to Teadeck in this browser, for this account. Nothing here is sent to the instance.' },
   save: { de: 'Speichern', en: 'Save' },
 

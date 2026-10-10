@@ -53,3 +53,36 @@ export async function signIn(page, origin, { remember = false } = {}) {
   await page.locator('#teadeck-login button[type=submit]').click();
   await page.getByText(timelineText).first().waitFor();
 }
+
+/** Opens the account menu at the bottom of the navigation (English or German UI). */
+export async function openAccountMenu(page) {
+  await page.getByRole('button', { name: /^(Account settings|Kontoeinstellungen)$/ }).first().click();
+}
+
+/** Teadeck's settings, through the account menu as in Mastodon's redesign. */
+export async function openPreferences(page) {
+  await openAccountMenu(page);
+  await page.getByRole('link', { name: /^(Settings|Einstellungen)$/ }).click();
+}
+
+/** Signs out through the account menu and confirms. */
+export async function signOut(page) {
+  await openAccountMenu(page);
+  const name = /^(Sign Out|Abmelden)$/;
+  // A button in the navigation menu, a menu item elsewhere.
+  await page.getByRole('menuitem', { name }).or(page.getByRole('button', { name })).first().click();
+  await page.locator('.modal-root').getByRole('button', { name: /^(Abmelden|Log out)$/ }).click();
+}
+
+/** The redesigned composer's text field (German or English UI). */
+export const composerText = (page) => page.getByPlaceholder(/^(Was möchtest du mitteilen\?|What would you like to say\?)$/);
+
+/** Opens the composer from its button, unless it is already open. */
+export async function openComposer(page) {
+  const newPost = page.getByRole('button', { name: /^(Neuer Beitrag|New Post)$/ }).first();
+  await newPost.or(composerText(page)).first().waitFor();
+  if (!(await composerText(page).isVisible())) await newPost.click();
+  await composerText(page).waitFor();
+}
+
+export const publishButton = (page) => page.locator('form[role="dialog"]').getByRole('button', { name: /^(Veröffentlichen|Publish)$/ });

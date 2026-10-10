@@ -3,7 +3,7 @@ import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, instance, timelineText } from './fixtures.mjs';
-import { mockMastodon, signIn } from './mastodon_mock.mjs';
+import { mockMastodon, signIn, openAccountMenu, openPreferences, signOut } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 // The settings page keeps and applies a change the moment it is made: no reload,
@@ -41,7 +41,7 @@ test('a changed setting takes effect at once, and the page stays where it was', 
   try {
     let loads = 0;
     page.on('load', () => loads++);
-    await page.locator('a[href="/preferences"]').first().click();
+    await openPreferences(page);
     await page.locator('#teadeck-settings-theme').waitFor();
 
     // The single-column settings bind scrolling to the document, not the
@@ -80,7 +80,7 @@ test('a setting the interface only reads at startup is kept and offers a reload'
   try {
     let loads = 0;
     page.on('load', () => loads++);
-    await page.locator('a[href="/preferences"]').first().click();
+    await openPreferences(page);
     await page.locator('#teadeck-settings-autoPlayGif').waitFor();
     await page.locator('#teadeck-settings-autoPlayGif').check();
 
@@ -106,7 +106,7 @@ test('which notifications appear takes effect without a reload', { timeout: 120_
   try {
     let loads = 0;
     page.on('load', () => loads++);
-    await page.locator('a[href="/preferences"]').first().click();
+    await openPreferences(page);
     await page.locator('#teadeck-settings-notify-favourite').waitFor();
     await page.locator('#teadeck-settings-notify-favourite').uncheck();
 
@@ -124,30 +124,23 @@ test('which notifications appear takes effect without a reload', { timeout: 120_
   }
 });
 
-test('the navigation menu sends server-only pages to the instance and keeps local views in Teadeck', { timeout: 60_000 }, async () => {
+test('the account menu sends server-only pages to the instance and keeps local views in Teadeck', { timeout: 60_000 }, async () => {
   const { context, page, pageErrors } = await signedInPage();
   try {
-    await page.locator('.navigation-panel').getByRole('button', { name: 'Mehr', exact: true }).click();
-    const menu = page.locator('.dropdown-menu');
-    await menu.waitFor();
-    const links = await menu.locator('a[href]').evaluateAll((items) => items.map((item) => ({ text: item.textContent.trim(), href: item.href })));
-    const muted = links.find((link) => link.text === 'Stummgeschaltete Wörter');
-    assert.ok(muted, links.map((link) => link.text).join(' | '));
-    assert.equal(muted.href, 'https://mastodon.test/filters');
+    await openAccountMenu(page);
+    const links = await page.locator('a[href]').filter({ visible: true }).evaluateAll((items) => items.map((item) => ({ text: item.textContent.trim(), href: item.href })));
+    const href = (text) => links.find((link) => link.text === text)?.href;
+    // Teadeck's settings stay local; the account's own settings are on the server.
+    assert.equal(href('Einstellungen'), `${origin}/preferences`, links.map((link) => link.text).join(' | '));
+    assert.equal(href('Einstellungen auf dem Server'), 'https://mastodon.test/settings');
     // Server-only pages use the instance; supported local views stay in Teadeck.
-    for (const path of ['/filters', '/settings/privacy', '/statuses_cleanup', '/auth/edit', '/settings/export']) {
-      assert.ok(links.some((link) => link.href === `https://mastodon.test${path}`), path);
-      assert.ok(!links.some((link) => link.href === `${origin}${path}`), path);
-    }
-    for (const path of ['/mutes', '/blocks', '/domain_blocks']) {
-      assert.ok(links.some((link) => link.href === `${origin}${path}`), path);
-    }
+    assert.equal(href('Follower und Folge ich'), 'https://mastodon.test/relationships');
+    assert.equal(href('Blockierte Konten'), `${origin}/blocks`);
     assert.deepEqual(pageErrors, []);
   } finally {
     await context.close();
   }
 });
-
 test('the design this deployment starts with applies, and a reader\'s own choice wins over it', { timeout: 120_000 }, async () => {
   const { context, page, pageErrors } = await signedInPage({ deployment: { theme: 'sencha', colorScheme: 'dark' } });
   try {
@@ -156,7 +149,7 @@ test('the design this deployment starts with applies, and a reader\'s own choice
     assert.equal(await page.evaluate(() => document.documentElement.dataset.colorScheme), 'dark');
 
     // Choosing something else keeps it, here and after a reload.
-    await page.locator('a[href="/preferences"]').first().click();
+    await openPreferences(page);
     await page.locator('#teadeck-settings-theme').waitFor();
     await page.locator('#teadeck-settings-theme').selectOption('mastodon');
     assert.equal(await page.evaluate(() => document.documentElement.dataset.teadeckTheme), undefined);
@@ -226,11 +219,10 @@ test('after signing out, the sign-in page greets in the design that was last use
   const { context, page } = await signedInPage({ deployment: { theme: 'assam', colorScheme: 'dark' } });
   try {
     // Someone who prefers Mastodon's look picks it, then signs out.
-    await page.locator('a[href="/preferences"]').first().click();
+    await openPreferences(page);
     await page.locator('#teadeck-settings-theme').waitFor();
     await page.locator('#teadeck-settings-theme').selectOption('mastodon');
-    await page.locator('.navigation-panel .teadeck-logout').first().click();
-    await page.locator('.modal-root').getByRole('button', { name: /^(Abmelden|Log out)$/ }).click();
+    await signOut(page);
     await page.waitForURL(`${origin}/login`);
     await page.locator('#teadeck-login').waitFor();
 
@@ -258,7 +250,7 @@ test('the settings page shows the design that is on screen, not the client\'s ow
   try {
     // Nothing chosen yet, so this installation's design is running …
     assert.equal(await page.evaluate(() => document.documentElement.dataset.teadeckTheme), 'sencha');
-    await page.locator('a[href="/preferences"]').first().click();
+    await openPreferences(page);
     await page.locator('#teadeck-settings-theme').waitFor();
     // … and that is what the fields say.
     assert.equal(await page.locator('#teadeck-settings-theme').inputValue(), 'sencha');
@@ -271,13 +263,13 @@ test('the settings page shows the design that is on screen, not the client\'s ow
 test('a setting changed after reopening the settings keeps the one changed before', { timeout: 120_000 }, async () => {
   const { context, page, pageErrors } = await signedInPage({ deployment: { theme: 'sencha' } });
   try {
-    await page.locator('a[href="/preferences"]').first().click();
+    await openPreferences(page);
     await page.locator('#teadeck-settings-theme').selectOption('assam');
     await page.locator('a[href="/home"]').first().click();
     await page.getByText(timelineText).first().waitFor();
 
     // Opened again, it shows the earlier choice and saving another setting keeps it.
-    await page.locator('a[href="/preferences"]').first().click();
+    await openPreferences(page);
     assert.equal(await page.locator('#teadeck-settings-theme').inputValue(), 'assam');
     await page.locator('#teadeck-settings-contrast').selectOption('high');
     assert.equal(await page.evaluate(() => document.documentElement.dataset.teadeckTheme), 'assam');

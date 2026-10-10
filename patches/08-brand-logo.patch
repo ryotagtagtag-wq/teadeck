@@ -18,12 +18,49 @@ diff --git a/app/javascript/mastodon/components/empty_state/index.tsx b/app/java
    error: (
      <GIF src='/oops.gif' staticSrc='/oops.png' className={classes.errorImage} />
    ),
+diff --git a/app/javascript/mastodon/features/announcements/index.tsx b/app/javascript/mastodon/features/announcements/index.tsx
+--- a/app/javascript/mastodon/features/announcements/index.tsx
++++ b/app/javascript/mastodon/features/announcements/index.tsx
+@@ -1,3 +1,4 @@
++import { BrandLogo } from '@/teadeck/brand_logo';
+ import { useCallback } from 'react';
+ import type { FC } from 'react';
+ 
+@@ -7,14 +8,12 @@ import type { Map, List } from 'immutable';
+ 
+ import { XIcon } from '@phosphor-icons/react';
+ 
+-import elephantUIPlane from '@/images/elephant_ui_plane.svg';
+ import { hideAnnouncements } from '@/mastodon/actions/announcements';
+ import { IconButton } from '@/mastodon/components/button/redesign';
+ import type { RenderSlideFn } from '@/mastodon/components/carousel';
+ import { Carousel } from '@/mastodon/components/carousel';
+ import { CustomEmojiProvider } from '@/mastodon/components/emoji/context';
+ import { useCustomEmojis } from '@/mastodon/hooks/useCustomEmojis';
+-import { mascot } from '@/mastodon/initial_state';
+ import {
+   createAppSelector,
+   useAppDispatch,
+@@ -62,12 +61,7 @@ export const Announcements: FC = () => {
+ 
+   return (
+     <div className='announcements__root'>
+-      <img
+-        className='announcements__mastodon'
+-        alt=''
+-        draggable='false'
+-        src={mascot ?? elephantUIPlane}
+-      />
++      <BrandLogo className='announcements__mastodon' />
+ 
+       {isRedesignEnabled() && (
+         <IconButton
 diff --git a/app/javascript/mastodon/features/compose/index.tsx b/app/javascript/mastodon/features/compose/index.tsx
 --- a/app/javascript/mastodon/features/compose/index.tsx
 +++ b/app/javascript/mastodon/features/compose/index.tsx
 @@ -1,3 +1,4 @@
 +import { BrandLogo, hasBrandLogo } from '@/teadeck/brand_logo';
- import { useEffect, useCallback } from 'react';
+ import { useEffect, useCallback, Suspense, lazy } from 'react';
  
  import { useIntl, defineMessages } from 'react-intl';
 @@ -8,7 +9,6 @@ import type { Map as ImmutableMap, List as ImmutableList } from 'immutable';
@@ -32,19 +69,19 @@ diff --git a/app/javascript/mastodon/features/compose/index.tsx b/app/javascript
  
 -import elephantUIPlane from '@/images/elephant_ui_plane.svg';
  import { Column } from '@/mastodon/components/column';
- import { ColumnHeader } from '@/mastodon/components/column/header';
- import EditIcon from '@/material-icons/400-24px/edit_square.svg?react';
-@@ -20,7 +20,7 @@ import PublicIcon from '@/material-icons/400-24px/public.svg?react';
- import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
- import { mountCompose, unmountCompose } from 'mastodon/actions/compose';
+ import { ColumnHeader as LegacyColumnHeader } from '@/mastodon/components/column/header';
+ import { ColumnHeader } from '@/mastodon/components/column_header';
+@@ -27,7 +27,7 @@ import {
+   unmountCompose,
+ } from 'mastodon/actions/compose';
  import { Icon } from 'mastodon/components/icon';
 -import { mascot, reduceMotion } from 'mastodon/initial_state';
 +import { reduceMotion } from 'mastodon/initial_state';
  import { useAppDispatch, useAppSelector } from 'mastodon/store';
  
  import { messages as navbarMessages } from '../ui/components/navigation_bar';
-@@ -143,9 +143,11 @@ const Compose: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
-           <div className='drawer__inner'>
+@@ -154,9 +154,11 @@ const Compose: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
+           <div className='drawer__inner' onFocus={handleFocus}>
              <ComposeFormContainer />
  
 -            <div className='drawer__inner__mastodon with-zig-zag-decoration'>
@@ -78,39 +115,6 @@ diff --git a/app/javascript/mastodon/features/explore/index.tsx b/app/javascript
            title={intl.formatMessage(messages.title)}
            multiColumn={multiColumn}
            scrollTopOnClick
-diff --git a/app/javascript/mastodon/features/home_timeline/components/announcements/index.tsx b/app/javascript/mastodon/features/home_timeline/components/announcements/index.tsx
---- a/app/javascript/mastodon/features/home_timeline/components/announcements/index.tsx
-+++ b/app/javascript/mastodon/features/home_timeline/components/announcements/index.tsx
-@@ -1,14 +1,13 @@
-+import { BrandLogo } from '@/teadeck/brand_logo';
- import { useCallback } from 'react';
- import type { FC } from 'react';
- 
- import type { Map, List } from 'immutable';
- 
--import elephantUIPlane from '@/images/elephant_ui_plane.svg';
- import type { RenderSlideFn } from '@/mastodon/components/carousel';
- import { Carousel } from '@/mastodon/components/carousel';
- import { CustomEmojiProvider } from '@/mastodon/components/emoji/context';
- import { useCustomEmojis } from '@/mastodon/hooks/useCustomEmojis';
--import { mascot } from '@/mastodon/initial_state';
- import { createAppSelector, useAppSelector } from '@/mastodon/store';
- 
- import type { IAnnouncement } from './announcement';
-@@ -46,12 +45,7 @@ export const Announcements: FC = () => {
- 
-   return (
-     <div className='announcements__root'>
--      <img
--        className='announcements__mastodon'
--        alt=''
--        draggable='false'
--        src={mascot ?? elephantUIPlane}
--      />
-+      <BrandLogo className='announcements__mastodon' />
- 
-       <CustomEmojiProvider emojis={emojis}>
-         <Carousel
 diff --git a/app/javascript/mastodon/features/home_timeline/index.jsx b/app/javascript/mastodon/features/home_timeline/index.jsx
 --- a/app/javascript/mastodon/features/home_timeline/index.jsx
 +++ b/app/javascript/mastodon/features/home_timeline/index.jsx
@@ -122,7 +126,7 @@ diff --git a/app/javascript/mastodon/features/home_timeline/index.jsx b/app/java
  import { fetchAnnouncements, toggleShowAnnouncements } from 'mastodon/actions/announcements';
  import { IconWithBadge } from 'mastodon/components/icon_with_badge';
  import { NotSignedInIndicator } from 'mastodon/components/not_signed_in_indicator';
-@@ -168,7 +167,7 @@ class HomeTimeline extends PureComponent {
+@@ -171,7 +170,7 @@ class HomeTimeline extends PureComponent {
          ) : (
            <LegacyColumnHeader
              icon='home'
@@ -131,42 +135,74 @@ diff --git a/app/javascript/mastodon/features/home_timeline/index.jsx b/app/java
              active={hasUnread}
              title={intl.formatMessage(messages.title)}
              onPin={this.handlePin}
-diff --git a/app/javascript/mastodon/features/navigation_panel/index.tsx b/app/javascript/mastodon/features/navigation_panel/index.tsx
---- a/app/javascript/mastodon/features/navigation_panel/index.tsx
-+++ b/app/javascript/mastodon/features/navigation_panel/index.tsx
-@@ -33,7 +33,7 @@ import { fetchFollowRequests } from 'mastodon/actions/accounts';
- import { openNavigation, closeNavigation } from 'mastodon/actions/navigation';
- import { Account } from 'mastodon/components/account';
- import { IconWithBadge } from 'mastodon/components/icon_with_badge';
--import { WordmarkLogo } from 'mastodon/components/logo';
+diff --git a/app/javascript/mastodon/features/multi_column_placeholder/index.tsx b/app/javascript/mastodon/features/multi_column_placeholder/index.tsx
+--- a/app/javascript/mastodon/features/multi_column_placeholder/index.tsx
++++ b/app/javascript/mastodon/features/multi_column_placeholder/index.tsx
+@@ -1,10 +1,9 @@
+ import { FormattedMessage } from 'react-intl';
+ 
+-import elephantUIPlane from '@/images/elephant_ui_plane.svg';
+ import { Column } from '@/mastodon/components/column';
+ import { EmptyColumnHeader } from '@/mastodon/components/column_header';
+ import { EmptyState } from '@/mastodon/components/empty_state';
+-import { mascot } from '@/mastodon/initial_state';
 +import { BrandLogo, hasBrandLogo } from '@/teadeck/brand_logo';
- import { Search } from 'mastodon/features/compose/components/search';
- import { ColumnLink } from 'mastodon/features/ui/components/column_link';
- import { getNavigationSkipLinkId } from 'mastodon/features/ui/components/skip_links';
-@@ -243,15 +243,17 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
-       className='navigation-panel'
-       aria-label={intl.formatMessage(messages.main)}
-     >
--      <div className='navigation-panel__logo'>
--        <Link
--          to='/'
--          className='column-link column-link--logo'
--          id={getNavigationSkipLinkId()}
--        >
--          <WordmarkLogo />
--        </Link>
+ 
+ const MultiColumnPlaceholderColumn: React.FC = () => {
+   return (
+@@ -27,9 +26,11 @@ const MultiColumnPlaceholderColumn: React.FC = () => {
+         }
+       />
+ 
+-      <div className='drawer__inner__mastodon'>
+-        <img alt='' draggable='false' src={mascot ?? elephantUIPlane} />
 -      </div>
 +      {hasBrandLogo() && (
-+        <div className='navigation-panel__logo'>
-+          <Link
-+            to='/'
-+            className='column-link column-link--logo'
-+            id={getNavigationSkipLinkId()}
-+          >
-+            <BrandLogo style={{ maxHeight: '30px', maxWidth: '100%' }} />
-+          </Link>
++        <div className='drawer__inner__mastodon'>
++          <BrandLogo />
 +        </div>
 +      )}
+     </Column>
+   );
+ };
+diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/header.tsx b/app/javascript/mastodon/features/navigation_panel/redesign/header.tsx
+--- a/app/javascript/mastodon/features/navigation_panel/redesign/header.tsx
++++ b/app/javascript/mastodon/features/navigation_panel/redesign/header.tsx
+@@ -1,10 +1,8 @@
+-import { FormattedMessage } from 'react-intl';
+-
+ import classNames from 'classnames';
+ import { Link } from 'react-router-dom';
  
-       {showSearch && <Search singleColumn />}
+-import { IconLogo } from '@/mastodon/components/logo';
+-import { customAppIcon, domain, title } from '@/mastodon/initial_state';
++import { domain, title } from '@/mastodon/initial_state';
++import { BrandLogo } from '@/teadeck/brand_logo';
  
+ import { getNavigationSkipLinkId } from '../../ui/components/skip_links';
+ 
+@@ -31,22 +29,12 @@ export const LogoLockup: React.FC<{
+       className={classNames(classes.siteNameLink, className)}
+       id={getNavigationSkipLinkId()}
+     >
+-      {customAppIcon && (
+-        <img src={customAppIcon} alt='' className={classes.appIcon} />
+-      )}
++      {/* The deployment's logo, if any; nothing of Mastodon's: the server may run other software. */}
++      <BrandLogo className={classNames('teadeck-logo', classes.appIcon)} />
+       <span className={classes.content}>
+         <span className={classes.serverName}>
+           {siteName ?? title ?? domain}
+         </span>
+-        <span className={classes.poweredBy}>
+-          <FormattedMessage
+-            id='navigation_bar.powered_by_mastodon'
+-            defaultMessage='powered by {logo}Mastodon'
+-            values={{
+-              logo: <IconLogo role='presentation' />,
+-            }}
+-          />
+-        </span>
+       </span>
+     </Link>
+   );

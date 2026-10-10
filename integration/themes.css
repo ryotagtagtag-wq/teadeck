@@ -178,6 +178,20 @@ html[data-teadeck-theme='sencha'][data-color-scheme='light'] {
   --teadeck-logo-tea: #cbbd62;
 }
 
+/* Mastodon's redesign takes surfaces and text from the accent ramp (indigo), which
+   would turn each design's ground into a tinted version of its accent. The designs
+   keep their neutral ground and text; the page behind the columns sets them apart. */
+html[data-teadeck-theme][data-color-scheme='dark'] {
+  --base-color-bg: var(--color-grey-950);
+  --base-color-bg-desktop: color-mix(in oklab, var(--color-grey-950) 60%, black);
+  --base-color-fg: var(--color-grey-100);
+}
+html[data-teadeck-theme][data-color-scheme='light'] {
+  --base-color-bg: var(--color-white);
+  --base-color-bg-desktop: var(--color-grey-100);
+  --base-color-fg: var(--color-grey-950);
+}
+
 /* The typeface follows the half of the design, not the tea. */
 html[data-teadeck-theme][data-color-scheme='dark'] {
   --font-heading: 'Teadeck Space Grotesk', system-ui, sans-serif;

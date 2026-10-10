@@ -88,8 +88,7 @@ test('the notifications column sorts by kind without being switched on first', {
 test('the switch for the short bar still works and is remembered', { timeout: 60_000 }, async () => {
   const deck = await signedInDeck();
   try {
-    await deck.page.locator('.column').filter({ hasText: 'Benachrichtigungen' }).first()
-      .getByRole('button', { name: 'Einstellungen anzeigen' }).click();
+    await deck.page.getByRole('button', { name: 'Benachrichtigungseinstellungen öffnen' }).first().click();
     await deck.page.getByLabel('Alle Filterkategorien anzeigen').first().uncheck({ force: true });
     await deck.page.waitForFunction(() => document.querySelectorAll('.notification__filter-bar button').length === 2);
 

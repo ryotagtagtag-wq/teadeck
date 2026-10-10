@@ -73,6 +73,25 @@ async function mockMastodonRest(context, { instanceFixture, onStatusPosted, fail
   });
 }
 
+// The redesigned composer opens from its button; "Who can reply" sits in its settings menu.
+const composerText = (page) => page.getByPlaceholder('Was möchtest du mitteilen?');
+async function openComposer(page) {
+  if (!(await composerText(page).isVisible())) await page.getByRole('button', { name: 'Neuer Beitrag' }).first().click();
+  await composerText(page).waitFor();
+}
+const submit = (page) => page.locator('form[role="dialog"]').getByRole('button', { name: 'Veröffentlichen' }).click();
+const settingsButton = (page) => page.locator('form[role="dialog"]').getByRole('button', { name: 'Einstellungen' });
+/** Opens the settings menu, runs `inMenu` on the reply-audience group (or null), and closes the menu again. */
+async function withReplyAudience(page, inMenu) {
+  await settingsButton(page).click();
+  const group = page.locator('.teadeck-reply-audience-picker');
+  await page.getByRole('menuitemcheckbox').first().waitFor();
+  const result = await inMenu((await group.count()) ? group : null);
+  await settingsButton(page).click();
+  await page.getByRole('menuitemcheckbox').first().waitFor({ state: 'detached' });
+  return result;
+}
+
 test('the GoToSocial reply-audience picker stays hidden on a plain Mastodon instance', { timeout: 60_000 }, async () => {
   const context = await browser.newContext({ locale: 'de-DE' });
   const page = await context.newPage();
@@ -84,11 +103,12 @@ test('the GoToSocial reply-audience picker stays hidden on a plain Mastodon inst
   await page.locator('#teadeck-instance').fill('mastodon.test');
   await page.locator('#teadeck-login button[type=submit]').click();
   await page.getByText(timelineText).waitFor();
+  await openComposer(page);
 
-  assert.equal(await page.locator('.teadeck-reply-audience-picker').count(), 0);
+  assert.equal(await withReplyAudience(page, (group) => group), null);
 
-  await page.getByPlaceholder('Was gibts Neues?').fill('Teadeck plain-instance post 3f0a');
-  await page.locator('.compose-form__submit button').click();
+  await composerText(page).fill('Teadeck plain-instance post 3f0a');
+  await submit(page);
   for (let attempt = 0; attempt < 50 && !posted; attempt++) await new Promise(r => setTimeout(r, 20));
   assert.ok(posted, 'the status was never posted');
   assert.equal('interaction_policy' in posted, false);
@@ -109,17 +129,17 @@ test('on a detected GoToSocial instance, restricting replies sends the matching 
   await page.locator('#teadeck-login button[type=submit]').click();
   await page.getByText(timelineText).waitFor();
 
-  // A pill button like the visibility and language buttons, in the same row.
-  const picker = page.locator('.compose-form__dropdowns .dropdown-button.teadeck-reply-audience-picker');
-  await picker.waitFor();
+  await openComposer(page);
+  const audience = () => withReplyAudience(page, (group) => group.getAttribute('data-value'));
   // Until something is chosen: the account default (no interaction policy sent).
-  assert.equal(await picker.getAttribute('data-value'), 'default');
+  assert.equal(await audience(), 'default');
 
-  await picker.click();
-  await page.locator('.dropdown-menu').getByRole('button', { name: 'Nur Follower und Erwähnte' }).click();
-  assert.equal(await picker.getAttribute('data-value'), 'followers');
-  await page.getByPlaceholder('Was gibts Neues?').fill('Teadeck GoToSocial reply-restricted post 6b2d');
-  await page.locator('.compose-form__submit button').click();
+  await withReplyAudience(page, async (group) => {
+    await group.getByRole('menuitemradio', { name: 'Nur Follower und Erwähnte' }).click();
+    assert.equal(await group.getAttribute('data-value'), 'followers');
+  });
+  await composerText(page).fill('Teadeck GoToSocial reply-restricted post 6b2d');
+  await submit(page);
   for (let attempt = 0; attempt < 50 && !posted; attempt++) await new Promise(r => setTimeout(r, 20));
   assert.ok(posted, 'the status was never posted');
   // Only replies are restricted; favourites and boosts keep the account's defaults for
@@ -132,11 +152,13 @@ test('on a detected GoToSocial instance, restricting replies sends the matching 
   });
 
   // The last choice sticks: for the next post, and after reloading the page.
-  await page.getByPlaceholder('Was gibts Neues?').and(page.locator(':placeholder-shown')).waitFor();
-  assert.equal(await picker.getAttribute('data-value'), 'followers');
+  await openComposer(page);
+  assert.equal(await composerText(page).inputValue(), '');
+  assert.equal(await audience(), 'followers');
   await page.reload();
   await page.getByText(timelineText).waitFor();
-  assert.equal(await picker.getAttribute('data-value'), 'followers');
+  await openComposer(page);
+  assert.equal(await audience(), 'followers');
 
   await context.close();
 });
@@ -154,15 +176,14 @@ test('without the account defaults a reply-restricted post is held back with a m
   await page.locator('#teadeck-login button[type=submit]').click();
   await page.getByText(timelineText).waitFor();
 
-  const picker = page.locator('.teadeck-reply-audience-picker');
-  await picker.click();
-  await page.locator('.dropdown-menu').getByRole('button', { name: 'Nur erwähnte Accounts' }).click();
-  await page.getByPlaceholder('Was gibts Neues?').fill('Teadeck held-back post 9c1e');
-  await page.locator('.compose-form__submit button').click();
+  await openComposer(page);
+  await withReplyAudience(page, (group) => group.getByRole('menuitemradio', { name: 'Nur erwähnte Accounts' }).click());
+  await composerText(page).fill('Teadeck held-back post 9c1e');
+  await submit(page);
   await page.getByText('Die Interaktions-Standards deines Kontos ließen sich nicht laden', { exact: false }).waitFor();
   assert.equal(posted, undefined);
   // The text stays for another attempt.
-  assert.equal(await page.getByPlaceholder('Was gibts Neues?').inputValue(), 'Teadeck held-back post 9c1e');
+  assert.equal(await composerText(page).inputValue(), 'Teadeck held-back post 9c1e');
 
   await context.close();
 });

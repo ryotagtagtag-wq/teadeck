@@ -5,10 +5,14 @@
  */
 
 import MarkdownIcon from './icons/markdown.svg?react';
+import { setComposeContentType } from '@/mastodon/actions/compose_typed';
+import { ToggleIconButton } from '@/mastodon/components/button/redesign';
 import { Icon } from '@/mastodon/components/icon';
+import { initialState } from '@/mastodon/initial_state';
+import { useAppDispatch, useAppSelector } from '@/mastodon/store';
 
 import type { StatusFormat } from './gotosocial';
-import { effectiveStatusFormat, statusFormatChoice } from './gotosocial';
+import { accountStatusFormat, effectiveStatusFormat, statusFormatChoice } from './gotosocial';
 import { saveStatusFormat } from './status_format';
 import type { UiTextLocale } from './settings_strings';
 import { currentUiTextLocale } from './settings_strings';
@@ -56,5 +60,36 @@ export const StatusFormatToggle: React.FC<{
     >
       <Icon id='markdown' icon={MarkdownIcon} />
     </button>
+  );
+};
+
+/** The redesigned composer's version, next to its emoji button; reads and sets the form's state itself. */
+export const StatusFormatToggleButton: React.FC = () => {
+  const value = useAppSelector((state) => state.compose.get('content_type', 'default') as StatusFormat);
+  const dispatch = useAppDispatch();
+  const meta = initialState?.meta as { teadeck_status_format?: boolean; teadeck_status_content_type?: unknown } | undefined;
+  const accountDefault = accountStatusFormat(meta?.teadeck_status_content_type);
+  if (!meta?.teadeck_status_format) return null;
+  const locale = currentUiTextLocale();
+  const format = effectiveStatusFormat(value, accountDefault);
+  const markdown = format === 'markdown';
+
+  const toggle = () => {
+    const chosen = statusFormatChoice(markdown ? 'plain' : 'markdown', accountDefault);
+    saveStatusFormat(chosen);
+    dispatch(setComposeContentType(chosen));
+  };
+
+  return (
+    <ToggleIconButton
+      size='sm'
+      active={markdown}
+      icon={MarkdownIcon}
+      className='teadeck-status-format-toggle'
+      data-value={format}
+      onClick={toggle}
+    >
+      {`${texts[locale][markdown ? 'on' : 'off']} · ${texts[locale][value === 'default' ? 'accountDefault' : 'own']}`}
+    </ToggleIconButton>
   );
 };

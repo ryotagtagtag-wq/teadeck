@@ -129,23 +129,32 @@ async function signedInPage({ instance: instanceBody, account: accountBody, stat
   await page.goto(origin);
   await page.locator('#teadeck-instance').fill('mastodon.test');
   await page.locator('#teadeck-login button[type=submit]').click();
-  await page.getByPlaceholder('Was gibts Neues?').waitFor();
+  // The redesigned composer opens from its button and closes again after posting.
+  const textarea = page.getByPlaceholder('Was möchtest du mitteilen?');
+  const openComposer = async () => {
+    await page.getByRole('button', { name: 'Neuer Beitrag' }).or(textarea).first().waitFor();
+    if (!(await textarea.isVisible())) await page.getByRole('button', { name: 'Neuer Beitrag' }).first().click();
+    await textarea.waitFor();
+  };
+  await openComposer();
   if (savedFormat) {
     await page.evaluate(({ accountId, format }) => {
       localStorage.setItem(`teadeck.v1:https://mastodon.test:${accountId}:statusFormat.v1`, JSON.stringify(format));
     }, { accountId: accountBody.id, format: savedFormat });
     await page.reload();
-    await page.getByPlaceholder('Was gibts Neues?').waitFor();
+    await openComposer();
   }
   return {
-    page, posted, pageErrors,
+    page, posted, pageErrors, openComposer,
     toggle: page.locator('.teadeck-status-format-toggle'),
     async post(text) {
       const before = posted.length;
-      await page.getByPlaceholder('Was gibts Neues?').fill(text);
+      await openComposer();
+      await textarea.fill(text);
       await page.getByRole('button', { name: 'Veröffentlichen' }).click();
       for (let attempt = 0; attempt < 100 && posted.length === before; attempt++) await new Promise((r) => setTimeout(r, 50));
       assert.equal(posted.length, before + 1, 'the status was never posted');
+      await openComposer();
       return posted[posted.length - 1];
     },
     stop: async () => { await context.close(); },
@@ -168,20 +177,18 @@ test('the switch sits with the compose buttons, right after the emoji picker', {
   const app = await signedInPage({ instance: gtsInstance, account: markdownAccount });
   try {
     await app.toggle.waitFor();
-    // Same row as the attachment, poll, warning and emoji buttons - and directly after the last of them.
-    const order = await app.page.locator('.compose-form__buttons > *').evaluateAll((elements) => elements.map((element) => element.className));
-    const emoji = order.findIndex((name) => name.includes('emoji'));
-    const toggle = order.findIndex((name) => name.includes('teadeck-status-format-toggle'));
-    assert.ok(emoji >= 0, `no emoji button in the row: ${order.join(' | ')}`);
-    assert.equal(toggle, emoji + 1, `the switch is not next to the emoji button: ${order.join(' | ')}`);
+    // Same row as the upload, emoji and poll buttons - and directly after the emoji button.
+    const footer = app.page.locator('form[role="dialog"] footer');
+    const emojiButton = footer.getByRole('button', { name: 'Emoji hinzufügen' });
+    const position = (button) => button.evaluate((element) => [...element.closest('footer').children].findIndex((child) => child.contains(element)));
+    const emoji = await position(emojiButton);
+    assert.ok(emoji >= 0, 'no emoji button in the row');
+    assert.equal(await position(app.toggle), emoji + 1, 'the switch is not next to the emoji button');
 
-    // And it is one of them to look at: same button class, same size.
-    assert.ok((await app.toggle.getAttribute('class')).includes('icon-button'));
-    const [emojiBox, toggleBox] = [
-      await app.page.locator('.compose-form__buttons .emoji-button, .compose-form__buttons [class*=emoji] button').first().boundingBox(),
-      await app.toggle.boundingBox(),
-    ];
+    // And it is one of them to look at: the same size.
+    const [emojiBox, toggleBox] = [await emojiButton.boundingBox(), await app.toggle.boundingBox()];
     assert.ok(Math.abs(emojiBox.height - toggleBox.height) <= 2, `heights differ: ${emojiBox.height} vs ${toggleBox.height}`);
+    assert.ok(Math.abs(emojiBox.width - toggleBox.width) <= 2, `widths differ: ${emojiBox.width} vs ${toggleBox.width}`);
     assert.deepEqual(app.pageErrors, []);
   } finally { await app.stop(); }
 });
@@ -195,7 +202,7 @@ test('a click overrides the account setting for the posts that follow, and is re
 
     // Remembered: a fresh start of the app keeps the choice.
     await app.page.reload();
-    await app.page.getByPlaceholder('Was gibts Neues?').waitFor();
+    await app.openComposer();
     assert.equal(await app.toggle.getAttribute('aria-pressed'), 'false');
     assert.equal((await app.post('immer noch ohne Markdown')).content_type, 'text/plain');
 
@@ -204,7 +211,7 @@ test('a click overrides the account setting for the posts that follow, and is re
     assert.equal(await app.toggle.getAttribute('aria-pressed'), 'true');
     assert.equal((await app.post('wieder Kontostandard')).content_type, undefined);
     await app.page.reload();
-    await app.page.getByPlaceholder('Was gibts Neues?').waitFor();
+    await app.openComposer();
     assert.equal(await app.toggle.getAttribute('aria-pressed'), 'true');
     assert.deepEqual(app.pageErrors, []);
   } finally { await app.stop(); }
@@ -259,16 +266,14 @@ test('editing a post keeps the format it was written in', { timeout: 60_000 }, a
     // This account writes plain text, so the switch starts off.
     assert.equal(await app.toggle.getAttribute('aria-pressed'), 'false');
 
-    await app.page.locator('.status__action-bar').getByRole('button', { name: 'Mehr' }).click();
-    await app.page.locator('.dropdown-menu').getByText('Beitrag bearbeiten', { exact: true }).click();
-    await app.page.waitForFunction(() => {
-      const textarea = document.querySelector('textarea[placeholder="Was gibts Neues?"]');
-      return textarea instanceof HTMLTextAreaElement && textarea.value.includes('Markdown');
-    });
+    await app.page.locator('article').getByRole('button', { name: 'Mehr' }).click();
+    await app.page.getByRole('menuitem', { name: 'Beitrag bearbeiten', exact: true }).click();
+    await app.page.waitForFunction(() => [...document.querySelectorAll('form[role="dialog"] textarea')]
+      .some((textarea) => textarea instanceof HTMLTextAreaElement && textarea.value.includes('Markdown')));
     // The post was written in Markdown: editing it must not turn it into plain text.
     assert.equal(await app.toggle.getAttribute('aria-pressed'), 'true');
 
-    await app.page.getByRole('button', { name: 'Aktualisieren' }).click();
+    await app.page.locator('form[role="dialog"]').getByRole('button', { name: 'Speichern' }).click();
     for (let attempt = 0; attempt < 100 && app.posted.length === 0; attempt++) await new Promise((r) => setTimeout(r, 50));
     assert.equal(app.posted.length, 1, 'the edit was never sent');
     assert.equal(app.posted[0].content_type, 'text/markdown');

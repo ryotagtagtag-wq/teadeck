@@ -45,12 +45,16 @@ The container reads these settings at startup; open pages need a reload to pick 
 
 ## Personal settings
 
-Open **Settings** to change layout, appearance, language and notification filters for the current account. These choices stay in this browser. Some apply immediately; others offer a reload because Mastodon reads them only at startup.
+Open **Settings** in the account menu (**⋯** next to your name at the bottom of the navigation) to change layout, appearance, language and notification filters for the current account. These choices stay in this browser. Some apply immediately; others offer a reload because Mastodon reads them only at startup.
 
 ## Markdown
 
-The Markdown button is next to the emoji picker below the compose field. It is highlighted when Markdown is selected; click it to switch between Markdown and plain text. Teadeck remembers an override per account. Choosing the account's default again clears that override so later changes to the server-side default can take effect.
+The Markdown button is next to the emoji button at the bottom of the composer. It is highlighted when Markdown is selected; click it to switch between Markdown and plain text. Teadeck remembers an override per account. Choosing the account's default again clears that override so later changes to the server-side default can take effect.
 
 When editing a post, Teadeck keeps the post's original format.
 
 The button appears only if the server advertises both `text/plain` and `text/markdown`, as GoToSocial does.
+
+## Who can reply
+
+On GoToSocial, the composer's settings menu (the gear) has a **Who can reply** section next to **Who can quote**. Teadeck remembers the last choice per account. **Account default** sends nothing and leaves the decision to the server.

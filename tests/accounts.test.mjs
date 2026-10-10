@@ -3,6 +3,7 @@ import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, instance, status, timelineText } from './fixtures.mjs';
+import { signOut } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 let staticServer;
@@ -70,7 +71,7 @@ async function signIn(page) {
   await page.getByText(timelineText).waitFor();
 }
 
-test('"stay signed in" resumes the account in a new tab without OAuth; signing out from the compose column forgets it', { timeout: 60_000 }, async () => {
+test('"stay signed in" resumes the account in a new tab without OAuth; signing out from the account menu forgets it', { timeout: 60_000 }, async () => {
   const context = await browser.newContext();
   const pageErrors = [];
 
@@ -95,9 +96,8 @@ test('"stay signed in" resumes the account in a new tab without OAuth; signing o
   assert.equal(server.tokenExchanges, 1);
   await freshPage.close();
 
-  // Signing out from the navigation list revokes the token and forgets the account.
-  await page.locator('.teadeck-logout').click();
-  await page.locator('.modal-root').getByRole('button', { name: /^(Abmelden|Log out)$/ }).click();
+  // Signing out from the account menu revokes the token and forgets the account.
+  await signOut(page);
   await page.waitForURL(`${origin}/login`);
   await page.locator('#teadeck-login').waitFor();
   assert.equal(server.revocations, 1);

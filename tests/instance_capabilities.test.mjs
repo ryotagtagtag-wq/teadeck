@@ -3,7 +3,7 @@ import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { instance } from './fixtures.mjs';
-import { mockMastodon, signIn } from './mastodon_mock.mjs';
+import { mockMastodon, signIn, composerText, openComposer, publishButton } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 let server;
@@ -39,23 +39,30 @@ test('compose enforces the real instance character limit, not a hardcoded defaul
 
   await signIn(page, origin);
 
-  const composeInput = page.getByPlaceholder('Was gibts Neues?');
-  const submitButton = page.locator('.compose-form__submit button');
+  const posted = [];
+  page.on('request', (request) => {
+    if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/v1/statuses') posted.push(request);
+  });
+  await openComposer(page);
+  const composeInput = composerText(page);
+  const counter = page.locator('form[role="dialog"] footer');
 
-  // Under the real (small) limit: counter shows remaining characters and submit is enabled.
+  // The counter shows the instance's limit (upstream loads it a few seconds after the start).
   await composeInput.fill('short');
-  await page.locator('.character-counter').getByText('15').waitFor();
-  assert.equal(await submitButton.isDisabled(), false);
+  await counter.getByText('5/20').waitFor();
 
-  // Over the real (small, non-default) limit: counter goes negative and submit is blocked.
+  // Over the real (small, non-default) limit the post is not sent.
   // A hardcoded 500-character fallback would let this through silently.
   await composeInput.fill('this text is deliberately longer than twenty characters');
-  await page.locator('.character-counter--over').waitFor();
-  assert.equal(await submitButton.isDisabled(), true);
+  await counter.getByText('55/20').waitFor();
+  await publishButton(page).click();
+  await page.waitForTimeout(500);
+  assert.equal(posted.length, 0);
+  assert.equal(await composeInput.inputValue(), 'this text is deliberately longer than twenty characters');
 
   // The instance's custom emoji is fetched and offered while composing.
   await composeInput.fill('short :teadeck_te');
-  await page.locator('.autosuggest-emoji__name', { hasText: ':teadeck_test:' }).waitFor();
+  await page.locator('button[data-type="emoji"][data-id="teadeck_test"]').waitFor();
 
   await context.close();
 });

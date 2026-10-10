@@ -12,7 +12,7 @@ import type { UiTextLocale } from './settings_strings';
 import { currentUiTextLocale } from './settings_strings';
 
 // GoToSocial always lets mentioned accounts reply, whatever the policy says.
-const labels: Record<UiTextLocale, Record<ReplyAudience, { short: string; long: string }>> = {
+export const replyAudienceLabels: Record<UiTextLocale, Record<ReplyAudience, { short: string; long: string }>> = {
   de: {
     default: { short: 'Standard', long: 'Kontostandard (in GoToSocial eingestellt)' },
     public: { short: 'Alle', long: 'Alle' },
@@ -31,7 +31,7 @@ const labels: Record<UiTextLocale, Record<ReplyAudience, { short: string; long: 
   },
 };
 
-const texts = {
+export const replyAudienceTexts = {
   de: {
     title: 'Wer darf antworten', onlyPublic: 'Nur bei öffentlichen oder nicht gelisteten Beiträgen', notDirect: 'Bei direkten Nachrichten nicht möglich',
     defaultsUnavailable: 'Die Interaktions-Standards deines Kontos ließen sich nicht laden. Der Beitrag wurde nicht gesendet, damit Favorisieren und Teilen nicht weiter erlaubt werden als eingestellt. Bitte erneut versuchen.',
@@ -44,7 +44,7 @@ const texts = {
 
 /** Shown when a post restricting replies was held back (see interactionPolicyFor). */
 export function interactionDefaultsUnavailableMessage() {
-  return texts[currentUiTextLocale()].defaultsUnavailable;
+  return replyAudienceTexts[currentUiTextLocale()].defaultsUnavailable;
 }
 
 export const ReplyAudiencePicker: React.FC<{
@@ -59,8 +59,8 @@ export const ReplyAudiencePicker: React.FC<{
     () => replyAudiences.map((audience) => {
       const feasible = isReplyAudienceFeasible(audience, visibility);
       return {
-        text: labels[locale][audience].long,
-        description: feasible ? undefined : texts[locale][audience === 'public' ? 'onlyPublic' : 'notDirect'],
+        text: replyAudienceLabels[locale][audience].long,
+        description: feasible ? undefined : replyAudienceTexts[locale][audience === 'public' ? 'onlyPublic' : 'notDirect'],
         disabled: !feasible,
         highlighted: audience === effective,
         action: () => {
@@ -71,13 +71,13 @@ export const ReplyAudiencePicker: React.FC<{
     }),
     [visibility, effective, onChange, locale],
   );
-  const title = `${texts[locale].title}: ${labels[locale][effective].long}`;
+  const title = `${replyAudienceTexts[locale].title}: ${replyAudienceLabels[locale][effective].long}`;
 
   return (
     <Dropdown items={items} placement='bottom-start' title={title}>
       <button type='button' className='dropdown-button teadeck-reply-audience-picker' title={title} data-value={effective}>
         <Icon id='reply' icon={ReplyIcon} />
-        <span className='dropdown-button__label'>{labels[locale][effective].short}</span>
+        <span className='dropdown-button__label'>{replyAudienceLabels[locale][effective].short}</span>
       </button>
     </Dropdown>
   );

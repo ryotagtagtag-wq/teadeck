@@ -79,35 +79,29 @@ test('favouriting, boosting and replying to a status all go through Teadeck\'s p
   await page.locator('#teadeck-login button[type=submit]').click();
   await page.getByText(timelineText).waitFor();
 
+  const post = page.locator('article').filter({ hasText: timelineText }).last();
+
   // Favourite.
-  const favouriteButton = page.locator('button.star-icon');
+  const favouriteButton = post.getByRole('button', { name: 'Favorisieren' });
   await favouriteButton.click();
   for (let attempt = 0; attempt < 50 && favouriteCalls.length < 1; attempt++) await new Promise(r => setTimeout(r, 20));
   assert.deepEqual(favouriteCalls, ['POST']);
-  await page.locator('button.star-icon.active').waitFor();
+  await post.locator('button[aria-pressed="true"]').first().waitFor();
 
-  // Boost: shift-click skips the boost/quote menu and reblogs directly.
-  const boostButton = page.getByRole('button', { name: 'Teilen oder zitieren' });
-  await boostButton.click({ modifiers: ['Shift'] });
+  // Boost, from the boost-or-quote menu.
+  await post.getByRole('button', { name: 'Teilen oder zitieren' }).click();
+  await page.getByRole('menuitem', { name: /^Teilen/ }).first().click();
   for (let attempt = 0; attempt < 50 && reblogCalls.length < 1; attempt++) await new Promise(r => setTimeout(r, 20));
   assert.deepEqual(reblogCalls, ['POST']);
-  await page.waitForFunction(() => {
-    const button = [...document.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === 'Teilen oder zitieren');
-    return button?.classList.contains('active');
-  });
 
-  // Reply: prefills the compose form with the mention and the original status id.
-  await page.getByRole('button', { name: 'Antworten' }).click();
-  const composeInput = page.getByPlaceholder('Was gibts Neues?');
-  await page.waitForFunction(() => {
-    const textarea = document.querySelector('textarea[placeholder="Was gibts Neues?"]');
-    return textarea instanceof HTMLTextAreaElement && textarea.value.includes('@bob');
-  });
+  // Reply: opens the composer with the mention and the original status id.
+  await post.getByRole('button', { name: 'Antworten' }).click();
+  const composeInput = page.locator('form[role="dialog"] textarea');
+  await page.waitForFunction(() => document.querySelector('form[role="dialog"] textarea')?.value.includes('@bob'));
   await composeInput.press('End');
   await composeInput.pressSequentially('Teadeck reply test e5c1');
-  // The submit button's label changes to "Reply" while in-reply-to is set, so
-  // target it structurally instead of by (now different) accessible name.
-  await page.locator('.compose-form__submit button').click();
+  // The submit button's label depends on the kind of post, so target it structurally.
+  await page.locator('form[role="dialog"] button[type="submit"]').click();
 
   for (let attempt = 0; attempt < 50 && !publishedStatus; attempt++) await new Promise(r => setTimeout(r, 20));
   assert.ok(publishedStatus, 'the reply was never posted to /api/v1/statuses');

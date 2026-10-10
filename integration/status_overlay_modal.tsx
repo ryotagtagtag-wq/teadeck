@@ -10,14 +10,11 @@ import { useHistory } from 'react-router-dom';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import { focusCompose } from '@/mastodon/actions/compose';
 import { IconButton } from '@/mastodon/components/icon_button';
-import Status from '@/mastodon/features/status';
+import { StatusPage } from '@/mastodon/features/status/redesign';
 import { useAppDispatch, useAppSelector } from '@/mastodon/store';
 
 import { currentUiTextLocale, t } from './settings_strings';
 import { registerStatusOverlay } from './status_overlay';
-
-// Upstream's post view takes the post from its route; here it is given directly.
-const StatusView = Status as unknown as React.ComponentType<{ params: { statusId: string }; multiColumn: boolean; scrollKey: string }>;
 
 type ComposeState = { get: (key: string) => unknown };
 type StatusesState = { getIn: (path: string[]) => unknown };
@@ -62,7 +59,7 @@ const StatusOverlayModal = forwardRef<HTMLDivElement, { statusId: string; onClos
   return (
     <div ref={ref} className='modal-root__modal teadeck-status-overlay' role='dialog' aria-modal='true'>
       {/* Its own scroll key: a post view may already be open behind the overlay. */}
-      <StatusView params={{ statusId }} multiColumn scrollKey='teadeck-status-overlay' />
+      <StatusPage statusId={statusId} multiColumn scrollKey='teadeck-status-overlay' />
       <IconButton className='teadeck-status-overlay__close' title={t('close', currentUiTextLocale())} icon='times' iconComponent={CloseIcon} onClick={close} />
     </div>
   );

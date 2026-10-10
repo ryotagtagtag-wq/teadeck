@@ -1,7 +1,7 @@
 diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodon/actions/compose.js
 --- a/app/javascript/mastodon/actions/compose.js
 +++ b/app/javascript/mastodon/actions/compose.js
-@@ -4,6 +4,8 @@ import axios from 'axios';
+@@ -4,6 +4,8 @@ import { isCancel } from 'axios';
  import { throttle } from 'lodash';
  
  import api from '@/mastodon/api';
@@ -10,7 +10,7 @@ diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodo
  import { browserHistory } from '@/mastodon/components/router';
  import { countableText } from '@/mastodon/features/compose/util/counter';
  import { tagHistory } from '@/mastodon/settings';
-@@ -256,7 +258,9 @@ export function submitCompose(successCallback) {
+@@ -247,7 +249,9 @@ export function submitCompose(successCallback) {
      }
  
      const visibility = getState().getIn(['compose', 'privacy']);
@@ -21,7 +21,7 @@ diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodo
        url: statusId === null ? '/api/v1/statuses' : `/api/v1/statuses/${statusId}`,
        method: statusId === null ? 'post' : 'put',
        data: {
-@@ -271,11 +275,12 @@ export function submitCompose(successCallback) {
+@@ -262,11 +266,12 @@ export function submitCompose(successCallback) {
          language: getState().getIn(['compose', 'language']),
          quoted_status_id: getState().getIn(['compose', 'quoted_status_id']),
          quote_approval_policy: visibility === 'private' || visibility === 'direct' ? 'nobody' : getState().getIn(['compose', 'quote_policy']),
@@ -32,10 +32,10 @@ diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodo
        },
 -    }).then(function (response) {
 +    })).then(function (response) {
-       if ((browserHistory.location.pathname === '/publish' || browserHistory.location.pathname === '/statuses/new') && window.history.state) {
+       if (isStandaloneComposePath(browserHistory.location.pathname) && window.history.state) {
          browserHistory.goBack();
        }
-@@ -322,6 +327,11 @@ export function submitCompose(successCallback) {
+@@ -318,6 +323,11 @@ export function submitCompose(successCallback) {
          ),
        }));
      }).catch(function (error) {
@@ -56,9 +56,9 @@ diff --git a/app/javascript/mastodon/actions/compose_typed.ts b/app/javascript/m
  import type { ApiQuotePolicy } from '@/mastodon/api_types/quotes';
 +import type { ReplyAudience } from '@/teadeck/gotosocial';
  import type { MediaAttachment } from '@/mastodon/models/media_attachment';
- import type { Status, StatusVisibility } from '@/mastodon/models/status';
- import type { RootState } from '@/mastodon/store';
-@@ -293,6 +294,10 @@ export const setComposeQuotePolicy = createAction<ApiQuotePolicy>(
+ import type {
+   MediaAttachmentShape,
+@@ -337,6 +338,10 @@ export const setComposeQuotePolicy = createAction<ApiQuotePolicy>(
    'compose/setQuotePolicy',
  );
  
@@ -135,6 +135,26 @@ diff --git a/app/javascript/mastodon/features/compose/containers/compose_form_co
  });
  
  export default connect(mapStateToProps, mapDispatchToProps)(ComposeForm);
+diff --git a/app/javascript/mastodon/features/compose/redesign/settings.tsx b/app/javascript/mastodon/features/compose/redesign/settings.tsx
+--- a/app/javascript/mastodon/features/compose/redesign/settings.tsx
++++ b/app/javascript/mastodon/features/compose/redesign/settings.tsx
+@@ -30,6 +30,7 @@ import {
+   selectComposeQuotePolicy,
+   selectComposeSensitive,
+ } from './selectors';
++import { ReplyAudienceMenuGroup } from '@/teadeck/reply_audience_menu';
+ 
+ export const ComposeSettingsMenu: React.FC = () => {
+   return (
+@@ -80,6 +81,8 @@ const ComposeSettingsInnerMenu: React.FC = () => {
+ 
+   return (
+     <>
++      <ReplyAudienceMenuGroup />
++
+       {privacy !== 'direct' && (
+         <MenuItemGroup
+           label={
 diff --git a/app/javascript/mastodon/reducers/compose.js b/app/javascript/mastodon/reducers/compose.js
 --- a/app/javascript/mastodon/reducers/compose.js
 +++ b/app/javascript/mastodon/reducers/compose.js
@@ -151,7 +171,7 @@ diff --git a/app/javascript/mastodon/reducers/compose.js b/app/javascript/mastod
    pasteLinkCompose,
    cancelPasteLinkCompose,
    setDragUploadEnabled,
-@@ -102,6 +104,11 @@ const initialState = ImmutableMap({
+@@ -103,6 +105,11 @@ const initialState = ImmutableMap({
    quote_policy: 'public',
    default_quote_policy: 'public', // Set in hydration.
    fetching_link: null,
@@ -163,7 +183,7 @@ diff --git a/app/javascript/mastodon/reducers/compose.js b/app/javascript/mastod
  });
  
  const initialPoll = ImmutableMap({
-@@ -142,6 +149,7 @@ function clearAll(state) {
+@@ -144,6 +151,7 @@ function clearAll(state) {
      map.set('idempotencyKey', uuid());
      map.set('quoted_status_id', null);
      map.set('quote_policy', state.get('default_quote_policy'));
@@ -171,7 +191,7 @@ diff --git a/app/javascript/mastodon/reducers/compose.js b/app/javascript/mastod
      map.set('isDragDisabled', false);
    });
  }
-@@ -381,6 +389,8 @@ export const composeReducer = (state = initialState, action) => {
+@@ -383,6 +391,8 @@ export const composeReducer = (state = initialState, action) => {
      return state.set('quoted_status_id', null);
    } else if (setComposeQuotePolicy.match(action)) {
      return state.set('quote_policy', action.payload);

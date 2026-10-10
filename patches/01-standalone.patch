@@ -146,7 +146,7 @@ diff --git a/app/javascript/mastodon/actions/settings.js b/app/javascript/mastod
 diff --git a/app/javascript/mastodon/api.ts b/app/javascript/mastodon/api.ts
 --- a/app/javascript/mastodon/api.ts
 +++ b/app/javascript/mastodon/api.ts
-@@ -8,7 +8,7 @@ import axios from 'axios';
+@@ -8,7 +8,7 @@ import { create as createAxiosInstance } from 'axios';
  import LinkHeader from 'http-link-header';
  
  import { getAccessToken } from './initial_state';
@@ -179,7 +179,7 @@ diff --git a/app/javascript/mastodon/api.ts b/app/javascript/mastodon/api.ts
 @@ -91,11 +77,13 @@ const authorizationTokenFromInitialState = (): RawAxiosRequestHeaders => {
  // eslint-disable-next-line import/no-default-export
  export default function api(withAuthorization = true) {
-   const instance = axios.create({
+   const instance = createAxiosInstance({
 +    adapter: 'fetch',
 +    withCredentials: false,
 +    fetchOptions: { redirect: 'error' },
@@ -204,10 +204,10 @@ diff --git a/app/javascript/mastodon/api.ts b/app/javascript/mastodon/api.ts
    instance.interceptors.response.use(
      (response: AxiosResponse) => {
        if (response.headers.deprecation) {
-diff --git a/app/javascript/mastodon/components/status_action_bar/index.jsx b/app/javascript/mastodon/components/status_action_bar/index.jsx
---- a/app/javascript/mastodon/components/status_action_bar/index.jsx
-+++ b/app/javascript/mastodon/components/status_action_bar/index.jsx
-@@ -277,7 +277,6 @@ class StatusActionBar extends ImmutablePureComponent {
+diff --git a/app/javascript/mastodon/components/status/legacy/action_bar/index.jsx b/app/javascript/mastodon/components/status/legacy/action_bar/index.jsx
+--- a/app/javascript/mastodon/components/status/legacy/action_bar/index.jsx
++++ b/app/javascript/mastodon/components/status/legacy/action_bar/index.jsx
+@@ -282,7 +282,6 @@ class StatusActionBar extends ImmutablePureComponent {
      }
  
      if (publicStatus && !isRemote) {
@@ -259,7 +259,7 @@ diff --git a/app/javascript/mastodon/containers/scroll_container/state_storage.t
 diff --git a/app/javascript/mastodon/features/status/components/action_bar.jsx b/app/javascript/mastodon/features/status/components/action_bar.jsx
 --- a/app/javascript/mastodon/features/status/components/action_bar.jsx
 +++ b/app/javascript/mastodon/features/status/components/action_bar.jsx
-@@ -232,7 +232,6 @@ class ActionBar extends PureComponent {
+@@ -244,7 +244,6 @@ class ActionBar extends PureComponent {
      }
  
      if (publicStatus && (signedIn || !isRemote)) {
@@ -356,18 +356,18 @@ diff --git a/app/javascript/mastodon/main.tsx b/app/javascript/mastodon/main.tsx
 diff --git a/app/javascript/mastodon/selectors/statuses.ts b/app/javascript/mastodon/selectors/statuses.ts
 --- a/app/javascript/mastodon/selectors/statuses.ts
 +++ b/app/javascript/mastodon/selectors/statuses.ts
-@@ -77,7 +77,9 @@ export const selectStatusLoadingState = createAppSelector(
+@@ -78,7 +78,9 @@ export const selectStatusLoadingState = createAppSelector(
    [
      (state, { statusId }: { statusId?: string | null }) =>
        selectExpandedStatus(state, statusId ?? undefined),
 -    selectStatusFilters,
 +    // Called lazily: statuses.ts and filters.ts import each other.
-+    (state, props: { statusId?: string | null; warnInsteadOfHide?: boolean }) =>
++    (state, props: Parameters<typeof selectStatusFilters>[1]) =>
 +      selectStatusFilters(state, props),
-     (_, { warnInsteadOfHide }: { warnInsteadOfHide?: boolean }) =>
-       warnInsteadOfHide,
    ],
-@@ -176,7 +182,7 @@ export const selectStatusInteractions = createAppSelector(
+   (status, { filterAction }) => {
+     if (!status) {
+@@ -178,7 +180,7 @@ export const selectStatusInteractions = createAppSelector(
        delete: addAllowed({ isMine }),
        edit: addAllowed({ isMine }),
        editQuotePolicy: addAllowed({ isMine, isPublic }),
@@ -473,8 +473,8 @@ diff --git a/app/javascript/mastodon/utils/log_out.ts b/app/javascript/mastodon/
 diff --git a/tsconfig.json b/tsconfig.json
 --- a/tsconfig.json
 +++ b/tsconfig.json
-@@ -4,6 +4,7 @@
-     "allowJs": true,
+@@ -5,6 +5,7 @@
+     "allowImportingTsExtensions": true,
      "resolveJsonModule": true,
      "noEmit": true,
 +    "allowImportingTsExtensions": true,

@@ -33,7 +33,7 @@ diff --git a/app/javascript/mastodon/api/search.ts b/app/javascript/mastodon/api
    params: {
      q: string;
      resolve?: boolean;
-@@ -15,11 +38,51 @@ export const apiGetSearch = (
+@@ -15,11 +35,51 @@ export const apiGetSearch = (
    options: {
      signal?: AbortSignal;
    } = {},
@@ -182,7 +182,7 @@ diff --git a/app/javascript/mastodon/components/hashtag.tsx b/app/javascript/mas
    to: string;
    uses?: number;
    withGraph?: boolean;
-@@ -134,9 +138,9 @@ export const Hashtag: React.FC<HashtagProps> = ({
+@@ -134,9 +136,9 @@ export const Hashtag: React.FC<HashtagProps> = ({
  
        {description ? (
          <span>{description}</span>
@@ -213,47 +213,3 @@ diff --git a/app/javascript/mastodon/features/followed_tags/index.tsx b/app/java
  
    return (
      <Hashtag
-diff --git a/app/javascript/mastodon/features/hashtag_timeline/components/hashtag_header.tsx b/app/javascript/mastodon/features/hashtag_timeline/components/hashtag_header.tsx
---- a/app/javascript/mastodon/features/hashtag_timeline/components/hashtag_header.tsx
-+++ b/app/javascript/mastodon/features/hashtag_timeline/components/hashtag_header.tsx
-@@ -184,7 +184,10 @@ export const HashtagHeader: React.FC<{
-     return null;
-   }
- 
--  const [uses, people] = tag.history.reduce(
-+  // Servers without usage history get no statistics.
-+  const tagHistory = tag.history as typeof tag.history | undefined;
-+  const hasStats = Array.isArray(tagHistory) && tagHistory.length > 0;
-+  const [uses, people] = (tagHistory ?? []).reduce(
-     (arr, day) => [
-       arr[0] + parseInt(day.uses),
-       arr[1] + parseInt(day.accounts),
-@@ -221,16 +224,18 @@ export const HashtagHeader: React.FC<{
-         </div>
-       </div>
- 
--      <div>
--        <ShortNumber value={uses} renderer={usesRenderer} />
--        {dividingCircle}
--        <ShortNumber value={people} renderer={peopleRenderer} />
--        {dividingCircle}
--        <ShortNumber
--          value={parseInt(tag.history[0].uses)}
--          renderer={usesTodayRenderer}
--        />
--      </div>
-+      {hasStats && (
-+        <div>
-+          <ShortNumber value={uses} renderer={usesRenderer} />
-+          {dividingCircle}
-+          <ShortNumber value={people} renderer={peopleRenderer} />
-+          {dividingCircle}
-+          <ShortNumber
-+            value={parseInt(tagHistory[0].uses)}
-+            renderer={usesTodayRenderer}
-+          />
-+        </div>
-+      )}
-     </div>
-   );
- };

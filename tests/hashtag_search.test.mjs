@@ -3,6 +3,7 @@ import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, instance, status, timelineText } from './fixtures.mjs';
+import { composerText, openComposer } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 let server;
@@ -78,8 +79,8 @@ test('posts for a "#tag" search come from the hashtag timeline and page by max_i
 
   // The list renders offscreen posts as placeholders with their id: one entry per post, newest first,
   // without duplicates or gaps across the page boundary.
-  const ids = page.locator('.explore__search-results article');
-  await page.waitForFunction(() => document.querySelectorAll('.explore__search-results article').length > 11);
+  const ids = page.locator('.item-list > article[data-id]');
+  await page.waitForFunction(() => document.querySelectorAll('.item-list > article[data-id]').length > 11);
   const shownIds = (await ids.evaluateAll((els) => els.map((el) => el.getAttribute('data-id')))).map(Number);
   assert.equal(new Set(shownIds).size, shownIds.length, 'no duplicates');
   shownIds.forEach((id, index) => assert.equal(id, 1025 - index, 'no gaps'));
@@ -132,7 +133,8 @@ test('a link pasted into the compose form is looked up without an error', { time
 
   // Upstream's compose form hands the search a URL object, not a string.
   const link = 'https://git.knubbel.me/knubbel/teadeck';
-  const compose = page.getByPlaceholder('Was gibts Neues?');
+  await openComposer(page);
+  const compose = composerText(page);
   await compose.click();
   await compose.evaluate((field, text) => {
     const data = new DataTransfer();

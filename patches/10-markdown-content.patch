@@ -21,17 +21,50 @@ diff --git a/app/javascript/config/html-tags.json b/app/javascript/config/html-t
 +    "div": {}
    }
  }
-diff --git a/app/javascript/mastodon/components/status_content.jsx b/app/javascript/mastodon/components/status_content.jsx
---- a/app/javascript/mastodon/components/status_content.jsx
-+++ b/app/javascript/mastodon/components/status_content.jsx
-@@ -13,6 +13,7 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
- import { Icon }  from 'mastodon/components/icon';
- import { Poll } from 'mastodon/components/poll';
- import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
+diff --git a/app/javascript/mastodon/components/status/content.tsx b/app/javascript/mastodon/components/status/content.tsx
+--- a/app/javascript/mastodon/components/status/content.tsx
++++ b/app/javascript/mastodon/components/status/content.tsx
+@@ -85,7 +85,8 @@ export const StatusContent: React.FC<
+       >
+         {text.trim().length > 0 && (
+           <EmojiHTML
+-            className={classes.text}
++            // Teadeck's themes style post text (Markdown, code) by this class.
++            className={classNames(classes.text, 'status__content__text')}
+             ref={onRef}
+             lang={language}
+             htmlString={text}
+diff --git a/app/javascript/mastodon/components/status/hooks.ts b/app/javascript/mastodon/components/status/hooks.ts
+--- a/app/javascript/mastodon/components/status/hooks.ts
++++ b/app/javascript/mastodon/components/status/hooks.ts
+@@ -53,6 +53,7 @@ import { useAppSelector, useAppDispatch } from '@/mastodon/store';
+ import type { AppDispatch } from '@/mastodon/store';
+ import { isRedesignEnabled } from '@/mastodon/utils/environment';
+ import type { OnElementHandler } from '@/mastodon/utils/html';
 +import { CodeBlock } from '@/teadeck/code_block';
- import { languages as preloadedLanguages } from 'mastodon/initial_state';
  
- import { EmojiHTML } from './emoji/html';
+ import type { HotkeyHandlerFunction, HotkeyName } from '../hotkeys';
+ import { FOCUS_TARGET } from '../navigation_focus_target';
+@@ -489,6 +490,8 @@ export function useHandlersForStatus(
+           { key: key as React.Key, 'aria-disabled': true, ...props },
+           children,
+         );
++      } else if (element instanceof HTMLPreElement) {
++        return createElement(CodeBlock, { element, key: key as React.Key });
+       }
+       return undefined;
+     },
+diff --git a/app/javascript/mastodon/components/status/legacy/content.jsx b/app/javascript/mastodon/components/status/legacy/content.jsx
+--- a/app/javascript/mastodon/components/status/legacy/content.jsx
++++ b/app/javascript/mastodon/components/status/legacy/content.jsx
+@@ -13,6 +13,7 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
+ import { Icon }  from '@/mastodon/components/icon';
+ import { Poll } from '@/mastodon/components/poll';
+ import { identityContextPropShape, withIdentity } from '@/mastodon/identity_context';
++import { CodeBlock } from '@/teadeck/code_block';
+ import { languages as preloadedLanguages } from '@/mastodon/initial_state';
+ import { EmojiHTML } from '@/mastodon/components/emoji/html';
+ import { injectIntl } from '@/mastodon/components/intl';
 @@ -178,6 +179,8 @@ class StatusContent extends PureComponent {
        );
      } else if (element.classList.contains('quote-inline') && this.props.status.get('quote')) {

@@ -104,23 +104,21 @@ test('works against a GoToSocial-shaped API: missing status fields, v1-only noti
   assert.ok(requests.includes('/api/v1/notifications'));
 
   // No policy API, so no policy controls that could not be saved.
-  await page.getByRole('button', { name: 'Einstellungen anzeigen' }).first().click();
+  await page.getByRole('button', { name: 'Benachrichtigungseinstellungen öffnen' }).first().click();
   await page.waitForTimeout(300);
   assert.equal(await page.getByText('Benachrichtigungen verwalten von').count(), 0);
   // Searching for a hashtag renders the results instead of crashing on the missing `collections` and tag history.
-  const searchInput = page.locator('input[type="search"], .search__input').first();
-  await searchInput.fill('#teadecktag');
-  await searchInput.press('Enter');
-  await page.waitForURL(/\/search\?q=/);
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => { history.pushState(null, '', '/search?q=%23teadecktag'); dispatchEvent(new PopStateEvent('popstate')); });
   await page.locator('.trends__item__name', { hasText: 'teadecktag' }).waitFor();
   assert.equal(await page.getByText('Oh nein!').count(), 0);
   // Posts for the hashtag come from its timeline, since the search itself returns none.
   await page.getByText(timelineText).first().waitFor();
   assert.ok(requests.includes('/api/v1/timelines/tag/teadecktag'));
 
-  // The hashtag timeline's header, too, reads the missing history.
+  // The hashtag timeline opens too, despite the missing history.
   await page.evaluate(() => { history.pushState(null, '', '/tags/teadecktag'); dispatchEvent(new PopStateEvent('popstate')); });
-  await page.locator('.hashtag-header h1', { hasText: 'teadecktag' }).waitFor();
+  await page.getByRole('button', { name: '#teadecktag', exact: true }).waitFor();
   assert.equal(await page.getByText('Oh nein!').count(), 0);
 
   // The own profile asks for featured tag suggestions, which GoToSocial lacks; no error, and no profile request.

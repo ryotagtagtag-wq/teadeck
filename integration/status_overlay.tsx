@@ -9,9 +9,10 @@
 
 import { useCallback, useSyncExternalStore } from 'react';
 
-import FullscreenIcon from '@/material-icons/400-24px/fullscreen.svg?react';
+import { CornersOutIcon } from '@phosphor-icons/react';
+
 import { openModal } from '@/mastodon/actions/modal';
-import { IconButton } from '@/mastodon/components/icon_button';
+import { IconButton } from '@/mastodon/components/button/redesign';
 import { useAppDispatch } from '@/mastodon/store';
 
 import { currentUiTextLocale, t } from './settings_strings';
@@ -92,10 +93,9 @@ export const StatusOverlayButton: React.FC<{ statusId: string }> = ({ statusId }
   const open = useOpenStatusOverlay();
   const handleClick = useCallback(() => { open(statusId); }, [open, statusId]);
   if (enabled) return null;
-  const title = t('openInOverlay', currentUiTextLocale());
   return (
-    <div className='status__action-bar__button-wrapper'>
-      <IconButton className='status__action-bar__button teadeck-status-overlay-button' title={title} icon='fullscreen' iconComponent={FullscreenIcon} onClick={handleClick} />
-    </div>
+    <IconButton size='sm' variant='ghost' className='teadeck-status-overlay-button' icon={CornersOutIcon} onClick={handleClick}>
+      {t('openInOverlay', currentUiTextLocale())}
+    </IconButton>
   );
 };

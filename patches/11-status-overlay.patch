@@ -1,15 +1,84 @@
+diff --git a/app/javascript/mastodon/components/status/action_bar.tsx b/app/javascript/mastodon/components/status/action_bar.tsx
+--- a/app/javascript/mastodon/components/status/action_bar.tsx
++++ b/app/javascript/mastodon/components/status/action_bar.tsx
+@@ -35,6 +35,7 @@ import {
+ } from './hooks';
+ import { RemoveQuoteHint } from './legacy/action_bar/remove_quote_hint';
+ import classes from './styles.module.scss';
++import { StatusOverlayButton } from '@/teadeck/status_overlay';
+ 
+ interface StatusActionBarProps {
+   statusId: string;
+@@ -151,6 +152,8 @@ export const StatusActionBar: React.FC<StatusActionBarProps> = ({
+         {bookmark.title}
+       </ToggleIconButton>
+ 
++      <StatusOverlayButton statusId={statusId} />
++
+       <RemoveQuoteHint
+         className='status__action-bar__button-wrapper'
+         canShowHint={shouldShowQuoteRemovalHint}
 diff --git a/app/javascript/mastodon/components/status/header.tsx b/app/javascript/mastodon/components/status/header.tsx
 --- a/app/javascript/mastodon/components/status/header.tsx
 +++ b/app/javascript/mastodon/components/status/header.tsx
-@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
+@@ -17,6 +17,7 @@ import { Skeleton } from '../skeleton';
+ 
+ import classes from './header.module.scss';
+ import { accountStatusLinkProps, statusLink } from './utils';
++import { useStatusTimeClick } from '@/teadeck/status_overlay';
+ 
+ interface StatusRedesignHeaderProps {
+   status: Pick<
+@@ -40,6 +41,7 @@ export const StatusRedesignHeader: React.FC<StatusRedesignHeaderProps> = ({
+   );
+ 
+   const handleId = useId();
++  const handleTimeClick = useStatusTimeClick(status.id);
+   const accountLinkProps = accountStatusLinkProps(account);
+ 
+   let displayName = (
+@@ -113,6 +115,7 @@ export const StatusRedesignHeader: React.FC<StatusRedesignHeaderProps> = ({
+               state: { reference: 'status' },
+             }}
+             className={classes.date}
++            onClick={handleTimeClick}
+           >
+             <RelativeTimestamp timestamp={status.created_at} />
+           </Link>
+diff --git a/app/javascript/mastodon/components/status/hooks.ts b/app/javascript/mastodon/components/status/hooks.ts
+--- a/app/javascript/mastodon/components/status/hooks.ts
++++ b/app/javascript/mastodon/components/status/hooks.ts
+@@ -54,6 +54,7 @@ import type { AppDispatch } from '@/mastodon/store';
+ import { isRedesignEnabled } from '@/mastodon/utils/environment';
+ import type { OnElementHandler } from '@/mastodon/utils/html';
+ import { CodeBlock } from '@/teadeck/code_block';
++import { openInActiveStatusOverlay } from '@/teadeck/status_overlay';
+ 
+ import type { HotkeyHandlerFunction, HotkeyName } from '../hotkeys';
+ import { FOCUS_TARGET } from '../navigation_focus_target';
+@@ -151,6 +152,10 @@ export function useStatusHandlers({
+         return;
+       }
+ 
++      if (!newTab && openInActiveStatusOverlay(status.id)) {
++        return;
++      }
++
+       const path = `/@${status.account.acct}/${status.id}`;
+ 
+       if (newTab) {
+diff --git a/app/javascript/mastodon/components/status/legacy/header.tsx b/app/javascript/mastodon/components/status/legacy/header.tsx
+--- a/app/javascript/mastodon/components/status/legacy/header.tsx
++++ b/app/javascript/mastodon/components/status/legacy/header.tsx
+@@ -14,6 +14,7 @@ import { VisibilityIcon } from '@/mastodon/components/visibility_icon';
  import type { Account, AccountShapeFull } from '@/mastodon/models/account';
  import { selectAccountStatus } from '@/mastodon/selectors/statuses';
  import { useAppSelector } from '@/mastodon/store';
 +import { useStatusTimeClick } from '@/teadeck/status_overlay';
  
- import { Avatar } from '../avatar';
- import { AvatarOverlay } from '../avatar_overlay';
-@@ -44,6 +45,7 @@ export const StatusHeader: FC<StatusHeaderProps> = ({
+ export interface StatusHeaderProps {
+   statusId: string;
+@@ -43,6 +44,7 @@ export const StatusHeader: FC<StatusHeaderProps> = ({
    const status = useAppSelector((state) =>
      selectAccountStatus(state, statusId),
    );
@@ -17,7 +86,7 @@ diff --git a/app/javascript/mastodon/components/status/header.tsx b/app/javascri
    if (!status) {
      return null;
    }
-@@ -70,6 +72,7 @@ export const StatusHeader: FC<StatusHeaderProps> = ({
+@@ -69,6 +71,7 @@ export const StatusHeader: FC<StatusHeaderProps> = ({
        <Link
          to={`/@${statusAccount.acct}/${status.id}`}
          className='status__relative-time'
@@ -25,75 +94,50 @@ diff --git a/app/javascript/mastodon/components/status/header.tsx b/app/javascri
        >
          <span className='status__visibility-icon'>
            <VisibilityIcon visibility={status.visibility} />
-diff --git a/app/javascript/mastodon/components/status_action_bar/index.jsx b/app/javascript/mastodon/components/status_action_bar/index.jsx
---- a/app/javascript/mastodon/components/status_action_bar/index.jsx
-+++ b/app/javascript/mastodon/components/status_action_bar/index.jsx
-@@ -28,6 +28,7 @@ import { BoostButton } from '../status/boost_button';
- import { RemoveQuoteHint } from './remove_quote_hint';
- import { quoteItemState } from '../status/boost_button_utils';
- import { selectStatusConditions } from '@/mastodon/selectors/statuses';
-+import { StatusOverlayButton } from '@/teadeck/status_overlay';
+diff --git a/app/javascript/mastodon/features/status/redesign.tsx b/app/javascript/mastodon/features/status/redesign.tsx
+--- a/app/javascript/mastodon/features/status/redesign.tsx
++++ b/app/javascript/mastodon/features/status/redesign.tsx
+@@ -70,9 +70,20 @@ const messages = defineMessages({
+   },
+ });
  
+-export const StatusPage: React.FC = () => {
+-  const { statusId } = useParams<{ acct: string; statusId: string }>();
+-  const { multiColumn } = useColumnsContext();
++// Teadeck's status overlay passes the post and its own scroll key.
++export const StatusPage: React.FC<{
++  statusId?: string;
++  scrollKey?: string;
++  multiColumn?: boolean;
++}> = ({
++  statusId: statusIdProp,
++  scrollKey = 'thread',
++  multiColumn: multiColumnProp,
++}) => {
++  const params = useParams<{ acct: string; statusId: string }>();
++  const statusId = statusIdProp ?? params.statusId;
++  const columnsContext = useColumnsContext();
++  const multiColumn = multiColumnProp ?? columnsContext.multiColumn;
+   const intl = useIntl();
+   const dispatch = useAppDispatch();
  
- const messages = defineMessages({
-@@ -403,6 +404,7 @@ class StatusActionBar extends ImmutablePureComponent {
-         <div className='status__action-bar__button-wrapper'>
-           <IconButton className='status__action-bar__button bookmark-icon' disabled={!signedIn} active={status.get('bookmarked')} title={bookmarkTitle} icon='bookmark' iconComponent={status.get('bookmarked') ? BookmarkIcon : BookmarkBorderIcon} onClick={this.handleBookmarkClick} />
-         </div>
-+        <StatusOverlayButton statusId={status.get('id')} />
-         <RemoveQuoteHint className='status__action-bar__button-wrapper' canShowHint={shouldShowQuoteRemovalHint}>
-           {(dismissQuoteHint) => (
-             <Dropdown
+@@ -253,7 +264,7 @@ export const StatusPage: React.FC = () => {
+       />
+ 
+       <ScrollContainer
+-        scrollKey='thread'
++        scrollKey={scrollKey}
+         shouldUpdateScroll={shouldUpdateScroll}
+       >
+         <div
 diff --git a/app/javascript/mastodon/features/ui/components/modal_root.jsx b/app/javascript/mastodon/features/ui/components/modal_root.jsx
 --- a/app/javascript/mastodon/features/ui/components/modal_root.jsx
 +++ b/app/javascript/mastodon/features/ui/components/modal_root.jsx
-@@ -112,6 +112,7 @@ export const MODAL_COMPONENTS = {
-   'COMPOSER_ADD_QUOTE': () => import('@/mastodon/features/compose/redesign/modal_quote'),
+@@ -114,6 +114,7 @@ export const MODAL_COMPONENTS = {
    'NOTIFICATION_SETTINGS': () => import('@/mastodon/features/notifications_v2/components/notification_settings_modal'),
+   'NOTIFICATION_REQUESTS_SETTINGS': () => import('@/mastodon/features/notifications/components/notification_requests_settings').then(module => ({default: module.NotificationRequestsSettingsModal})),
    'HASHTAG_SETTINGS': () => import('@/mastodon/features/hashtag_timeline/components/column_settings_modal'),
 +  'TEADECK_STATUS': () => import('@/teadeck/status_overlay_modal'),
  };
  
  /** @param {keyof import('@/mastodon/features/account_edit/modals')} type */
-diff --git a/app/javascript/mastodon/components/status.jsx b/app/javascript/mastodon/components/status.jsx
---- a/app/javascript/mastodon/components/status.jsx
-+++ b/app/javascript/mastodon/components/status.jsx
-@@ -34,6 +34,7 @@ import { StatusThreadLabel } from './status_thread_label';
- import { CollectionPreviewCard } from '../features/collections/components/collection_preview_card';
- import { compareUrls } from '../utils/compare_urls';
- import { FOCUS_TARGET } from './navigation_focus_target';
-+import { openInActiveStatusOverlay } from '@/teadeck/status_overlay';
- 
- const domParser = new DOMParser();
- 
-@@ -302,6 +303,10 @@ class Status extends ImmutablePureComponent {
-     const { history } = this.props;
-     const status = this._properStatus();
- 
-+    if (!newTab && openInActiveStatusOverlay(status.get('id'))) {
-+      return;
-+    }
-+
-     if (!history) {
-       return;
-     }
-diff --git a/app/javascript/mastodon/features/status/index.jsx b/app/javascript/mastodon/features/status/index.jsx
---- a/app/javascript/mastodon/features/status/index.jsx
-+++ b/app/javascript/mastodon/features/status/index.jsx
-@@ -144,6 +144,7 @@ class Status extends ImmutablePureComponent {
-     intl: PropTypes.object.isRequired,
-     askReplyConfirmation: PropTypes.bool,
-     multiColumn: PropTypes.bool,
-+    scrollKey: PropTypes.string,
-     domain: PropTypes.string.isRequired,
-     pictureInPicture: ImmutablePropTypes.contains({
-       inUse: PropTypes.bool,
-@@ -612,7 +613,7 @@ class Status extends ImmutablePureComponent {
-           />
-         )}
- 
--        <ScrollContainer scrollKey='thread' shouldUpdateScroll={this.shouldUpdateScroll} childRef={this.setContainerRef}>
-+        <ScrollContainer scrollKey={this.props.scrollKey ?? 'thread'} shouldUpdateScroll={this.shouldUpdateScroll} childRef={this.setContainerRef}>
-           <div className={classNames('item-list scrollable scrollable--flex', { fullscreen })} ref={this.setContainerRef}>
-             {ancestors}
- 

@@ -3,6 +3,7 @@ import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, instance, status, timelineText } from './fixtures.mjs';
+import { openPreferences, signOut } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 let server;
@@ -80,19 +81,18 @@ test('static SPA completes OAuth and renders the Mastodon home timeline', { time
   await page.getByText(timelineText).waitFor();
   // The former top bar is gone: layout lives in the settings page, sign-out in the navigation list.
   assert.equal(await page.locator('#teadeck-bar').count(), 0);
-  await page.locator('a[href="/preferences"]').first().click();
+  await openPreferences(page);
   await page.getByLabel('Layout').selectOption('advanced');
   // Layout is saved immediately and takes effect through the offered reload.
   await page.locator('#teadeck-settings-reload').getByRole('button').click();
   await page.waitForURL(`${origin}/deck/preferences`);
   await page.goto(origin);
-  await page.waitForURL(`${origin}/deck/getting-started`);
+  await page.waitForURL(`${origin}/deck/home`);
   await page.getByText(timelineText).first().waitFor();
   assert.equal(await page.evaluate(() => JSON.parse(localStorage[Object.keys(localStorage).find((key) => key.endsWith(':advancedLayout'))]).valueOf()), true);
   assert.equal(await page.locator('a[href="https://git.knubbel.me/knubbel/teadeck"]').count() > 0, true);
 
-  await page.locator('.teadeck-logout').click();
-  await page.locator('.modal-root').getByRole('button', { name: /^(Abmelden|Log out)$/ }).click();
+  await signOut(page);
   await page.waitForURL(`${origin}/login`);
   await page.locator('#teadeck-login').waitFor();
   assert.deepEqual(localApiRequests, []);

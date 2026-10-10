@@ -5,7 +5,7 @@ import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { status, timelineText } from './fixtures.mjs';
-import { mockMastodon, signIn } from './mastodon_mock.mjs';
+import { mockMastodon, signIn, openPreferences } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 // The configured logo is put into the page (not loaded as an image), so a drawing
@@ -38,7 +38,7 @@ async function signedInPage(logo, { advancedLayout = false } = {}) {
  */
 function paintedWith(page) {
   return page.evaluate(() => {
-    const svg = document.querySelector('.navigation-panel__logo .teadeck-logo svg');
+    const svg = document.querySelector('a[href="/"] .teadeck-logo svg');
     const probe = (token) => {
       const element = document.createElement('span');
       element.style.color = `var(${token})`;
@@ -60,7 +60,7 @@ function paintedWith(page) {
 }
 
 async function choose(page, origin, { theme, colorScheme }) {
-  await page.locator('a[href="/preferences"]').first().click();
+  await openPreferences(page);
   await page.locator('#teadeck-settings-theme').waitFor();
   await page.locator('#teadeck-settings-theme').selectOption(theme);
   await page.locator('#teadeck-settings-color-scheme').selectOption(colorScheme);
@@ -73,8 +73,8 @@ test('the cup takes its colours from the theme, not from its own palette', { tim
   const { page, origin, pageErrors, stop } = await signedInPage(flatCup);
   try {
     // In the page, not in an <img>: only then can it be coloured at all.
-    await page.locator('.navigation-panel__logo .teadeck-logo svg').waitFor();
-    assert.equal(await page.locator('.navigation-panel__logo img').count(), 0);
+    await page.locator('a[href="/"] .teadeck-logo svg').waitFor();
+    assert.equal(await page.locator('a[href="/"] img').count(), 0);
 
     await choose(page, origin, { theme: 'mastodon', colorScheme: 'dark' });
     const dark = await paintedWith(page);
@@ -122,13 +122,13 @@ test('the cup takes its colours from the theme, not from its own palette', { tim
 
 test('a logo that did not ask to be put into the page is shown as an image, untouched', { timeout: 60_000 }, async () => {
   // A drawing without the data-teadeck-logo mark: an administrator's own file.
-  const own = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><style>.status { display: none }</style><rect width="10" height="10" fill="#123456"/></svg>';
+  const own = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><style>article { display: none }</style><rect width="10" height="10" fill="#123456"/></svg>';
   const { page, stop } = await signedInPage(own);
   try {
-    await page.locator('.navigation-panel__logo img.teadeck-logo').waitFor();
-    assert.equal(await page.locator('.navigation-panel__logo svg').count(), 0);
+    await page.locator('a[href="/"] img.teadeck-logo').waitFor();
+    assert.equal(await page.locator('a[href="/"] svg').count(), 0);
     // Its style rules therefore cannot reach the application: statuses are still shown.
-    assert.ok(await page.locator('.status').first().isVisible());
+    assert.ok(await page.locator('article').first().isVisible());
   } finally {
     await stop();
   }
@@ -137,22 +137,22 @@ test('a logo that did not ask to be put into the page is shown as an image, unto
 test('nothing executable or page-wide from a marked drawing ends up in the page', { timeout: 60_000 }, async () => {
   const hostile = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10" data-teadeck-logo="teacup">
     <script>window.teadeckLogoRanScript = true;</script>
-    <style>.status { display: none !important }</style>
+    <style>article { display: none !important }</style>
     <rect width="10" height="10" fill="var(--teadeck-logo-tea, #b85c1e)" onload="window.teadeckLogoRanHandler = true"/>
     <a href="javascript:void(window.teadeckLogoRanLink = true)"><circle r="1"/></a>
   </svg>`;
   const { page, pageErrors, stop } = await signedInPage(hostile);
   try {
-    const logo = page.locator('.navigation-panel__logo .teadeck-logo svg');
+    const logo = page.locator('a[href="/"] .teadeck-logo svg');
     await logo.waitFor();
     const markup = await logo.evaluate((svg) => svg.outerHTML);
     assert.doesNotMatch(markup, /script|onload|javascript:|<style/i, markup);
     assert.deepEqual(await page.evaluate(() => [window.teadeckLogoRanScript, window.teadeckLogoRanHandler, window.teadeckLogoRanLink]), [undefined, undefined, undefined]);
     // The drawing itself survives, links and all; only what could act does not.
-    assert.equal(await page.locator('.navigation-panel__logo .teadeck-logo svg rect').count(), 1);
-    assert.equal(await page.locator('.navigation-panel__logo .teadeck-logo svg circle').count(), 1);
+    assert.equal(await page.locator('a[href="/"] .teadeck-logo svg rect').count(), 1);
+    assert.equal(await page.locator('a[href="/"] .teadeck-logo svg circle').count(), 1);
     // The style rule never applied: statuses are still visible.
-    assert.ok(await page.locator('.status').first().isVisible());
+    assert.ok(await page.locator('article').first().isVisible());
     assert.deepEqual(pageErrors, []);
   } finally {
     await stop();
@@ -187,28 +187,29 @@ test('a logo the page cannot colour is still shown as an image', { timeout: 60_0
   const { page, stop } = await signedInPage('not an svg at all');
   try {
     // Attached, though a file that is not a drawing has no size to show.
-    await page.locator('.navigation-panel__logo').waitFor();
-    assert.equal(await page.locator('.navigation-panel__logo img.teadeck-logo').count(), 1);
-    assert.equal(await page.locator('.navigation-panel__logo svg').count(), 0);
+    await page.locator('a[href="/"] .teadeck-logo').waitFor();
+    assert.equal(await page.locator('a[href="/"] img.teadeck-logo').count(), 1);
+    assert.equal(await page.locator('a[href="/"] svg').count(), 0);
   } finally {
     await stop();
   }
 });
 
-test('in the compose column the cup stands at the bottom, without a decorative band', { timeout: 120_000 }, async () => {
+test('in the column beside the pinned ones the cup stands at the bottom, without a decorative band', { timeout: 120_000 }, async () => {
   const { page, origin, pageErrors, stop } = await signedInPage(flatCup, { advancedLayout: true });
   try {
     await page.waitForURL(/\/deck\//);
     const cup = page.locator('.drawer__inner__mastodon .teadeck-logo svg');
     await cup.waitFor();
 
+    // Mastodon's placeholder column (home is pinned), where Mastodon puts its mascot.
     // Mastodon's zig-zag band at the bottom of the column is gone, in every design.
     assert.equal(await page.locator('.with-zig-zag-decoration').count(), 0);
 
     for (const [theme, colorScheme] of [['assam', 'dark'], ['sencha', 'dark'], ['sencha', 'light'], ['mastodon', 'dark']]) {
       await choose(page, origin, { theme, colorScheme });
       const drawing = await cup.boundingBox();
-      const column = await page.locator('.drawer__inner').boundingBox();
+      const column = await page.locator('[data-column-root]').filter({ has: cup }).boundingBox();
       const gap = column.y + column.height - drawing.y - drawing.height;
       assert.ok(gap >= 0 && gap < 8, `${theme}/${colorScheme}: ${gap}px below the cup`);
       assert.ok(drawing.width > column.width * 0.7, `${theme}/${colorScheme}: the cup is ${Math.round(drawing.width)}px wide`);

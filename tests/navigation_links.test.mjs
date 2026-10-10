@@ -3,7 +3,7 @@ import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { instance, timelineText } from './fixtures.mjs';
-import { mockMastodon, signIn } from './mastodon_mock.mjs';
+import { mockMastodon, openAccountMenu, signIn, signOut } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 let server;
@@ -37,15 +37,16 @@ async function signedInPage({ instanceFixture, advancedLayout }) {
   return { context, page, pageErrors };
 }
 
-/** Sign-out directly follows Settings and More in the navigation list. */
-async function assertLogoutAfterSettingsAndMore(page) {
-  const logout = page.locator('.navigation-panel .teadeck-logout').first();
-  await logout.waitFor();
-  const entries = await page.locator('.navigation-panel').first().locator('li').evaluateAll((items) => items.map((item) => item.textContent.trim()).filter(Boolean));
-  const at = entries.indexOf('Abmelden');
-  assert.ok(at >= 2, `navigation entries: ${entries.join(' | ')}`);
-  assert.deepEqual(entries.slice(at - 2, at + 1), ['Einstellungen', 'Mehr', 'Abmelden']);
-  assert.equal(await page.locator('.compose-form .teadeck-logout, .compose-panel .teadeck-logout').count(), 0, 'no longer in the compose column');
+/** The account menu: Teadeck's settings, pages of the server on the server, and sign-out. */
+async function assertAccountMenu(page) {
+  await openAccountMenu(page);
+  assert.equal(await page.getByRole('link', { name: 'Einstellungen', exact: true }).getAttribute('href'), '/preferences');
+  assert.equal(await page.getByRole('link', { name: 'Einstellungen auf dem Server' }).getAttribute('href'), 'https://mastodon.test/settings');
+  assert.equal(await page.getByRole('link', { name: /^Follower/ }).getAttribute('href'), 'https://mastodon.test/relationships');
+  const signOutEntry = page.getByRole('menuitem', { name: 'Abmelden' }).or(page.getByRole('button', { name: 'Abmelden' }));
+  await signOutEntry.first().waitFor();
+  await page.keyboard.press('Escape');
+  await signOutEntry.first().waitFor({ state: 'detached' });
 }
 
 test('advanced layout: About and the privacy policy open in the column, not in a new tab', { timeout: 90_000 }, async () => {
@@ -57,7 +58,7 @@ test('advanced layout: About and the privacy policy open in the column, not in a
   const { context, page, pageErrors } = await signedInPage({ instanceFixture, advancedLayout: true });
   try {
     await page.waitForURL(/\/deck\//);
-    await assertLogoutAfterSettingsAndMore(page);
+    await assertAccountMenu(page);
     // Nothing branded: no Mastodon logo, and no mascot or empty frame without a configured logo.
     assert.equal(await page.locator('.logo--wordmark, .logo--icon, img[alt="Mastodon"]').count(), 0);
     assert.equal(await page.locator('img[src*="elephant"], .drawer__inner__mastodon, .navigation-panel__logo').count(), 0);
@@ -74,7 +75,7 @@ test('advanced layout: About and the privacy policy open in the column, not in a
 
     // The About column took the place of the start column (like settings do); back to it.
     await page.goBack();
-    await page.waitForURL(/\/deck\/getting-started$/);
+    await page.waitForURL(/\/deck\/home$/);
     await page.locator('footer a[href="/privacy-policy"]').first().click();
     await page.getByText('Teadeck test privacy policy 51d0').waitFor();
     assert.equal(context.pages().length, 1, 'no new tab');
@@ -85,12 +86,12 @@ test('advanced layout: About and the privacy policy open in the column, not in a
   }
 });
 
-test('single column: no privacy policy link where the instance has none; sign-out below settings and more', { timeout: 60_000 }, async () => {
+test('single column: no privacy policy link where the instance has none; sign-out in the account menu', { timeout: 60_000 }, async () => {
   // Like GoToSocial: configuration.urls without privacy_policy / terms_of_service.
   const instanceFixture = { ...instance, configuration: { ...instance.configuration, urls: { streaming: '' } } };
   const { context, page, pageErrors } = await signedInPage({ instanceFixture, advancedLayout: false });
   try {
-    await assertLogoutAfterSettingsAndMore(page);
+    await assertAccountMenu(page);
     await page.getByRole('link', { name: /^Über/ }).first().waitFor();
     assert.equal(await page.getByRole('link', { name: /^(Datenschutzerklärung|Datenschutz)$/ }).count(), 0);
     assert.equal(await page.getByRole('link', { name: /^Nutzungsbedingungen$/ }).count(), 0);
@@ -99,8 +100,7 @@ test('single column: no privacy policy link where the instance has none; sign-ou
     assert.equal(await page.locator('.logo--wordmark, .logo--icon, img[alt="Mastodon"]').count(), 0);
     assert.equal(await page.locator('img.teadeck-logo').count(), 0);
 
-    await page.locator('.navigation-panel .teadeck-logout').first().click();
-    await page.locator('.modal-root').getByRole('button', { name: /^(Abmelden|Log out)$/ }).click();
+    await signOut(page);
     await page.waitForURL(`${origin}/login`);
     assert.deepEqual(pageErrors, []);
   } finally {

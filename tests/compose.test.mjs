@@ -3,6 +3,7 @@ import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, instance } from './fixtures.mjs';
+import { composerText, openComposer, publishButton } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 let server;
@@ -88,18 +89,19 @@ test('posting a status with an attached image goes through Teadeck\'s patched co
   await page.goto(origin);
   await page.locator('#teadeck-instance').fill('mastodon.test');
   await page.locator('#teadeck-login button[type=submit]').click();
-  await page.getByPlaceholder('Was gibts Neues?').waitFor();
+  await openComposer(page);
 
   const composeText = 'Teadeck compose test 9c2f';
-  await page.getByPlaceholder('Was gibts Neues?').fill(composeText);
-  await page.locator('input[name="file-upload-input"]').setInputFiles({
+  await composerText(page).fill(composeText);
+  await page.locator('form[role="dialog"] input[type="file"]').setInputFiles({
     name: 'photo.png', mimeType: 'image/png',
     buffer: Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex'),
   });
-  await page.locator('.compose-form__upload').waitFor();
+  for (let attempt = 0; attempt < 100 && mediaUploads === 0; attempt++) await new Promise(r => setTimeout(r, 50));
+  // The attachment is listed in the composer once its upload has been processed.
+  await page.locator('form[role="dialog"]').getByRole('button', { name: 'Bild entfernen' }).waitFor();
 
-  await page.getByRole('button', { name: 'Veröffentlichen' }).click();
-  await page.getByPlaceholder('Was gibts Neues?').waitFor();
+  await publishButton(page).click();
   for (let attempt = 0; attempt < 50 && !publishedStatus; attempt++) await new Promise(r => setTimeout(r, 50));
   assert.ok(publishedStatus, 'the composed status was never posted to /api/v1/statuses');
 
@@ -107,11 +109,9 @@ test('posting a status with an attached image goes through Teadeck\'s patched co
   assert.equal(publishedStatus.status, composeText);
   assert.deepEqual(publishedStatus.media_ids, [media.id]);
   // The route handler above resolving doesn't imply the page has already
-  // processed the response and re-rendered; wait for the compose form to reset.
-  await page.waitForFunction(() => {
-    const textarea = document.querySelector('textarea[placeholder="Was gibts Neues?"]');
-    return textarea instanceof HTMLTextAreaElement && textarea.value === '';
-  });
+  // processed the response and re-rendered; wait for the composer to reset.
+  await openComposer(page);
+  await page.waitForFunction(() => document.querySelector('form[role="dialog"] textarea')?.value === '');
   assert.deepEqual(pageErrors, []);
 
   await context.close();

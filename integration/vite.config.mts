@@ -28,6 +28,12 @@ export default defineConfig(async environment => {
       rolldownOptions: {
         ...upstream.build?.rolldownOptions,
         input: { teadeck: path.resolve(import.meta.dirname, 'app/javascript/teadeck/index.html') },
+        output: {
+          ...upstream.build?.rolldownOptions?.output,
+          // One entry pulls upstream's whole graph into shared chunks that import
+          // each other; without this a chunk can run before code it needs.
+          strictExecutionOrder: true,
+        },
       },
     },
   };

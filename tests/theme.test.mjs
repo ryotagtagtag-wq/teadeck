@@ -3,7 +3,7 @@ import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { timelineText } from './fixtures.mjs';
-import { mockMastodon, signIn } from './mastodon_mock.mjs';
+import { mockMastodon, signIn, openPreferences } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 // Teadeck's own designs (Assam, Sencha) are a layer of CSS variables over
@@ -32,7 +32,7 @@ async function signedInPage() {
 
 /** Chooses design and colour scheme on the settings page and returns what the interface looks like afterwards. */
 async function choose(page, { theme, colorScheme }) {
-  await page.locator('a[href="/preferences"]').first().click();
+  await openPreferences(page);
   await page.locator('#teadeck-settings-theme').waitFor();
   await page.locator('#teadeck-settings-theme').selectOption(theme);
   await page.locator('#teadeck-settings-color-scheme').selectOption(colorScheme);
@@ -41,7 +41,7 @@ async function choose(page, { theme, colorScheme }) {
   await page.getByText(timelineText).waitFor();
   return page.evaluate(() => {
     const styles = getComputedStyle(document.body);
-    const publish = document.querySelector('.compose-form__submit button');
+    const publish = [...document.querySelectorAll('button')].find((element) => /^(Neuer Beitrag|New Post)$/.test(element.textContent.trim()));
     const button = publish ? getComputedStyle(publish) : null;
     return {
       theme: document.documentElement.dataset.teadeckTheme ?? null,
@@ -59,16 +59,14 @@ test('each tea design replaces colours, fonts and radii; Mastodon\'s design stay
   try {
     const mastodon = await choose(page, { theme: 'mastodon', colorScheme: 'dark' });
     assert.equal(mastodon.theme, null);
-    assert.match(mastodon.font, /mastodon-font-sans-serif/);
-    assert.equal(mastodon.brand, '#7263f2');
-    // Mastodon's primary button is a filled surface.
-    assert.equal(mastodon.button.background, 'rgb(86, 56, 204)');
-    assert.equal(mastodon.button.radius, '4px');
+    assert.match(mastodon.font, /Inter/);
+    assert.equal(mastodon.brand, '#705dd6');
 
     // Every design of Teadeck's own: its ground and accent differ from Mastodon's
-    // and from each other, the typeface follows the half, and the button is outlined.
+    // and from each other, the typeface follows the half, and the main button takes the accent.
     const grounds = new Map([['mastodon/dark', mastodon.surface]]);
     const accents = new Map([['mastodon/dark', mastodon.brand]]);
+    const buttons = new Map([['mastodon/dark', mastodon.button.background]]);
     for (const [theme, colorScheme, font] of [
       ['assam', 'dark', /Teadeck IBM Plex Sans/],
       ['assam', 'light', /Teadeck Public Sans/],
@@ -80,9 +78,8 @@ test('each tea design replaces colours, fonts and radii; Mastodon\'s design stay
       assert.equal(design.theme, theme, name);
       assert.equal(design.colorScheme, colorScheme, name);
       assert.match(design.font, font, name);
-      assert.equal(design.button.background, 'rgba(0, 0, 0, 0)', `${name}: outlined, not filled`);
-      assert.equal(design.button.radius, '8px', name);
-      assert.notEqual(design.button.border, 'rgba(0, 0, 0, 0)', name);
+      for (const [other, background] of buttons) assert.notEqual(design.button.background, background, `${name} and ${other} share a button colour`);
+      buttons.set(name, design.button.background);
       for (const [other, ground] of grounds) assert.notEqual(design.surface, ground, `${name} and ${other} share a ground`);
       for (const [other, accent] of accents) assert.notEqual(design.brand, accent, `${name} and ${other} share an accent`);
       grounds.set(name, design.surface);

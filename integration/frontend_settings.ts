@@ -143,7 +143,7 @@ export function frontendSettingsMeta(settings: FrontendSettings) {
   };
 }
 
-/** Where Mastodon itself opens each layout; `/deck/home` would show the home column twice. */
+/** Where Mastodon itself opens each layout; with home pinned, `/deck/home` shows a placeholder beside it. */
 export function layoutStartPath(advancedLayout: boolean) {
-  return advancedLayout ? '/deck/getting-started' : '/home';
+  return advancedLayout ? '/deck/home' : '/home';
 }
