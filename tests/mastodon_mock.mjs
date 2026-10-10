@@ -71,7 +71,7 @@ export async function signOut(page) {
   const name = /^(Sign Out|Abmelden)$/;
   // A button in the navigation menu, a menu item elsewhere.
   await page.getByRole('menuitem', { name }).or(page.getByRole('button', { name })).first().click();
-  await page.locator('.modal-root').getByRole('button', { name: /^(Abmelden|Log out)$/ }).click();
+  await page.locator('.modal-root').getByRole('button', { name: /^(Abmelden|Log out|Sign out)$/ }).click();
 }
 
 /** The redesigned composer's text field (German or English UI). */

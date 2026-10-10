@@ -129,7 +129,8 @@ export async function startNginx({ builds, config = productionConfig, logo }) {
       const expected = /add_header Content-Security-Policy "([^"]+)"/.exec(await readFile(configSource, 'utf8'))?.[1];
       let inARow = 0;
       for (let attempt = 0; expected && inARow < 5; attempt++) {
-        const served = (await fetch(`${origin}/healthz`)).headers.get('content-security-policy');
+        // An old worker may close a kept-alive connection while it shuts down: just ask again.
+        const served = await fetch(`${origin}/healthz`).then((response) => response.headers.get('content-security-policy'), () => undefined);
         inARow = served === expected ? inARow + 1 : 0;
         if (attempt > 200) throw new Error('nginx kept serving the previous configuration');
         await new Promise((resolve) => setTimeout(resolve, 100));
