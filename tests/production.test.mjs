@@ -256,15 +256,15 @@ test('a configured logo is served and shown; without one the interface has no lo
     assert.equal(response.headers.get('cache-control'), 'no-cache', 'a changed logo must not be stuck in caches');
 
     await mockInstance(context, server.origin);
-    // The multi-column layout, which also has the place beside the compose form.
+    // The multi-column layout, which also has the placeholder column beside the pinned ones.
     await context.addInitScript(() => localStorage.setItem('teadeck.v1:https://mastodon.test:42:advancedLayout', 'true'));
     const page = await context.newPage();
     await signIn(page, server.origin);
     // Put into the page (so it can follow the design), and actually drawn.
-    const logo = page.locator('.navigation-panel .teadeck-logo svg').first();
+    const logo = page.locator('a[href="/"] .teadeck-logo svg').first();
     await logo.waitFor();
     assert.ok((await logo.boundingBox()).height > 4, 'the logo is displayed');
-    // It also stands in for Mastodon's mascot beside the compose form.
+    // It also stands in for Mastodon's mascot in the placeholder column.
     assert.equal(await page.locator('.drawer__inner__mastodon .teadeck-logo svg').count(), 1);
     // Mastodon's own logo and elephants are gone from the interface.
     assert.equal(await page.locator('.logo--wordmark, .logo--icon, img[alt="Mastodon"]').count(), 0);
