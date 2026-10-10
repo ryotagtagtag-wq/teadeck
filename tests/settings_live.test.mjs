@@ -133,9 +133,14 @@ test('the account menu sends server-only pages to the instance and keeps local v
     // Teadeck's settings stay local; the account's own settings are on the server.
     assert.equal(href('Einstellungen'), `${origin}/preferences`, links.map((link) => link.text).join(' | '));
     assert.equal(href('Einstellungen auf dem Server'), 'https://mastodon.test/settings');
-    // Server-only pages use the instance; supported local views stay in Teadeck.
-    assert.equal(href('Follower und Folge ich'), 'https://mastodon.test/relationships');
+    // Supported local views stay in Teadeck.
+    assert.equal(href('Follower und Folge ich'), `${origin}/@alice/following`);
     assert.equal(href('Blockierte Konten'), `${origin}/blocks`);
+
+    // The lists open in Teadeck, not as an error page of the server.
+    await page.getByRole('link', { name: 'Follower und Folge ich' }).click();
+    await page.waitForURL(`${origin}/@alice/following`);
+    assert.equal(await page.getByText('Oh nein!').count(), 0);
     assert.deepEqual(pageErrors, []);
   } finally {
     await context.close();

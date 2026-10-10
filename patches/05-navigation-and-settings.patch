@@ -151,7 +151,24 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
    CirclesFourIcon,
    HeartIcon,
    BookmarkSimpleIcon,
-@@ -118,10 +121,19 @@ export const AccountMenuItems: React.FC<{
+@@ -14,7 +17,6 @@ import {
+   GavelIcon,
+   ShieldStarIcon,
+   SignOutIcon,
+-  MastodonLogoIcon,
+   GithubLogoIcon,
+ } from '@phosphor-icons/react';
+ 
+@@ -39,7 +41,7 @@ import {
+ } from '@/mastodon/components/menu';
+ import { useAccount } from '@/mastodon/hooks/useAccount';
+ import { useIdentity } from '@/mastodon/identity_context';
+-import { source_url, version } from '@/mastodon/initial_state';
++import { source_url } from '@/mastodon/initial_state';
+ import {
+   canManageReports,
+   canViewAdminDashboard,
+@@ -118,10 +120,19 @@ export const AccountMenuItems: React.FC<{
          />
        </MenuItemLink>
  
@@ -172,12 +189,13 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
        <MenuItemDivider />
  
        <MenuItemLink
-@@ -152,7 +164,7 @@ export const AccountMenuItems: React.FC<{
+@@ -152,7 +163,8 @@ export const AccountMenuItems: React.FC<{
  
        <MenuItemDivider />
  
 -      <MenuItemLink as='a' href='/relationships' icon={UsersThreeIcon}>
-+      <MenuItemLink as='a' href={serverUrl('/relationships')} icon={UsersThreeIcon}>
++      {/* Teadeck's own lists: the server's /relationships page exists only on Mastodon. */}
++      <MenuItemLink to={`${accountBasePath}/following`} icon={UsersThreeIcon}>
          <FormattedMessage
            id='navigation_bar.followers_and_following'
            defaultMessage='Followers & Following'
@@ -199,10 +217,37 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
                <FormattedMessage
                  id='navigation_bar.moderation'
                  defaultMessage='Moderation'
+@@ -192,24 +204,14 @@ export const AccountMenuItems: React.FC<{
+ 
+       <MenuItemDivider />
+ 
+-      <MenuItemGroup label={`Mastodon v${version}`}>
++      {/* This client is Teadeck, whatever software the server runs. */}
++      <MenuItemGroup label='Teadeck'>
+         <MenuItemLink as='a' href={source_url} icon={GithubLogoIcon}>
+           <FormattedMessage
+             id='navigation_bar.source_code'
+             defaultMessage='Source Code'
+           />
+         </MenuItemLink>
+-
+-        <MenuItemLink
+-          as='a'
+-          href='https://joinmastodon.org'
+-          icon={MastodonLogoIcon}
+-        >
+-          <FormattedMessage
+-            id='navigation_bar.about_mastodon'
+-            defaultMessage='About Mastodon'
+-          />
+-        </MenuItemLink>
+       </MenuItemGroup>
+ 
+       <MenuItemDivider />
 diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx b/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx
 --- a/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx
 +++ b/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx
-@@ -3,6 +3,7 @@ import { FormattedMessage } from 'react-intl';
+@@ -3,10 +3,10 @@ import { FormattedMessage } from 'react-intl';
  import { NavLink } from 'react-router-dom';
  
  import {
@@ -210,7 +255,11 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/footer_l
    statusPageUrl,
    termsOfServiceEnabled,
    profile_directory as canViewProfileDirectory,
-@@ -15,18 +16,13 @@ import classes from './footer_links.module.scss';
+-  version,
+   source_url,
+ } from '@/mastodon/initial_state';
+ 
+@@ -15,18 +15,13 @@ import classes from './footer_links.module.scss';
  export const NavigationFooterLinks: React.FC<{
    multiColumn?: boolean;
    withVersionInfo?: boolean;
@@ -232,7 +281,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/footer_l
              <FormattedMessage
                id='footer.about_this_server'
                defaultMessage='About'
-@@ -38,7 +34,6 @@ export const NavigationFooterLinks: React.FC<{
+@@ -38,7 +33,6 @@ export const NavigationFooterLinks: React.FC<{
              <NavLink
                to='/terms-of-service'
                rel='terms-of-service'
@@ -240,7 +289,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/footer_l
              >
                <FormattedMessage
                  id='footer.terms_of_service_short'
-@@ -47,11 +42,11 @@ export const NavigationFooterLinks: React.FC<{
+@@ -47,11 +41,11 @@ export const NavigationFooterLinks: React.FC<{
              </NavLink>
            </li>
          )}
@@ -253,7 +302,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/footer_l
            >
              <FormattedMessage
                id='footer.privacy_policy_short'
-@@ -59,6 +54,7 @@ export const NavigationFooterLinks: React.FC<{
+@@ -59,6 +53,7 @@ export const NavigationFooterLinks: React.FC<{
              />
            </NavLink>
          </li>
@@ -261,6 +310,15 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/footer_l
          {statusPageUrl && (
            <li>
              <a href={statusPageUrl} target='_blank' rel='noopener'>
+@@ -79,7 +74,7 @@ export const NavigationFooterLinks: React.FC<{
+       </ul>
+       {withVersionInfo && (
+         <p>
+-          {`Mastodon v${version} `}&nbsp;
++          {'Teadeck '}&nbsp;
+           <a href={source_url} rel='noopener' target='_blank'>
+             <FormattedMessage
+               id='footer.source_code'
 diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx b/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx
 --- a/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx
 +++ b/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx

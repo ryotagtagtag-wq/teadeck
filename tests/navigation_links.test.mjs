@@ -42,7 +42,11 @@ async function assertAccountMenu(page) {
   await openAccountMenu(page);
   assert.equal(await page.getByRole('link', { name: 'Einstellungen', exact: true }).getAttribute('href'), '/preferences');
   assert.equal(await page.getByRole('link', { name: 'Einstellungen auf dem Server' }).getAttribute('href'), 'https://mastodon.test/settings');
-  assert.equal(await page.getByRole('link', { name: /^Follower/ }).getAttribute('href'), 'https://mastodon.test/relationships');
+  // Teadeck's own lists: /relationships exists only on Mastodon servers.
+  assert.equal(await page.getByRole('link', { name: /^Follower/ }).getAttribute('href'), '/@alice/following');
+  // Nothing about Mastodon in a client that may well talk to GoToSocial.
+  assert.equal(await page.locator('a[href*="joinmastodon.org"]').count(), 0);
+  assert.equal(await page.getByText(/^Mastodon v/).count(), 0);
   const signOutEntry = page.getByRole('menuitem', { name: 'Abmelden' }).or(page.getByRole('button', { name: 'Abmelden' }));
   await signOutEntry.first().waitFor();
   await page.keyboard.press('Escape');
