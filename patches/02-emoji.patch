@@ -1,3 +1,19 @@
+diff --git a/app/javascript/mastodon/features/emoji/database.ts b/app/javascript/mastodon/features/emoji/database.ts
+--- a/app/javascript/mastodon/features/emoji/database.ts
++++ b/app/javascript/mastodon/features/emoji/database.ts
+@@ -190,10 +190,8 @@ export async function loadCustomEmojiKeys(
+ 
+ export async function loadAllCustomEmoji() {
+   const db = await loadDB();
+-  const cacheValue = await db.get('etags', 'custom');
+-  if (!cacheValue) {
+-    return null;
+-  }
++  // Teadeck: no etag check. Servers on another origin hide the ETag header
++  // unless they expose it via CORS, so none is stored though the emojis are.
+   return db.getAll('custom');
+ }
+ 
 diff --git a/app/javascript/mastodon/features/emoji/db-schema.ts b/app/javascript/mastodon/features/emoji/db-schema.ts
 --- a/app/javascript/mastodon/features/emoji/db-schema.ts
 +++ b/app/javascript/mastodon/features/emoji/db-schema.ts

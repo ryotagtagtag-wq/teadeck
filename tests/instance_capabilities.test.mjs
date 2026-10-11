@@ -66,3 +66,26 @@ test('compose enforces the real instance character limit, not a hardcoded defaul
 
   await context.close();
 });
+
+test('the emoji picker lists the instance\'s custom emoji, even though the server hides its ETag from other origins', { timeout: 60_000 }, async () => {
+  const context = await browser.newContext({ locale: 'en-US' });
+  const page = await context.newPage();
+  // No Access-Control-Expose-Headers: ETag, as on GoToSocial and Mastodon:
+  // the browser hides the header from Teadeck.
+  await mockMastodon(context, origin, {
+    '/api/v2/instance': instance,
+    '/api/v1/markers': {},
+    '/api/v1/custom_emojis': [customEmoji],
+  });
+  await context.route('https://mastodon.test/emoji/**', (route) => route.fulfill({
+    contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><rect width="8" height="8" fill="#a4632a"/></svg>',
+  }));
+
+  await signIn(page, origin);
+  await openComposer(page);
+  await page.locator('form[role="dialog"]').getByRole('button', { name: 'Insert emoji' }).click();
+  await page.locator('.emoji-mart').waitFor();
+  await page.locator('.emoji-mart [aria-label*="teadeck_test"]').first().waitFor({ timeout: 10_000 });
+
+  await context.close();
+});
