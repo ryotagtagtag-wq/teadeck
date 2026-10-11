@@ -64,10 +64,12 @@ body > [hidden], #teadeck-shell [hidden] { display: none !important; }
   overflow: hidden;
   background: var(--color-bg-primary);
 }
-.teadeck-status-overlay > [data-column-root] { flex: 1; width: 100%; max-width: none; min-height: 0; }
+/* Above upstream's `.layout-multiple-columns` column rule (fixed width, no growing), which would
+   leave the post list without height. */
+.modal-root__modal.teadeck-status-overlay > [data-column-root] { flex: 1; width: 100%; max-width: none; min-height: 0; }
 .teadeck-status-overlay .scrollable { overflow-y: auto; }
 /* Room for the close button beside the post's own buttons in the header. */
-.teadeck-status-overlay > [data-column-root] > header > :first-child { padding-inline-end: 48px; }
+.modal-root__modal.teadeck-status-overlay > [data-column-root] > header > :first-child { padding-inline-end: 48px; }
 .teadeck-status-overlay__close.icon-button { position: absolute; top: 12px; inset-inline-end: 12px; z-index: 10; }
 @media (width <= 630px) {
   .teadeck-status-overlay { width: 100vw; height: 100dvh; border: 0; border-radius: 0; }

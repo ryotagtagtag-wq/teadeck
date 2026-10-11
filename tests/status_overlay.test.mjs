@@ -94,3 +94,27 @@ test('a post opens with its thread in an overlay, from its own button or, when c
   assert.deepEqual(pageErrors, []);
   await context.close();
 });
+
+test('in the multi-column layout and a low window, the overlay shows the post, not just its header', { timeout: 60_000 }, async () => {
+  // Upstream's multi-column rule for columns (fixed width, no growing) once left the
+  // overlay's post list without any height.
+  const context = await browser.newContext({ locale: 'en-US', viewport: { width: 1600, height: 450 } });
+  await context.addInitScript(() => localStorage.setItem('teadeck.v1:https://mastodon.test:42:advancedLayout', 'true'));
+  await mockMastodon(context, origin, {
+    [`/api/v1/statuses/${status.id}`]: status,
+    [`/api/v1/statuses/${status.id}/context`]: { ancestors: [], descendants: [reply] },
+  });
+  const page = await context.newPage();
+  await signIn(page, origin);
+  await page.locator('article').filter({ hasText: timelineText }).first().getByRole('button', { name: 'Open in overlay' }).click();
+  const overlay = page.locator('.teadeck-status-overlay');
+  const post = overlay.locator('article[data-variant="page"]').getByText(timelineText);
+  await post.waitFor();
+
+  const [box, postBox] = [await overlay.boundingBox(), await post.boundingBox()];
+  assert.ok(postBox.y >= box.y && postBox.y + postBox.height <= box.y + box.height, `post at ${postBox.y}, overlay ${box.y}–${box.y + box.height}`);
+  // And the list scrolls within the overlay, as tall as the space it has left.
+  const list = await overlay.locator('.scrollable').first().boundingBox();
+  assert.ok(list.height > 100, `list is ${list.height}px high`);
+  await context.close();
+});
