@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
-import { account, instance, status, timelineText } from './fixtures.mjs';
+import { account, instance, timelineText } from './fixtures.mjs';
+import { mockMastodon, respond, waitUntil } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 let server;
@@ -32,25 +33,12 @@ test('"Profil bearbeiten" works on GoToSocial through verify_credentials and upd
   let current = { ...base, bot: false, fields: [], source: { note: 'Test account', fields: [], privacy: 'private', language: 'de' } };
   const gtsInstance = { ...instance, version: '3.5.3+0.22.1', source_url: 'https://codeberg.org/superseriousbusiness/gotosocial' };
   const updates = [];
-  const profileRequests = [];
 
-  await context.route('https://mastodon.test/**', async (route) => {
-    const request = route.request();
-    const url = new URL(request.url());
-    const cors = { 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
-    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    if (url.pathname === '/oauth/authorize') {
-      const callback = new URL('/oauth/callback', origin);
-      callback.search = new URLSearchParams({ code: 'browser-code', state: url.searchParams.get('state') ?? '' });
-      return route.fulfill({ contentType: 'text/html', body: `<script>location.replace(${JSON.stringify(callback.href)})</script>` });
-    }
-    const json = (body, statusCode = 200) => route.fulfill({ status: statusCode, contentType: 'application/json', headers: cors, body: JSON.stringify(body) });
-    if (url.pathname === '/api/v1/apps') return json({ client_id: 'browser-client', client_secret: 'browser-secret' });
-    if (url.pathname === '/oauth/token') return json({ access_token: 'browser-token', token_type: 'Bearer', scope: 'read write follow' });
-    if (url.pathname === '/api/v2/instance') return json(gtsInstance);
-    if (url.pathname.startsWith('/api/v1/profile')) { profileRequests.push(`${request.method()} ${url.pathname}`); return json({ error: 'Not Found' }, 404); }
-    if (url.pathname === '/api/v1/accounts/update_credentials' && request.method() === 'PATCH') {
-      const body = JSON.parse(request.postData());
+  const notFound = respond(404, { error: 'Not Found' });
+  const server = await mockMastodon(context, origin, {
+    '/api/v2/instance': gtsInstance,
+    '/api/v1/profile': notFound,
+    'PATCH /api/v1/accounts/update_credentials': ({ body }) => {
       updates.push(body);
       const { fields_attributes: fieldsAttributes, note, ...simple } = body;
       current = { ...current, ...simple };
@@ -59,20 +47,18 @@ test('"Profil bearbeiten" works on GoToSocial through verify_credentials and upd
         const fields = Object.keys(fieldsAttributes).sort().map((key) => ({ name: fieldsAttributes[key].name, value: fieldsAttributes[key].value }));
         current = { ...current, fields: fields.map((f) => ({ ...f, verified_at: null })), source: { ...current.source, fields } };
       }
-      return json(current);
-    }
-    if (['/api/v1/accounts/verify_credentials', '/api/v1/accounts/lookup', `/api/v1/accounts/${account.id}`].includes(url.pathname)) return json(current);
-    if (url.pathname === '/api/v1/preferences') return json({});
-    if (url.pathname === '/api/v1/timelines/home') return json([status]);
-    if (['/api/v2/notifications', '/api/v2/notifications/policy', '/api/v1/instance/translation_languages', '/api/v1/featured_tags/suggestions'].includes(url.pathname)) {
-      return json({ error: 'Not Found' }, 404);
-    }
-    return json([]);
+      return current;
+    },
+    '/api/v1/accounts/verify_credentials': () => current,
+    '/api/v1/accounts/lookup': () => current,
+    [`/api/v1/accounts/${account.id}`]: () => current,
+    '/api/v2/notifications': notFound,
+    '/api/v2/notifications/policy': notFound,
+    '/api/v1/instance/translation_languages': notFound,
+    '/api/v1/featured_tags/suggestions': notFound,
   });
-  const waitFor = async (predicate, what) => {
-    for (let attempt = 0; attempt < 200 && !predicate(); attempt++) await new Promise(r => setTimeout(r, 50));
-    assert.ok(predicate(), what);
-  };
+  const profileRequests = () => server.requests.filter((request) => request.path.startsWith('/api/v1/profile')).map((request) => `${request.method} ${request.path}`);
+  const waitFor = (predicate, what) => waitUntil(predicate, { message: what });
 
   await page.goto(origin);
   await page.locator('#teadeck-instance').fill('mastodon.test');
@@ -102,7 +88,7 @@ test('"Profil bearbeiten" works on GoToSocial through verify_credentials and upd
   await waitFor(() => updates.some((body) => body.display_name === 'Alice Neu'), 'display name sent to update_credentials');
 
   // Reading and writing the missing /api/v1/profile were each tried once, not on every change; no "Oops" toasts.
-  assert.deepEqual(profileRequests.sort(), ['GET /api/v1/profile', 'PATCH /api/v1/profile']);
+  assert.deepEqual(profileRequests().sort(), ['GET /api/v1/profile', 'PATCH /api/v1/profile']);
   assert.equal(await page.getByText('Ups!').count(), 0);
   assert.deepEqual(pageErrors, []);
   await context.close();

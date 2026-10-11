@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
-import { account, instance } from './fixtures.mjs';
-import { mockMastodon, signIn } from './mastodon_mock.mjs';
+import { account, instance, postedStatus } from './fixtures.mjs';
+import { mockMastodon, signIn, waitUntil } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 // GoToSocial with Markdown, for an account that writes Markdown.
@@ -37,12 +37,7 @@ async function signedInPage({ instanceFixture = gtsInstance, accountFixture = ma
     '/api/v2/instance': instanceFixture,
     '/api/v1/accounts/verify_credentials': accountFixture,
     '/api/v1/markers': {},
-    '/api/v1/statuses': ({ request }) => {
-      if (request.method() !== 'POST') return [];
-      const sent = JSON.parse(request.postData());
-      posted.push(sent);
-      return { id: 'posted-1', created_at: new Date().toISOString(), account, visibility: 'public', content: '<p>ok</p>', spoiler_text: '', sensitive: false, language: 'de', uri: 'https://mastodon.test/users/alice/statuses/1', url: 'https://mastodon.test/@alice/1', replies_count: 0, reblogs_count: 0, favourites_count: 0, quotes_count: 0, favourited: false, reblogged: false, muted: false, bookmarked: false, pinned: false, media_attachments: [], mentions: [], tags: [], emojis: [], tagged_collections: [], filtered: [] };
-    },
+    'POST /api/v1/statuses': ({ body }) => { posted.push(body); return postedStatus(body); },
   });
   const page = await context.newPage();
   const pageErrors = [];
@@ -90,7 +85,7 @@ test('the large composer opens from the right part of "New post", previews Markd
 
     // Posting works as from the regular composer.
     await form(page).getByRole('button', { name: 'Veröffentlichen' }).click();
-    for (let attempt = 0; attempt < 100 && posted.length === 0; attempt++) await new Promise((r) => setTimeout(r, 50));
+    await waitUntil(() => posted.length > 0, { message: 'the post was never sent' });
     assert.equal(posted[0]?.status, text);
     assert.deepEqual(pageErrors, []);
   } finally {

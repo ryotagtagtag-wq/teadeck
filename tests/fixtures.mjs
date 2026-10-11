@@ -62,3 +62,12 @@ export const status = {
   content: `<p>${timelineText}</p>`, account, media_attachments: [], mentions: [],
   tags: [], emojis: [], tagged_collections: [], filtered: [],
 };
+
+/** The server's answer to a new post: `status` with what was sent (`sent` as posted to /api/v1/statuses). */
+export function postedStatus(sent, overrides = {}) {
+  return {
+    ...status, id: 'posted-1', created_at: new Date().toISOString(),
+    visibility: sent.visibility ?? 'public', content: `<p>${sent.status}</p>`,
+    in_reply_to_id: sent.in_reply_to_id ?? null, ...overrides,
+  };
+}

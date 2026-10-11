@@ -3,7 +3,8 @@ import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { shouldReloadForUpdate } from '../integration/update_reload.ts';
-import { account, instance, status, timelineText } from './fixtures.mjs';
+import { account, status, timelineText } from './fixtures.mjs';
+import { mockMastodon } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 test('reloads at most once per 30 seconds', () => {
@@ -31,32 +32,10 @@ test('a lazily loaded view missing after a redeploy reloads the page instead of 
   // serve it; see production.test.mjs): without a service worker.
   const context = await browser.newContext({ locale: 'de-DE', serviceWorkers: 'block' });
   const page = await context.newPage();
-  const policy = {
-    for_not_following: 'accept', for_not_followers: 'accept', for_new_accounts: 'accept',
-    for_private_mentions: 'accept', for_limited_accounts: 'filter', for_bots: 'accept',
-    summary: { pending_requests_count: 0, pending_notifications_count: 0 },
-  };
 
-  await context.route('https://mastodon.test/**', async (route) => {
-    const request = route.request();
-    const url = new URL(request.url());
-    const cors = { 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
-    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    if (url.pathname === '/oauth/authorize') {
-      const callback = new URL('/oauth/callback', origin);
-      callback.search = new URLSearchParams({ code: 'browser-code', state: url.searchParams.get('state') ?? '' });
-      return route.fulfill({ contentType: 'text/html', body: `<script>location.replace(${JSON.stringify(callback.href)})</script>` });
-    }
-    let body = [];
-    if (url.pathname === '/api/v1/apps') body = { client_id: 'browser-client', client_secret: 'browser-secret' };
-    else if (url.pathname === '/oauth/token') body = { access_token: 'browser-token', token_type: 'Bearer', scope: 'read write follow' };
-    else if (url.pathname === '/api/v2/instance') body = instance;
-    else if (['/api/v1/accounts/verify_credentials', '/api/v1/accounts/lookup', `/api/v1/accounts/${account.id}`].includes(url.pathname)) body = account;
-    else if (url.pathname === '/api/v1/preferences') body = {};
-    else if (url.pathname === '/api/v1/timelines/home') body = [status];
-    else if (url.pathname === '/api/v2/notifications') body = { notification_groups: [], accounts: [], statuses: [] };
-    else if (url.pathname === '/api/v2/notifications/policy') body = policy;
-    return route.fulfill({ status: 200, contentType: 'application/json', headers: cors, body: JSON.stringify(body) });
+  await mockMastodon(context, origin, {
+    '/api/v1/accounts/lookup': account,
+    [`/api/v1/accounts/${account.id}`]: account,
   });
 
   await page.goto(origin);

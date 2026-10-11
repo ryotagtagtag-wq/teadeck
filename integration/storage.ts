@@ -74,8 +74,10 @@ async function withAccountsStore<T>(
     return await new Promise<T>((resolve, reject) => {
       const tx = db.transaction(accountsStoreName, mode);
       const request = run(tx.objectStore(accountsStoreName));
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error ?? new ShellError('errorAccountStoreAccess'));
+      // A successful request is not yet a stored change: the transaction can
+      // still abort. Only its completion counts.
+      tx.oncomplete = () => resolve(request.result);
+      tx.onabort = () => reject(tx.error ?? request.error ?? new ShellError('errorAccountStoreAccess'));
     });
   } finally {
     db.close();

@@ -47,30 +47,43 @@ export function interactionDefaultsUnavailableMessage() {
   return replyAudienceTexts[currentUiTextLocale()].defaultsUnavailable;
 }
 
-export const ReplyAudiencePicker: React.FC<{
-  value: ReplyAudience;
-  onChange: (value: ReplyAudience) => void;
-}> = ({ value, onChange }) => {
+/** The options for the post being written: which fit its visibility, and the one in effect. */
+export function useReplyAudienceOptions(value: ReplyAudience) {
   const visibility = useAppSelector((state) => state.compose.get('privacy') as string);
   const locale = currentUiTextLocale();
   // The remembered choice, or its fallback while the visibility rules it out.
   const effective = effectiveReplyAudience(value, visibility);
-  const items = useMemo(
-    () => replyAudiences.map((audience) => {
-      const feasible = isReplyAudienceFeasible(audience, visibility);
-      return {
-        text: replyAudienceLabels[locale][audience].long,
-        description: feasible ? undefined : replyAudienceTexts[locale][audience === 'public' ? 'onlyPublic' : 'notDirect'],
-        disabled: !feasible,
-        highlighted: audience === effective,
-        action: () => {
-          saveReplyAudience(audience);
-          onChange(audience);
-        },
-      };
-    }),
-    [visibility, effective, onChange, locale],
-  );
+  const options = useMemo(() => replyAudiences.map((audience) => {
+    const feasible = isReplyAudienceFeasible(audience, visibility);
+    return {
+      audience,
+      label: replyAudienceLabels[locale][audience].long,
+      hint: feasible ? undefined : replyAudienceTexts[locale][audience === 'public' ? 'onlyPublic' : 'notDirect'],
+      disabled: !feasible,
+      selected: audience === effective,
+    };
+  }), [visibility, effective, locale]);
+  return { effective, options, locale };
+}
+
+/** Remembers the choice for the next posts and hands it to the form. */
+export function chooseReplyAudience(audience: ReplyAudience, onChange: (value: ReplyAudience) => void) {
+  saveReplyAudience(audience);
+  onChange(audience);
+}
+
+export const ReplyAudiencePicker: React.FC<{
+  value: ReplyAudience;
+  onChange: (value: ReplyAudience) => void;
+}> = ({ value, onChange }) => {
+  const { effective, options, locale } = useReplyAudienceOptions(value);
+  const items = useMemo(() => options.map((option) => ({
+    text: option.label,
+    description: option.hint,
+    disabled: option.disabled,
+    highlighted: option.selected,
+    action: () => { chooseReplyAudience(option.audience, onChange); },
+  })), [options, onChange]);
   const title = `${replyAudienceTexts[locale].title}: ${replyAudienceLabels[locale][effective].long}`;
 
   return (

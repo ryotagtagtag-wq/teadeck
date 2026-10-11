@@ -99,11 +99,6 @@ export const settingsStrings = {
   useSystemScrollbars: { de: 'Bildlaufleiste des Betriebssystems verwenden', en: "Use the operating system's scrollbars" },
 
   language: { de: 'Sprache', en: 'Language' },
-  timezone: { de: 'Zeitzone', en: 'Time zone' },
-  timezoneHint: {
-    de: 'Wirkt sich in Teadeck derzeit nicht auf angezeigte Zeiten aus: Zeiten werden immer in der Zeitzone deines Browsers dargestellt, wie im Mastodon-Webclient auch.',
-    en: "Currently has no effect on times shown in Teadeck: times always display in your browser's own time zone, just like in Mastodon's own web client.",
-  },
 
   notifications: { de: 'Benachrichtigungen', en: 'Notifications' },
   notificationsHint: { de: 'Bestimmt, welche Benachrichtigungen in der Benachrichtigungs-Spalte erscheinen.', en: 'Controls which notifications appear in the Notifications column.' },

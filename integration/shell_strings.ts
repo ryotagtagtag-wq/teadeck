@@ -107,11 +107,14 @@ export function englishShellMessages(): Record<string, string> {
 export class ShellError extends Error {
   readonly id: ShellMessageId;
   readonly detail?: string;
+  /** The HTTP status of a failed request to the server. */
+  readonly status?: number;
 
-  constructor(id: ShellMessageId, detail?: string) {
+  constructor(id: ShellMessageId, detail?: string, status?: number) {
     super(detail ? `${shellMessages[id].en} (${detail})` : shellMessages[id].en);
     this.id = id;
     this.detail = detail;
+    this.status = status;
     this.name = 'ShellError';
   }
 }

@@ -72,14 +72,6 @@ const settingsAtStart = (): FrontendSettings => ({
 // Like upstream's `.simple_form h3`; a bare <h3> has no styling.
 const sectionHeadingStyle: React.CSSProperties = { fontSize: '20px', fontWeight: 600, marginBottom: '16px' };
 
-function timeZones(): string[] {
-  const supportedValuesOf = (Intl as { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf;
-  if (supportedValuesOf) {
-    try { return supportedValuesOf('timeZone'); } catch { /* fall through to the browser's own zone only */ }
-  }
-  return [Intl.DateTimeFormat().resolvedOptions().timeZone];
-}
-
 function localeNameLookup() {
   try { return new Intl.DisplayNames([navigator.language, 'en'], { type: 'language' }); }
   catch { return undefined; }
@@ -91,14 +83,12 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
   const [uiLocale, setUiLocale] = useState(() => document.documentElement.lang || 'en');
   const locale = uiTextLocale(uiLocale);
   const [statusOverlay, setStatusOverlay] = useState(statusOverlayEnabled);
-  const [timezone, setTimezone] = useState(() => readPreference('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone));
   const [notifications, setNotifications] = useState<NotificationShows>(() => readNotificationShows(readSettings()));
 
   const [reloadNeeded, setReloadNeeded] = useState(false);
   const dispatch = useAppDispatch();
 
   const localeNames = useMemo(localeNameLookup, []);
-  const zones = useMemo(timeZones, []);
 
   // Saved at once. Settings upstream reads only at startup offer a reload.
   const change = useCallback((patch: Partial<FrontendSettings>, { instant = false } = {}) => {
@@ -188,13 +178,6 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
     setReloadNeeded(true);
   }, []);
 
-  const handleTimezone = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = event.target.value;
-    setTimezone(value);
-    writePreference('timezone', value);
-    setReloadNeeded(true);
-  }, []);
-
   const handleStatusOverlay = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setStatusOverlay(event.target.checked);
     setStatusOverlayEnabled(event.target.checked);
@@ -236,10 +219,6 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
             {availableLocales.map(code => (
               <option key={code} value={code}>{localeNames?.of(code) ?? code}</option>
             ))}
-          </SelectField>
-
-          <SelectField id='teadeck-settings-timezone' label={t('timezone', locale)} hint={t('timezoneHint', locale)} value={timezone} onChange={handleTimezone}>
-            {zones.map(zone => <option key={zone} value={zone}>{zone}</option>)}
           </SelectField>
 
           <h3 style={sectionHeadingStyle}>{t('appearance', locale)}</h3>

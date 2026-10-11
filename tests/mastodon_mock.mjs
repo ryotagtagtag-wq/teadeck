@@ -13,15 +13,26 @@ export const authorizeWith = (origin, code = 'browser-code') => ({ route, url })
   return route.fulfill({ contentType: 'text/html', body: `<script>location.replace(${JSON.stringify(callback.href)})</script>` });
 };
 
+const response = Symbol('response');
+
+/** An answer with its own status code, for `mockMastodon` routes. */
+export function respond(status, body = {}) {
+  return { [response]: true, status, body };
+}
+
 /**
  * Answers requests to https://mastodon.test like a Mastodon server with one
- * post on the home timeline. `routes` adds or replaces answers by path: a value
- * is sent as JSON; a function gets `{ route, request, url, cors }` and returns
- * the value to send, or nothing once it has answered itself. Any other path
- * gets an empty list.
+ * post on the home timeline. `routes` adds or replaces answers by path, or by
+ * method and path (`'POST /api/v1/statuses'`, which wins over the path alone).
+ * A value is sent as JSON, `respond(status, body)` with that status; a function
+ * gets `{ route, request, url, cors, body }` and returns either, or nothing once
+ * it has answered itself. Any other path gets an empty list.
+ *
+ * Returns `{ requests }`: every request so far as `{ method, path, url, body }`,
+ * with the body parsed from JSON where it is JSON.
  */
 export async function mockMastodon(target, origin, routes = {}) {
-  const cors = { 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
+  const cors = { 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type,if-none-match', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
   const answers = {
     '/oauth/authorize': authorizeWith(origin),
     '/api/v1/apps': { client_id: 'browser-client', client_secret: 'browser-secret' },
@@ -34,15 +45,32 @@ export async function mockMastodon(target, origin, routes = {}) {
     '/api/v2/notifications/policy': notificationPolicy,
     ...routes,
   };
+  const requests = [];
   await target.route('https://mastodon.test/**', async (route) => {
     const request = route.request();
     const url = new URL(request.url());
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    const answer = answers[url.pathname] ?? [];
-    const body = typeof answer === 'function' ? await answer({ route, request, url, cors }) : answer;
-    if (body === undefined) return;
-    return route.fulfill({ status: 200, contentType: 'application/json', headers: cors, body: JSON.stringify(body) });
+    let body = request.postData();
+    try { body = body === null ? undefined : JSON.parse(body); } catch { /* not JSON: keep the text */ }
+    requests.push({ method: request.method(), path: url.pathname, url, body });
+    const answer = answers[`${request.method()} ${url.pathname}`] ?? answers[url.pathname] ?? [];
+    const result = typeof answer === 'function' ? await answer({ route, request, url, cors, body }) : answer;
+    if (result === undefined) return;
+    const { status: code, body: payload } = result?.[response] ? result : { status: 200, body: result };
+    return route.fulfill({ status: code, contentType: 'application/json', headers: cors, body: JSON.stringify(payload) });
   });
+  return { requests };
+}
+
+/** Waits until `check` returns something truthy, and returns that. */
+export async function waitUntil(check, { timeout = 5_000, message = 'condition never met' } = {}) {
+  const deadline = Date.now() + timeout;
+  for (;;) {
+    const result = await check();
+    if (result) return result;
+    if (Date.now() > deadline) throw new Error(`waitUntil: ${message}`);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
 }
 
 /** Signs in to mastodon.test and waits for the home timeline. */

@@ -1,14 +1,15 @@
 diff --git a/app/javascript/mastodon/features/lists/new.tsx b/app/javascript/mastodon/features/lists/new.tsx
 --- a/app/javascript/mastodon/features/lists/new.tsx
 +++ b/app/javascript/mastodon/features/lists/new.tsx
-@@ -164,7 +164,10 @@ const NewList: React.FC<{ list?: List | null }> = ({ list }) => {
+@@ -164,7 +164,11 @@ const NewList: React.FC<{ list?: List | null }> = ({ list }) => {
      [setRepliesPolicy],
    );
  
 -  const handleSubmit = useCallback(() => {
 +  const handleSubmit = useCallback((event: React.FormEvent) => {
 +    // Otherwise the browser submits the form too and reloads the page, which
-+    // cuts off the request that creates the list.
++    // cuts off the request that creates the list. Not fixed upstream as of
++    // mastodon/mastodon@9e3fab27; drop this once upstream's form prevents it.
 +    event.preventDefault();
      setSubmitting(true);
  

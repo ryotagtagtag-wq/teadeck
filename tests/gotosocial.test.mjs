@@ -3,6 +3,7 @@ import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, instance, status, timelineText } from './fixtures.mjs';
+import { mockMastodon, respond, waitUntil } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 let server;
@@ -35,55 +36,34 @@ test('works against a GoToSocial-shaped API: missing status fields, v1-only noti
   const context = await browser.newContext({ locale: 'de-DE' });
   const page = await context.newPage();
   const pageErrors = [];
-  const requests = [];
   let customEmojiAuthorization;
   page.on('pageerror', (error) => pageErrors.push(error.message));
 
-  await context.route('https://mastodon.test/**', async (route) => {
-    const request = route.request();
-    const url = new URL(request.url());
-    const cors = { 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type,if-none-match', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
-    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    requests.push(url.pathname);
-    if (url.pathname === '/oauth/authorize') {
-      const callback = new URL('/oauth/callback', origin);
-      callback.search = new URLSearchParams({ code: 'browser-code', state: url.searchParams.get('state') ?? '' });
-      return route.fulfill({ contentType: 'text/html', body: `<script>location.replace(${JSON.stringify(callback.href)})</script>` });
-    }
-    const json = (body, statusCode = 200) => route.fulfill({ status: statusCode, contentType: 'application/json', headers: cors, body: JSON.stringify(body) });
-    if (url.pathname === '/api/v1/apps') return json({ client_id: 'browser-client', client_secret: 'browser-secret' });
-    if (url.pathname === '/oauth/token') return json({ access_token: 'browser-token', token_type: 'Bearer', scope: 'read write follow' });
-    if (url.pathname === '/api/v2/instance') return json(gtsInstance);
-    if (['/api/v1/accounts/verify_credentials', '/api/v1/accounts/lookup', `/api/v1/accounts/${account.id}`].includes(url.pathname)) return json(account);
-    if (url.pathname === '/api/v1/preferences') return json({});
-    if (url.pathname === '/api/v1/timelines/home') return json([gtsStatus]);
-    if (url.pathname === '/api/v2/search') {
-      // GoToSocial's search response has no `collections` list.
-      // A "#tag" query returns hashtags only on GoToSocial, never posts. Tag `history` is a stub (empty or absent).
-      requests.push(`search:${url.searchParams.get('type') ?? 'all'}`);
-      return json({ accounts: [], statuses: [], hashtags: [{ name: 'teadecktag', url: 'https://mastodon.test/tags/teadecktag', history: [] }] });
-    }
-    if (url.pathname === '/api/v1/tags/teadecktag') {
-      return json({ name: 'teadecktag', url: 'https://mastodon.test/tags/teadecktag', following: false });
-    }
-    if (url.pathname === '/api/v1/timelines/tag/teadecktag') return json([gtsStatus]);
-    if (url.pathname === '/api/v1/followed_tags') {
-      return json([{ name: 'followedgtstag', url: 'https://mastodon.test/tags/followedgtstag', following: true }]);
-    }
-    if (url.pathname === '/api/v1/notifications') {
-      return json([{ id: '900', type: 'favourite', created_at: '2026-09-14T09:00:00.000Z', account: fan, status: gtsStatus }]);
-    }
-    if (url.pathname === '/api/v1/custom_emojis') {
+  const notFound = respond(404, { error: 'Not Found' });
+  const server = await mockMastodon(context, origin, {
+    '/api/v2/instance': gtsInstance,
+    '/api/v1/accounts/lookup': account,
+    [`/api/v1/accounts/${account.id}`]: account,
+    '/api/v1/timelines/home': [gtsStatus],
+    // GoToSocial's search response has no `collections` list. A "#tag" query returns hashtags
+    // only on GoToSocial, never posts. Tag `history` is a stub (empty or absent).
+    '/api/v2/search': { accounts: [], statuses: [], hashtags: [{ name: 'teadecktag', url: 'https://mastodon.test/tags/teadecktag', history: [] }] },
+    '/api/v1/tags/teadecktag': { name: 'teadecktag', url: 'https://mastodon.test/tags/teadecktag', following: false },
+    '/api/v1/timelines/tag/teadecktag': [gtsStatus],
+    '/api/v1/followed_tags': [{ name: 'followedgtstag', url: 'https://mastodon.test/tags/followedgtstag', following: true }],
+    '/api/v1/notifications': [{ id: '900', type: 'favourite', created_at: '2026-09-14T09:00:00.000Z', account: fan, status: gtsStatus }],
+    '/api/v1/custom_emojis': ({ request }) => {
       customEmojiAuthorization = request.headers().authorization;
-      return customEmojiAuthorization ? json([]) : json({ error: 'Unauthorized: token not supplied' }, 401);
-    }
+      return customEmojiAuthorization ? [] : respond(401, { error: 'Unauthorized: token not supplied' });
+    },
     // Mastodon-only endpoints GoToSocial does not have.
-    if (['/api/v2/notifications', '/api/v2/notifications/policy', '/api/v1/instance/translation_languages',
-      '/api/v1/profile', '/api/v1/featured_tags/suggestions'].includes(url.pathname)) {
-      return json({ error: 'Not Found' }, 404);
-    }
-    return json([]);
+    '/api/v2/notifications': notFound,
+    '/api/v2/notifications/policy': notFound,
+    '/api/v1/instance/translation_languages': notFound,
+    '/api/v1/profile': notFound,
+    '/api/v1/featured_tags/suggestions': notFound,
   });
+  const paths = () => server.requests.map((request) => request.path);
 
   await page.goto(origin);
   await page.locator('#teadeck-instance').fill('mastodon.test');
@@ -93,15 +73,15 @@ test('works against a GoToSocial-shaped API: missing status fields, v1-only noti
   await page.evaluate(() => { history.pushState(null, '', '/notifications'); dispatchEvent(new PopStateEvent('popstate')); });
   await page.getByText('Teadeck GtS fan 91c2').first().waitFor();
 
-  for (let attempt = 0; attempt < 50 && !customEmojiAuthorization; attempt++) await new Promise(r => setTimeout(r, 20));
+  await waitUntil(() => customEmojiAuthorization, { message: 'custom emoji were never requested' });
   assert.equal(customEmojiAuthorization, 'Bearer browser-token');
   // Without api_versions the grouped notifications and the policy are unknown, not absent: each is tried
   // once (404), then the fallback is used. Translation is ruled out by the instance metadata and never tried.
-  const count = (path) => requests.filter((p) => p === path).length;
+  const count = (path) => paths().filter((p) => p === path).length;
   assert.equal(count('/api/v2/notifications'), 1);
   assert.ok(count('/api/v2/notifications/policy') <= 1);
   assert.equal(count('/api/v1/instance/translation_languages'), 0);
-  assert.ok(requests.includes('/api/v1/notifications'));
+  assert.ok(paths().includes('/api/v1/notifications'));
 
   // No policy API, so no policy controls that could not be saved.
   await page.getByRole('button', { name: 'Benachrichtigungseinstellungen öffnen' }).first().click();
@@ -114,7 +94,7 @@ test('works against a GoToSocial-shaped API: missing status fields, v1-only noti
   assert.equal(await page.getByText('Oh nein!').count(), 0);
   // Posts for the hashtag come from its timeline, since the search itself returns none.
   await page.getByText(timelineText).first().waitFor();
-  assert.ok(requests.includes('/api/v1/timelines/tag/teadecktag'));
+  assert.ok(paths().includes('/api/v1/timelines/tag/teadecktag'));
 
   // The hashtag timeline opens too, despite the missing history.
   await page.evaluate(() => { history.pushState(null, '', '/tags/teadecktag'); dispatchEvent(new PopStateEvent('popstate')); });
@@ -124,10 +104,9 @@ test('works against a GoToSocial-shaped API: missing status fields, v1-only noti
   // The own profile asks for featured tag suggestions, which GoToSocial lacks; no error, and no profile request.
   await page.evaluate(() => { history.pushState(null, '', '/@alice'); dispatchEvent(new PopStateEvent('popstate')); });
   await page.getByText('Test account').first().waitFor();
-  for (let attempt = 0; attempt < 50 && !requests.includes('/api/v1/featured_tags/suggestions'); attempt++) await new Promise(r => setTimeout(r, 20));
-  assert.ok(requests.includes('/api/v1/featured_tags/suggestions'));
+  await waitUntil(() => paths().includes('/api/v1/featured_tags/suggestions'), { message: 'featured tag suggestions were never tried' });
   await page.waitForTimeout(500);
-  assert.equal(requests.includes('/api/v1/profile'), false);
+  assert.equal(paths().includes('/api/v1/profile'), false);
   assert.equal(await page.locator('#mastodon .notification-bar').count(), 0);
 
   // Followed hashtags come without history as well.

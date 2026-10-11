@@ -54,10 +54,8 @@ async function fetchJson(url: string, init: RequestInit = {}) {
     signal: init.signal ?? AbortSignal.timeout(20_000),
   });
   if (!response.ok) {
-    // The status stays in the message: callers recognise "HTTP 404" to tell a
-    // missing endpoint from a real failure (see bootstrap.ts).
     if (response.status === 401) throw new ShellError('errorSessionInvalid');
-    throw new ShellError('errorServer', `HTTP ${response.status}`);
+    throw new ShellError('errorServer', `HTTP ${response.status}`, response.status);
   }
   if (response.status === 204) return undefined;
   return response.json();

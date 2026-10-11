@@ -4,6 +4,7 @@ import { after, before, test } from 'node:test';
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { keepStreamingAlive, reconnectDelay } from '../integration/stream_keepalive.ts';
 import { instance, status, timelineText } from './fixtures.mjs';
+import { mockMastodon, waitUntil } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 test('reconnect delays grow exponentially from 1 s but never exceed 30 s', () => {
@@ -90,32 +91,10 @@ test('after the streaming connection drops or the network returns, Teadeck recon
   const sockets = [];
   const subscriptions = [];
   let homeRequests = 0;
-  const policy = {
-    for_not_following: 'accept', for_not_followers: 'accept', for_new_accounts: 'accept',
-    for_private_mentions: 'accept', for_limited_accounts: 'filter', for_bots: 'accept',
-    summary: { pending_requests_count: 0, pending_notifications_count: 0 },
-  };
 
-  await context.route('https://mastodon.test/**', async (route) => {
-    const request = route.request();
-    const url = new URL(request.url());
-    const cors = { 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
-    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    if (url.pathname === '/oauth/authorize') {
-      const callback = new URL('/oauth/callback', origin);
-      callback.search = new URLSearchParams({ code: 'browser-code', state: url.searchParams.get('state') ?? '' });
-      return route.fulfill({ contentType: 'text/html', body: `<script>location.replace(${JSON.stringify(callback.href)})</script>` });
-    }
-    let body = [];
-    if (url.pathname === '/api/v1/apps') body = { client_id: 'browser-client', client_secret: 'browser-secret' };
-    else if (url.pathname === '/oauth/token') body = { access_token: 'browser-token', token_type: 'Bearer', scope: 'read write follow' };
-    else if (url.pathname === '/api/v2/instance') body = streamingInstance;
-    else if (url.pathname === '/api/v1/accounts/verify_credentials') body = (await import('./fixtures.mjs')).account;
-    else if (url.pathname === '/api/v1/preferences') body = {};
-    else if (url.pathname === '/api/v1/timelines/home') { homeRequests++; body = [status]; }
-    else if (url.pathname === '/api/v2/notifications') body = { notification_groups: [], accounts: [], statuses: [] };
-    else if (url.pathname === '/api/v2/notifications/policy') body = policy;
-    return route.fulfill({ status: 200, contentType: 'application/json', headers: cors, body: JSON.stringify(body) });
+  await mockMastodon(context, origin, {
+    '/api/v2/instance': streamingInstance,
+    '/api/v1/timelines/home': () => { homeRequests++; return [status]; },
   });
   await context.routeWebSocket('wss://mastodon.test/**', (ws) => {
     sockets.push(ws);
@@ -124,10 +103,7 @@ test('after the streaming connection drops or the network returns, Teadeck recon
       if (message.type === 'subscribe') subscriptions.push({ socket: sockets.length, stream: message.stream });
     });
   });
-  const waitFor = async (predicate, what) => {
-    for (let attempt = 0; attempt < 300 && !predicate(); attempt++) await new Promise(r => setTimeout(r, 50));
-    assert.ok(predicate(), what);
-  };
+  const waitFor = (predicate, what) => waitUntil(predicate, { timeout: 15_000, message: what });
 
   await page.goto(origin);
   await page.locator('#teadeck-instance').fill('mastodon.test');

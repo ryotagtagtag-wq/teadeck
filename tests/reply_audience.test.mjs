@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
-import { account, instance, status, timelineText } from './fixtures.mjs';
-import { composerText, openComposer } from './mastodon_mock.mjs';
+import { instance, postedStatus, timelineText } from './fixtures.mjs';
+import { composerText, mockMastodon, openComposer, respond, waitUntil } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 let server;
@@ -20,57 +20,21 @@ after(async () => {
   await new Promise((resolve) => server?.close(resolve));
 });
 
-async function mockMastodonRest(context, { instanceFixture, onStatusPosted, failDefaults = false }) {
-  await context.route('https://mastodon.test/**', async (route) => {
-    const request = route.request();
-    const url = new URL(request.url());
-    const cors = { 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
-    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    if (url.pathname === '/oauth/authorize') {
-      const callback = new URL('/oauth/callback', origin);
-      callback.search = new URLSearchParams({ code: 'browser-code', state: url.searchParams.get('state') ?? '' });
-      return route.fulfill({ contentType: 'text/html', body: `<script>location.replace(${JSON.stringify(callback.href)})</script>` });
-    }
-    if (failDefaults && url.pathname === '/api/v1/interaction_policies/defaults') {
-      return route.fulfill({ status: 500, contentType: 'application/json', headers: cors, body: '{"error":"unavailable"}' });
-    }
-    let body;
-    if (url.pathname === '/api/v1/apps') body = { client_id: 'browser-client', client_secret: 'browser-secret' };
-    else if (url.pathname === '/oauth/token') body = { access_token: 'browser-token', token_type: 'Bearer', scope: 'read write follow' };
-    else if (url.pathname === '/oauth/revoke') body = {};
-    else if (url.pathname === '/api/v2/instance') body = instanceFixture;
-    else if (url.pathname === '/api/v1/accounts/verify_credentials') body = account;
-    else if (url.pathname === '/api/v1/preferences') body = {};
-    else if (url.pathname === '/api/v1/timelines/home') body = [status];
-    else if (url.pathname === '/api/v1/markers') body = {};
-    // GoToSocial account defaults: here boosts of followers-only posts are open to followers.
-    else if (url.pathname === '/api/v1/interaction_policies/defaults') body = {
-      private: {
-        can_favourite: { automatic_approval: ['author', 'followers', 'mentioned'], manual_approval: [] },
-        can_reply: { automatic_approval: ['author', 'followers', 'mentioned'], manual_approval: [] },
-        can_reblog: { automatic_approval: ['author', 'followers'], manual_approval: [] },
-      },
-    };
-    else if (url.pathname === '/api/v2/notifications') body = { notification_groups: [], accounts: [], statuses: [] };
-    else if (url.pathname === '/api/v2/notifications/policy') body = {
-      for_not_following: 'accept', for_not_followers: 'accept', for_new_accounts: 'accept',
-      for_private_mentions: 'accept', for_limited_accounts: 'filter', for_bots: 'accept',
-      summary: { pending_requests_count: 0, pending_notifications_count: 0 },
-    };
-    else if (url.pathname === '/api/v1/statuses' && request.method() === 'POST') {
-      const posted = JSON.parse(request.postData());
-      onStatusPosted(posted);
-      body = {
-        id: 'status-1', created_at: new Date().toISOString(), account, visibility: 'public',
-        content: `<p>${posted.status}</p>`, spoiler_text: '', sensitive: false, language: 'de',
-        uri: 'https://mastodon.test/users/alice/statuses/1', url: 'https://mastodon.test/@alice/1',
-        replies_count: 0, reblogs_count: 0, favourites_count: 0, quotes_count: 0,
-        favourited: false, reblogged: false, muted: false, bookmarked: false, pinned: false,
-        media_attachments: [], mentions: [], tags: [], emojis: [], tagged_collections: [], filtered: [],
-      };
-    }
-    else body = [];
-    return route.fulfill({ status: 200, contentType: 'application/json', headers: cors, body: JSON.stringify(body) });
+// GoToSocial account defaults: here boosts of followers-only posts are open to followers.
+const interactionDefaults = {
+  private: {
+    can_favourite: { automatic_approval: ['author', 'followers', 'mentioned'], manual_approval: [] },
+    can_reply: { automatic_approval: ['author', 'followers', 'mentioned'], manual_approval: [] },
+    can_reblog: { automatic_approval: ['author', 'followers'], manual_approval: [] },
+  },
+};
+
+function mockMastodonRest(context, { instanceFixture, onStatusPosted, failDefaults = false }) {
+  return mockMastodon(context, origin, {
+    '/api/v2/instance': instanceFixture,
+    '/api/v1/markers': {},
+    '/api/v1/interaction_policies/defaults': failDefaults ? respond(500, { error: 'unavailable' }) : interactionDefaults,
+    'POST /api/v1/statuses': ({ body }) => { onStatusPosted(body); return postedStatus(body); },
   });
 }
 
@@ -105,8 +69,7 @@ test('the GoToSocial reply-audience picker stays hidden on a plain Mastodon inst
 
   await composerText(page).fill('Teadeck plain-instance post 3f0a');
   await submit(page);
-  for (let attempt = 0; attempt < 50 && !posted; attempt++) await new Promise(r => setTimeout(r, 20));
-  assert.ok(posted, 'the status was never posted');
+  await waitUntil(() => posted, { message: 'the status was never posted' });
   assert.equal('interaction_policy' in posted, false);
 
   await context.close();
@@ -136,8 +99,7 @@ test('on a detected GoToSocial instance, restricting replies sends the matching 
   });
   await composerText(page).fill('Teadeck GoToSocial reply-restricted post 6b2d');
   await submit(page);
-  for (let attempt = 0; attempt < 50 && !posted; attempt++) await new Promise(r => setTimeout(r, 20));
-  assert.ok(posted, 'the status was never posted');
+  await waitUntil(() => posted, { message: 'the status was never posted' });
   // Only replies are restricted; favourites and boosts keep the account's defaults for
   // followers-only posts (here: boosts by followers), not hardcoded rules.
   assert.equal(posted.visibility, 'private');

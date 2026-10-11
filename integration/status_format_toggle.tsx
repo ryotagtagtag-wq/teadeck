@@ -4,6 +4,8 @@
  * rather than IconButton, so it can carry `aria-pressed`.
  */
 
+import { useCallback } from 'react';
+
 import MarkdownIcon from './icons/markdown.svg?react';
 import { setComposeContentType } from '@/mastodon/actions/compose_typed';
 import { ToggleIconButton } from '@/mastodon/components/button/redesign';
@@ -32,21 +34,26 @@ const texts: Record<UiTextLocale, { on: string; off: string; accountDefault: str
   },
 };
 
+/** What both switches show and do: the format in effect, its label, and the switch to the other one. */
+function useStatusFormatSwitch(value: StatusFormat, accountDefault: 'plain' | 'markdown', onChange: (value: StatusFormat) => void) {
+  const locale = currentUiTextLocale();
+  const format = effectiveStatusFormat(value, accountDefault);
+  const markdown = format === 'markdown';
+  const title = `${texts[locale][markdown ? 'on' : 'off']} · ${texts[locale][value === 'default' ? 'accountDefault' : 'own']}`;
+  const toggle = useCallback(() => {
+    const chosen = statusFormatChoice(markdown ? 'plain' : 'markdown', accountDefault);
+    saveStatusFormat(chosen);
+    onChange(chosen);
+  }, [markdown, accountDefault, onChange]);
+  return { format, markdown, title, toggle };
+}
+
 export const StatusFormatToggle: React.FC<{
   value: StatusFormat;
   accountDefault: 'plain' | 'markdown';
   onChange: (value: StatusFormat) => void;
 }> = ({ value, accountDefault, onChange }) => {
-  const locale = currentUiTextLocale();
-  const format = effectiveStatusFormat(value, accountDefault);
-  const markdown = format === 'markdown';
-  const title = `${texts[locale][markdown ? 'on' : 'off']} · ${texts[locale][value === 'default' ? 'accountDefault' : 'own']}`;
-
-  const toggle = () => {
-    const chosen = statusFormatChoice(markdown ? 'plain' : 'markdown', accountDefault);
-    saveStatusFormat(chosen);
-    onChange(chosen);
-  };
+  const { format, markdown, title, toggle } = useStatusFormatSwitch(value, accountDefault, onChange);
 
   return (
     <button
@@ -67,18 +74,10 @@ export const StatusFormatToggle: React.FC<{
 export const StatusFormatToggleButton: React.FC = () => {
   const value = useAppSelector((state) => state.compose.get('content_type', 'default') as StatusFormat);
   const dispatch = useAppDispatch();
+  const onChange = useCallback((chosen: StatusFormat) => { dispatch(setComposeContentType(chosen)); }, [dispatch]);
   const meta = initialState?.meta as { teadeck_status_format?: boolean; teadeck_status_content_type?: unknown } | undefined;
-  const accountDefault = accountStatusFormat(meta?.teadeck_status_content_type);
+  const { format, markdown, title, toggle } = useStatusFormatSwitch(value, accountStatusFormat(meta?.teadeck_status_content_type), onChange);
   if (!meta?.teadeck_status_format) return null;
-  const locale = currentUiTextLocale();
-  const format = effectiveStatusFormat(value, accountDefault);
-  const markdown = format === 'markdown';
-
-  const toggle = () => {
-    const chosen = statusFormatChoice(markdown ? 'plain' : 'markdown', accountDefault);
-    saveStatusFormat(chosen);
-    dispatch(setComposeContentType(chosen));
-  };
 
   return (
     <ToggleIconButton
@@ -89,7 +88,7 @@ export const StatusFormatToggleButton: React.FC = () => {
       data-value={format}
       onClick={toggle}
     >
-      {`${texts[locale][markdown ? 'on' : 'off']} · ${texts[locale][value === 'default' ? 'accountDefault' : 'own']}`}
+      {title}
     </ToggleIconButton>
   );
 };

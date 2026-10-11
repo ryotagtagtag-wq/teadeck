@@ -94,3 +94,18 @@ test('the active-account pointer is a plain, non-sensitive localStorage key', ()
   clearActiveAccountKey();
   assert.equal(getActiveAccountKey(), null);
 });
+
+test('remembering an account fails when its transaction aborts after the write was accepted', async () => {
+  const put = IDBObjectStore.prototype.put;
+  IDBObjectStore.prototype.put = function (...args) {
+    const request = put.apply(this, args);
+    request.addEventListener('success', () => this.transaction.abort());
+    return request;
+  };
+  try {
+    await assert.rejects(rememberAccount(account()));
+  } finally {
+    IDBObjectStore.prototype.put = put;
+  }
+  assert.deepEqual(await listRememberedAccounts(), []);
+});

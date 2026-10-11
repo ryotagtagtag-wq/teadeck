@@ -155,10 +155,10 @@ diff --git a/app/javascript/mastodon/api/notification_policies.ts b/app/javascri
 +// showing settings that cannot be saved.
  export const apiGetNotificationPolicy = () =>
 -  apiRequestGet<NotificationPolicyJSON>('v2/notifications/policy');
-+  withCapability<NotificationPolicyJSON>(
++  withCapability<NotificationPolicyJSON | null>(
 +    'notifications.policy',
 +    () => apiRequestGet<NotificationPolicyJSON>('v2/notifications/policy'),
-+    () => null as unknown as NotificationPolicyJSON,
++    () => null,
 +  );
  
  export const apiUpdateNotificationsPolicy = (

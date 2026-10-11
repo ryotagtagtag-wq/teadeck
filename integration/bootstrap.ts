@@ -222,7 +222,8 @@ async function boot() {
       setSupport('interactionPolicies.defaults', 'supported');
       return defaults;
     }, (error: unknown) => {
-      if (!(error instanceof Error && error.message.includes('HTTP 404'))) throw error;
+      // A missing endpoint means the server has no such defaults; other failures are retried.
+      if (!(error instanceof ShellError && error.status === 404)) throw error;
       setSupport('interactionPolicies.defaults', 'unsupported');
       return null;
     }));

@@ -3,6 +3,7 @@ import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, instance, status } from './fixtures.mjs';
+import { mockMastodon, waitUntil } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 import {
   accountStatusFormat, effectiveStatusFormat, statusContentType, statusFormatChoice,
@@ -86,44 +87,14 @@ async function signedInPage({ instance: instanceBody, account: accountBody, stat
   const posted = [];
 
   const ownStatus = { ...status, account: accountBody };
-  await context.route('https://mastodon.test/**', async (route) => {
-    const request = route.request();
-    const url = new URL(request.url());
-    const cors = { 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
-    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    if (url.pathname === '/oauth/authorize') {
-      const callback = new URL('/oauth/callback', origin);
-      callback.search = new URLSearchParams({ code: 'browser-code', state: url.searchParams.get('state') ?? '' });
-      return route.fulfill({ contentType: 'text/html', body: `<script>location.replace(${JSON.stringify(callback.href)})</script>` });
-    }
-    let body;
-    if (url.pathname === '/api/v1/apps') body = { client_id: 'browser-client', client_secret: 'browser-secret' };
-    else if (url.pathname === '/oauth/token') body = { access_token: 'browser-token', token_type: 'Bearer', scope: 'read write follow' };
-    else if (url.pathname === '/api/v2/instance') body = instanceBody;
-    else if (url.pathname === '/api/v1/accounts/verify_credentials') body = accountBody;
-    else if (url.pathname === '/api/v1/preferences') body = {};
-    else if (url.pathname === '/api/v1/timelines/home') body = [ownStatus];
-    else if (url.pathname === '/api/v1/markers') body = {};
-    else if (url.pathname === '/api/v2/notifications') body = { notification_groups: [], accounts: [], statuses: [] };
-    else if (url.pathname === '/api/v2/notifications/policy') body = {
-      for_not_following: 'accept', for_not_followers: 'accept', for_new_accounts: 'accept',
-      for_private_mentions: 'accept', for_limited_accounts: 'filter', for_bots: 'accept',
-      summary: { pending_requests_count: 0, pending_notifications_count: 0 },
-    };
-    else if (url.pathname === `/api/v1/statuses/${ownStatus.id}/source`) {
-      body = { id: ownStatus.id, text: 'geschrieben in Markdown', spoiler_text: '', ...statusSource };
-    }
-    else if (url.pathname === '/api/v1/statuses' && request.method() === 'POST') {
-      const sent = JSON.parse(request.postData());
-      posted.push(sent);
-      body = { ...ownStatus, id: `posted-${posted.length}`, content: `<p>${sent.status}</p>` };
-    }
-    else if (url.pathname === `/api/v1/statuses/${ownStatus.id}` && request.method() === 'PUT') {
-      posted.push(JSON.parse(request.postData()));
-      body = ownStatus;
-    }
-    else body = [];
-    return route.fulfill({ status: 200, contentType: 'application/json', headers: cors, body: JSON.stringify(body) });
+  await mockMastodon(context, origin, {
+    '/api/v2/instance': instanceBody,
+    '/api/v1/accounts/verify_credentials': accountBody,
+    '/api/v1/timelines/home': [ownStatus],
+    '/api/v1/markers': {},
+    [`/api/v1/statuses/${ownStatus.id}/source`]: { id: ownStatus.id, text: 'geschrieben in Markdown', spoiler_text: '', ...statusSource },
+    'POST /api/v1/statuses': ({ body }) => { posted.push(body); return { ...ownStatus, id: `posted-${posted.length}`, content: `<p>${body.status}</p>` }; },
+    [`PUT /api/v1/statuses/${ownStatus.id}`]: ({ body }) => { posted.push(body); return ownStatus; },
   });
 
   await page.goto(origin);
@@ -152,8 +123,7 @@ async function signedInPage({ instance: instanceBody, account: accountBody, stat
       await openComposer();
       await textarea.fill(text);
       await page.getByRole('button', { name: 'Veröffentlichen' }).click();
-      for (let attempt = 0; attempt < 100 && posted.length === before; attempt++) await new Promise((r) => setTimeout(r, 50));
-      assert.equal(posted.length, before + 1, 'the status was never posted');
+      await waitUntil(() => posted.length === before + 1, { message: 'the status was never posted' });
       await openComposer();
       return posted[posted.length - 1];
     },
@@ -274,8 +244,7 @@ test('editing a post keeps the format it was written in', { timeout: 60_000 }, a
     assert.equal(await app.toggle.getAttribute('aria-pressed'), 'true');
 
     await app.page.locator('form[role="dialog"]').getByRole('button', { name: 'Speichern' }).click();
-    for (let attempt = 0; attempt < 100 && app.posted.length === 0; attempt++) await new Promise((r) => setTimeout(r, 50));
-    assert.equal(app.posted.length, 1, 'the edit was never sent');
+    await waitUntil(() => app.posted.length === 1, { message: 'the edit was never sent' });
     assert.equal(app.posted[0].content_type, 'text/markdown');
   } finally { await app.stop(); }
 });

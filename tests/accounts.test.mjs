@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
-import { account, instance, status, timelineText } from './fixtures.mjs';
-import { signOut } from './mastodon_mock.mjs';
+import { account, timelineText } from './fixtures.mjs';
+import { authorizeWith, mockMastodon, respond, signOut } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 let staticServer;
@@ -23,40 +23,19 @@ after(async () => {
 /** The server: `server.verifyCredentials` makes the start fail with a status, or with no answer at all ('offline'). */
 async function mockServer(context) {
   const server = { tokenExchanges: 0, revocations: 0, verifyCredentials: 200 };
-  await context.route('https://mastodon.test/**', async (route) => {
-    const request = route.request();
-    const url = new URL(request.url());
-    const cors = { 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
-    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    if (url.pathname === '/oauth/authorize') {
-      const callback = new URL('/oauth/callback', origin);
-      callback.search = new URLSearchParams({ code: 'code-for-token-alice', state: url.searchParams.get('state') ?? '' });
-      return route.fulfill({ contentType: 'text/html', body: `<script>location.replace(${JSON.stringify(callback.href)})</script>` });
-    }
-    let body;
-    if (url.pathname === '/api/v1/apps') body = { client_id: 'browser-client', client_secret: 'browser-secret' };
-    else if (url.pathname === '/oauth/token') {
+  await mockMastodon(context, origin, {
+    '/oauth/authorize': authorizeWith(origin, 'code-for-token-alice'),
+    '/oauth/token': ({ body }) => {
       server.tokenExchanges++;
-      const code = new URLSearchParams(request.postData() ?? '').get('code') ?? '';
-      body = { access_token: code.replace('code-for-', ''), token_type: 'Bearer', scope: 'read write follow' };
-    }
-    else if (url.pathname === '/oauth/revoke') { server.revocations++; body = {}; }
-    else if (url.pathname === '/api/v2/instance') body = instance;
-    else if (url.pathname === '/api/v1/accounts/verify_credentials') {
-      if (server.verifyCredentials === 'offline') return route.abort('internetdisconnected');
-      if (server.verifyCredentials !== 200) return route.fulfill({ status: server.verifyCredentials, contentType: 'application/json', headers: cors, body: '{"error":"failed"}' });
-      body = account;
-    }
-    else if (url.pathname === '/api/v1/preferences') body = {};
-    else if (url.pathname === '/api/v1/timelines/home') body = [status];
-    else if (url.pathname === '/api/v2/notifications') body = { notification_groups: [], accounts: [], statuses: [] };
-    else if (url.pathname === '/api/v2/notifications/policy') body = {
-      for_not_following: 'accept', for_not_followers: 'accept', for_new_accounts: 'accept',
-      for_private_mentions: 'accept', for_limited_accounts: 'filter', for_bots: 'accept',
-      summary: { pending_requests_count: 0, pending_notifications_count: 0 },
-    };
-    else body = [];
-    return route.fulfill({ status: 200, contentType: 'application/json', headers: cors, body: JSON.stringify(body) });
+      const code = new URLSearchParams(typeof body === 'string' ? body : '').get('code') ?? '';
+      return { access_token: code.replace('code-for-', ''), token_type: 'Bearer', scope: 'read write follow' };
+    },
+    '/oauth/revoke': () => { server.revocations++; return {}; },
+    '/api/v1/accounts/verify_credentials': async ({ route }) => {
+      if (server.verifyCredentials === 'offline') return void await route.abort('internetdisconnected');
+      if (server.verifyCredentials !== 200) return respond(server.verifyCredentials, { error: 'failed' });
+      return account;
+    },
   });
 
   return server;
