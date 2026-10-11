@@ -34,8 +34,7 @@ html {
 /* Put into the page rather than loaded as an image (brand_logo.tsx), so the page sizes it. */
 .teadeck-logo { display: block; }
 .teadeck-logo > svg { display: block; width: auto; height: 100%; max-width: 100%; }
-.navigation-panel__logo .teadeck-logo { height: 30px; }
-/* The mascot's place in the compose column: at the bottom, as the design has it.
+/* The mascot's place in the column beside the pinned ones: at the bottom, as the design has it.
    Upstream positions its own elephant through rules for `img` only (and mirrors it),
    which do not apply to the drawing put into the page. */
 .drawer__inner__mastodon { display: flex; justify-content: center; }

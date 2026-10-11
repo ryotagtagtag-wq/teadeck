@@ -381,10 +381,10 @@ html[data-color-scheme] {
   --rich-text-decorations-color: var(--md-accent);
 }
 
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) {
   color: var(--md-text);
 }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(h1, h2, h3, h4, h5, h6) {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(h1, h2, h3, h4, h5, h6) {
   margin: 18px 0 8px;
   font-family: var(--font-heading);
   font-weight: var(--md-heading-weight);
@@ -392,27 +392,27 @@ html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator_
   letter-spacing: -0.015em;
   color: var(--md-heading);
 }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(h1, h2, h3, h4, h5, h6):first-child {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(h1, h2, h3, h4, h5, h6):first-child {
   margin-top: 0;
 }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) h1 { font-size: var(--md-h1); }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) h2 { font-size: var(--md-h2); }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(h3, h4, h5, h6) { font-size: var(--md-h3); }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(b, strong) {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) h1 { font-size: var(--md-h1); }
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) h2 { font-size: var(--md-h2); }
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(h3, h4, h5, h6) { font-size: var(--md-h3); }
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(b, strong) {
   font-weight: 600;
   color: var(--md-heading);
 }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(del, s) {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(del, s) {
   text-decoration: line-through;
   color: var(--md-muted);
 }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) a:not(.mention) {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) a:not(.mention) {
   color: var(--md-link);
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-color: var(--md-accent);
 }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :not(pre) > code {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :not(pre) > code {
   padding: 2px 6px;
   border-radius: 5px;
   font-family: var(--md-font-mono, var(--font-monospace));
@@ -420,27 +420,27 @@ html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator_
   color: var(--md-code-inline);
   background: var(--md-code-inline-bg);
 }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(ul, ol) {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(ul, ol) {
   padding-inline-start: 16px;
 }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) li {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) li {
   padding-inline-start: 10px;
   line-height: 1.6;
 }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) li + li {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) li + li {
   margin-top: 4px;
 }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) li::marker {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) li::marker {
   color: var(--md-accent);
 }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) blockquote {
   padding-inline-start: 16px;
   font-style: italic;
   line-height: 1.65;
   color: var(--md-text);
 }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote::before,
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote blockquote::before {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) blockquote::before,
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) blockquote blockquote::before {
   display: block;
   width: 2px;
   height: auto;
@@ -449,17 +449,17 @@ html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator_
   mask-image: none;
   background-color: var(--md-accent);
 }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) blockquote blockquote {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) blockquote blockquote {
   border-inline-start: 0;
   padding-inline-start: 16px;
 }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) hr {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) hr {
   height: 1px;
   margin: 16px 0;
   border: 0;
   background: linear-gradient(90deg, transparent, var(--md-border) 48px, var(--md-border) calc(100% - 48px), transparent);
 }
-html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator__content, .reply-indicator__content) :is(sup, sub) {
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(sup, sub) {
   font-size: 0.75em;
 }
 
