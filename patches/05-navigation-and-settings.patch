@@ -32,96 +32,20 @@ diff --git a/app/javascript/mastodon/features/collections/overview/featuring_you
                        {chunks}
                      </a>
                    ),
-diff --git a/app/javascript/mastodon/features/compose/components/warning.tsx b/app/javascript/mastodon/features/compose/components/warning.tsx
---- a/app/javascript/mastodon/features/compose/components/warning.tsx
-+++ b/app/javascript/mastodon/features/compose/components/warning.tsx
-@@ -1,3 +1,4 @@
-+import { serverUrl } from '@/teadeck/navigation';
- import { FormattedMessage } from 'react-intl';
- 
- import { createSelector } from '@reduxjs/toolkit';
-@@ -31,7 +32,7 @@ export const Warning = () => {
-           defaultMessage='Your account is not {locked}. Anyone can follow you to view your follower-only posts.'
-           values={{
-             locked: (
--              <a href='/settings/privacy#account_unlocked'>
-+              <a href={serverUrl('/settings/privacy#account_unlocked')}>
-                 <FormattedMessage
-                   id='compose_form.lock_disclaimer.lock'
-                   defaultMessage='locked'
 diff --git a/app/javascript/mastodon/features/compose/index.tsx b/app/javascript/mastodon/features/compose/index.tsx
 --- a/app/javascript/mastodon/features/compose/index.tsx
 +++ b/app/javascript/mastodon/features/compose/index.tsx
-@@ -17,7 +17,6 @@ import { isRedesignEnabled } from '@/mastodon/utils/environment';
- import EditIcon from '@/material-icons/400-24px/edit_square.svg?react';
- import PeopleIcon from '@/material-icons/400-24px/group.svg?react';
- import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
--import LogoutIcon from '@/material-icons/400-24px/logout.svg?react';
- import MenuIcon from '@/material-icons/400-24px/menu.svg?react';
- import NotificationsIcon from '@/material-icons/400-24px/notifications-fill.svg?react';
- import PublicIcon from '@/material-icons/400-24px/public.svg?react';
-@@ -27,7 +26,6 @@ import {
-   mountCompose,
-   unmountCompose,
- } from 'mastodon/actions/compose';
--import { openModal } from 'mastodon/actions/modal';
- import { Icon } from 'mastodon/components/icon';
- import { mascot, reduceMotion } from 'mastodon/initial_state';
- import { useAppDispatch, useAppSelector } from 'mastodon/store';
-@@ -50,7 +48,6 @@ const messages = defineMessages({
-     id: 'navigation_bar.preferences',
-     defaultMessage: 'Preferences',
-   },
--  logout: { id: 'navigation_bar.logout', defaultMessage: 'Logout' },
- });
+@@ -93,7 +93,9 @@ const Compose: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
+     });
+   }, []);
  
- type ColumnMap = ImmutableMap<'id' | 'uuid' | 'params', string>;
-@@ -74,18 +71,6 @@ const Compose: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
-     dispatch(changeComposing(true));
-   }, [dispatch]);
- 
--  const handleLogoutClick = useCallback(
--    (e: React.MouseEvent) => {
--      e.preventDefault();
--      e.stopPropagation();
--
--      dispatch(openModal({ modalType: 'CONFIRM_LOG_OUT', modalProps: {} }));
--
--      return false;
--    },
--    [dispatch],
--  );
--
-   const scrollNavbarIntoView = useCallback(() => {
-     const navbar = document.querySelector('.navigation-panel');
-     navbar?.scrollIntoView({
-@@ -149,23 +134,14 @@ const Compose: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
-               <Icon id='globe' icon={PublicIcon} />
-             </Link>
-           )}
--          <a
--            href='/settings/preferences'
-+          <Link
-+            to='/preferences'
-             className='drawer__tab'
-             title={intl.formatMessage(messages.preferences)}
-             aria-label={intl.formatMessage(messages.preferences)}
-           >
-             <Icon id='cog' icon={SettingsIcon} />
--          </a>
--          <a
--            href='/auth/sign_out'
--            className='drawer__tab'
--            title={intl.formatMessage(messages.logout)}
--            aria-label={intl.formatMessage(messages.logout)}
--            onClick={handleLogoutClick}
--          >
--            <Icon id='sign-out' icon={LogoutIcon} />
--          </a>
-+          </Link>
-         </nav>
- 
-         <Search singleColumn={false} />
+-  if (multiColumn) {
++  // Teadeck: the redesign's composer in the multi-column layout too, not
++  // the legacy drawer with its own form.
++  if (multiColumn && !isRedesignEnabled()) {
+     return (
+       <div className='drawer'>
+         <nav
 diff --git a/app/javascript/mastodon/features/interaction_modal/index.tsx b/app/javascript/mastodon/features/interaction_modal/index.tsx
 --- a/app/javascript/mastodon/features/interaction_modal/index.tsx
 +++ b/app/javascript/mastodon/features/interaction_modal/index.tsx

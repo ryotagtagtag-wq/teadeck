@@ -1,8 +1,5 @@
 import { useMemo } from 'react';
 
-import ReplyIcon from '@/material-icons/400-24px/reply.svg?react';
-import { Dropdown } from '@/mastodon/components/dropdown_menu';
-import { Icon } from '@/mastodon/components/icon';
 import { useAppSelector } from '@/mastodon/store';
 
 import type { ReplyAudience } from './gotosocial';
@@ -12,22 +9,22 @@ import type { UiTextLocale } from './settings_strings';
 import { currentUiTextLocale } from './settings_strings';
 
 // GoToSocial always lets mentioned accounts reply, whatever the policy says.
-export const replyAudienceLabels: Record<UiTextLocale, Record<ReplyAudience, { short: string; long: string }>> = {
+const replyAudienceLabels: Record<UiTextLocale, Record<ReplyAudience, string>> = {
   de: {
-    default: { short: 'Standard', long: 'Kontostandard (in GoToSocial eingestellt)' },
-    public: { short: 'Alle', long: 'Alle' },
-    followers: { short: 'Follower', long: 'Nur Follower und Erwähnte' },
-    following: { short: 'Folge ich', long: 'Nur Accounts, denen ich folge, und Erwähnte' },
-    mutuals: { short: 'Gegenseitig', long: 'Nur gegenseitige Follower und Erwähnte' },
-    mentioned: { short: 'Erwähnte', long: 'Nur erwähnte Accounts' },
+    default: 'Kontostandard (in GoToSocial eingestellt)',
+    public: 'Alle',
+    followers: 'Nur Follower und Erwähnte',
+    following: 'Nur Accounts, denen ich folge, und Erwähnte',
+    mutuals: 'Nur gegenseitige Follower und Erwähnte',
+    mentioned: 'Nur erwähnte Accounts',
   },
   en: {
-    default: { short: 'Default', long: 'Account default (set in GoToSocial)' },
-    public: { short: 'Everyone', long: 'Everyone' },
-    followers: { short: 'Followers', long: 'Only followers and mentioned accounts' },
-    following: { short: 'Following', long: 'Only accounts I follow, and mentioned accounts' },
-    mutuals: { short: 'Mutuals', long: 'Only mutual followers and mentioned accounts' },
-    mentioned: { short: 'Mentioned', long: 'Only mentioned accounts' },
+    default: 'Account default (set in GoToSocial)',
+    public: 'Everyone',
+    followers: 'Only followers and mentioned accounts',
+    following: 'Only accounts I follow, and mentioned accounts',
+    mutuals: 'Only mutual followers and mentioned accounts',
+    mentioned: 'Only mentioned accounts',
   },
 };
 
@@ -57,7 +54,7 @@ export function useReplyAudienceOptions(value: ReplyAudience) {
     const feasible = isReplyAudienceFeasible(audience, visibility);
     return {
       audience,
-      label: replyAudienceLabels[locale][audience].long,
+      label: replyAudienceLabels[locale][audience],
       hint: feasible ? undefined : replyAudienceTexts[locale][audience === 'public' ? 'onlyPublic' : 'notDirect'],
       disabled: !feasible,
       selected: audience === effective,
@@ -71,27 +68,3 @@ export function chooseReplyAudience(audience: ReplyAudience, onChange: (value: R
   saveReplyAudience(audience);
   onChange(audience);
 }
-
-export const ReplyAudiencePicker: React.FC<{
-  value: ReplyAudience;
-  onChange: (value: ReplyAudience) => void;
-}> = ({ value, onChange }) => {
-  const { effective, options, locale } = useReplyAudienceOptions(value);
-  const items = useMemo(() => options.map((option) => ({
-    text: option.label,
-    description: option.hint,
-    disabled: option.disabled,
-    highlighted: option.selected,
-    action: () => { chooseReplyAudience(option.audience, onChange); },
-  })), [options, onChange]);
-  const title = `${replyAudienceTexts[locale].title}: ${replyAudienceLabels[locale][effective].long}`;
-
-  return (
-    <Dropdown items={items} placement='bottom-start' title={title}>
-      <button type='button' className='dropdown-button teadeck-reply-audience-picker' title={title} data-value={effective}>
-        <Icon id='reply' icon={ReplyIcon} />
-        <span className='dropdown-button__label'>{replyAudienceLabels[locale][effective].short}</span>
-      </button>
-    </Dropdown>
-  );
-};

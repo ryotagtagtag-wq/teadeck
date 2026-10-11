@@ -113,3 +113,21 @@ test('the left part of "New post" opens the regular composer, and without Markdo
     await context.close();
   }
 });
+
+test('in the multi-column layout, /deck/publish shows the redesigned composer, not the legacy form', { timeout: 60_000 }, async () => {
+  const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1400, height: 900 } });
+  await context.addInitScript(() => localStorage.setItem('teadeck.v1:https://mastodon.test:42:advancedLayout', 'true'));
+  await mockMastodon(context, origin, { '/api/v2/instance': gtsInstance, '/api/v1/accounts/verify_credentials': markdownAccount, '/api/v1/markers': {} });
+  const page = await context.newPage();
+  const pageErrors = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  await signIn(page, origin);
+
+  await page.evaluate(() => { history.pushState(null, '', '/deck/publish'); dispatchEvent(new PopStateEvent('popstate')); });
+  await page.getByPlaceholder('Was möchtest du mitteilen?').waitFor();
+  assert.equal(await page.locator('.compose-form, .drawer').count(), 0);
+  // With the GoToSocial controls of the redesigned composer.
+  await page.locator('.teadeck-status-format-toggle').waitFor();
+  assert.deepEqual(pageErrors, []);
+  await context.close();
+});
