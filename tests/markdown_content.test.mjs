@@ -69,7 +69,9 @@ test('Markdown in a post keeps its structure and follows the theme', { timeout: 
   // The code block: its language, line numbers, highlighting and a copy button.
   const block = post.locator('.teadeck-code');
   assert.equal(await block.locator('.teadeck-code__language').textContent(), 'js');
-  assert.equal(await block.locator('.teadeck-code__lines').textContent(), '1\n2');
+  // One element per line; the numbers are CSS counters beside them.
+  assert.equal(await block.locator('.teadeck-code__line').count(), 2);
+  assert.equal(await block.locator('.teadeck-code__line').nth(1).evaluate((line) => getComputedStyle(line, '::before').content), 'counter(teadeck-code-line) / ""');
   assert.equal(await block.locator('.teadeck-code__keyword').first().textContent(), 'const');
   assert.equal(await block.locator('.teadeck-code__comment').textContent(), '// note');
   assert.equal(await style(block.locator('.teadeck-code__keyword').first(), 'color'), 'rgb(221, 162, 116)');
@@ -102,5 +104,42 @@ test('Mastodon\'s light theme shows Markdown in colours of its own, not pink', {
   assert.equal(await style(post.locator('p > code'), 'color'), 'rgb(67, 56, 158)');
   assert.equal(await style(post.locator('.teadeck-code'), 'backgroundColor'), 'rgb(242, 242, 249)');
   assert.deepEqual(pageErrors, []);
+  await context.close();
+});
+
+test('a long line in a code block wraps under its own number, and copying the code gives it back exactly', { timeout: 90_000 }, async () => {
+  const code = `const short = 1;\n\nconst long = "${'tea '.repeat(40)}";\n  indented();`;
+  const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const context = await browser.newContext({ locale: 'en-US', viewport: { width: 1280, height: 900 } });
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin });
+  await mockMastodon(context, origin, {
+    '/api/v1/timelines/home': [{ ...status, content: `<p>${timelineText}</p><pre><code class="language-js">${escaped}\n</code></pre>` }],
+  });
+  const page = await context.newPage();
+  await page.goto(origin);
+  await page.locator('#teadeck-instance').fill('mastodon.test');
+  await page.locator('#teadeck-login button[type=submit]').click();
+  const pre = page.locator('.teadeck-code pre').first();
+  await pre.waitFor();
+
+  // No sideways scrolling: the long line wraps, and still counts as one line.
+  const layout = await pre.evaluate((element) => ({
+    overflows: element.scrollWidth > element.clientWidth + 1,
+    heights: [...element.querySelectorAll('.teadeck-code__line')].map((line) => line.getBoundingClientRect().height),
+  }));
+  assert.equal(layout.overflows, false);
+  assert.equal(layout.heights.length, 4);
+  assert.ok(layout.heights[2] > layout.heights[0] * 2, `wrapped: ${layout.heights.join(' ')}`);
+  assert.equal(layout.heights[1], layout.heights[0], 'the empty line keeps its height');
+
+  // Selected and copied by hand, the code comes back without line numbers or extra lines.
+  await pre.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element.querySelector('code'));
+    getSelection().removeAllRanges();
+    getSelection().addRange(range);
+  });
+  await page.keyboard.press('Control+c');
+  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), code);
   await context.close();
 });

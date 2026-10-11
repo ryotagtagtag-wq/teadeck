@@ -525,34 +525,22 @@ html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator_
 }
 
 .teadeck-code__body {
-  display: flex;
-  padding: 14px 0;
   font-family: var(--md-font-mono, var(--font-monospace));
   font-size: 13px;
   line-height: 1.7;
 }
 
-.teadeck-code__lines {
-  flex: none;
-  padding: 0 14px;
-  text-align: end;
-  white-space: pre;
-  color: var(--md-code-comment, var(--color-text-secondary));
-  user-select: none;
-  font-family: var(--md-font-mono, var(--font-monospace));
-}
-
+/* Long lines wrap instead of scrolling; a wrapped line keeps one number. */
 .status__content__text .teadeck-code pre {
-  flex: 1;
-  min-width: 0;
   margin: 0;
-  padding: 0 14px 0 0;
+  padding: 14px 14px 14px 0;
   border-radius: 0;
   background: transparent;
   color: inherit;
-  white-space: pre;
-  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   unicode-bidi: normal;
+  counter-reset: teadeck-code-line;
 }
 .status__content__text .teadeck-code pre code {
   padding: 0;
@@ -560,6 +548,26 @@ html[data-color-scheme] :is(.status__content__text, .e-content, .edit-indicator_
   color: inherit;
   font-family: var(--md-font-mono, var(--font-monospace));
   font-size: inherit;
+  white-space: inherit;
+}
+
+.teadeck-code__line {
+  display: block;
+  position: relative;
+  min-height: 1lh;
+  padding-inline-start: calc(var(--teadeck-code-digits, 1) * 1ch + 28px);
+}
+/* Generated content: never part of a selection or a copy. */
+.teadeck-code__line::before {
+  counter-increment: teadeck-code-line;
+  content: counter(teadeck-code-line);
+  content: counter(teadeck-code-line) / '';
+  position: absolute;
+  inset-inline-start: 0;
+  width: calc(var(--teadeck-code-digits, 1) * 1ch + 14px);
+  text-align: end;
+  color: var(--md-code-comment, var(--color-text-secondary));
+  user-select: none;
 }
 
 .teadeck-code__keyword { color: var(--md-code-keyword); }

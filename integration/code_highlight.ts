@@ -81,3 +81,18 @@ export function highlightCode(code: string, language: string): Token[] {
   if (index < code.length) push(code.slice(index), 'plain');
   return tokens;
 }
+
+/**
+ * The tokens line by line, for a block that shows each line on its own (and
+ * wraps it). A token spanning lines, such as a block comment, is split at them.
+ */
+export function splitTokenLines(tokens: Token[]): Token[][] {
+  const lines: Token[][] = [[]];
+  for (const token of tokens) {
+    token.text.split('\n').forEach((text, index) => {
+      if (index > 0) lines.push([]);
+      if (text) lines.at(-1)!.push({ text, role: token.role });
+    });
+  }
+  return lines;
+}

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { codeLanguage, highlightCode } from '../integration/code_highlight.ts';
+import { codeLanguage, highlightCode, splitTokenLines } from '../integration/code_highlight.ts';
 
 const roles = (tokens, role) => tokens.filter(token => token.role === role).map(token => token.text.trim());
 
@@ -44,4 +44,18 @@ test('comment syntax follows the language', () => {
 test('code without a known language stays plain', () => {
   assert.deepEqual(highlightCode('const x = 1', ''), [{ text: 'const x = 1', role: 'plain' }]);
   assert.deepEqual(highlightCode('', 'js'), []);
+});
+
+test('tokens are split into lines, a block comment across lines included', () => {
+  const lines = splitTokenLines([
+    { text: 'a', role: 'plain' },
+    { text: '/* one\ntwo */', role: 'comment' },
+    { text: '\n\nb', role: 'plain' },
+  ]);
+  assert.deepEqual(lines, [
+    [{ text: 'a', role: 'plain' }, { text: '/* one', role: 'comment' }],
+    [{ text: 'two */', role: 'comment' }],
+    [],
+    [{ text: 'b', role: 'plain' }],
+  ]);
 });
