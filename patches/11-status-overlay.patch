@@ -97,22 +97,25 @@ diff --git a/app/javascript/mastodon/components/status/legacy/header.tsx b/app/j
 diff --git a/app/javascript/mastodon/features/status/redesign.tsx b/app/javascript/mastodon/features/status/redesign.tsx
 --- a/app/javascript/mastodon/features/status/redesign.tsx
 +++ b/app/javascript/mastodon/features/status/redesign.tsx
-@@ -70,9 +70,20 @@ const messages = defineMessages({
+@@ -70,9 +70,23 @@ const messages = defineMessages({
    },
  });
  
 -export const StatusPage: React.FC = () => {
 -  const { statusId } = useParams<{ acct: string; statusId: string }>();
 -  const { multiColumn } = useColumnsContext();
-+// Teadeck's status overlay passes the post and its own scroll key.
++// Teadeck's status overlay passes the post and its own scroll key, and
++// has a close button instead of the back button.
 +export const StatusPage: React.FC<{
 +  statusId?: string;
 +  scrollKey?: string;
 +  multiColumn?: boolean;
++  withBackButton?: boolean;
 +}> = ({
 +  statusId: statusIdProp,
 +  scrollKey = 'thread',
 +  multiColumn: multiColumnProp,
++  withBackButton = true,
 +}) => {
 +  const params = useParams<{ acct: string; statusId: string }>();
 +  const statusId = statusIdProp ?? params.statusId;
@@ -121,7 +124,16 @@ diff --git a/app/javascript/mastodon/features/status/redesign.tsx b/app/javascri
    const intl = useIntl();
    const dispatch = useAppDispatch();
  
-@@ -253,7 +264,7 @@ export const StatusPage: React.FC = () => {
+@@ -211,7 +225,7 @@ export const StatusPage: React.FC = () => {
+       label={intl.formatMessage(messages.detailedStatus)}
+     >
+       <ColumnHeader
+-        withBackButton
++        withBackButton={withBackButton}
+         title={columnTitle}
+         extraButtons={
+           <>
+@@ -253,7 +267,7 @@ export const StatusPage: React.FC = () => {
        />
  
        <ScrollContainer

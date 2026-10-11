@@ -3,6 +3,7 @@ import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, instance, status, timelineText } from './fixtures.mjs';
+import { composerText, openComposer } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
 
 let server;
@@ -74,11 +75,6 @@ async function mockMastodonRest(context, { instanceFixture, onStatusPosted, fail
 }
 
 // The redesigned composer opens from its button; "Who can reply" sits in its settings menu.
-const composerText = (page) => page.getByPlaceholder('Was möchtest du mitteilen?');
-async function openComposer(page) {
-  if (!(await composerText(page).isVisible())) await page.getByRole('button', { name: 'Neuer Beitrag' }).first().click();
-  await composerText(page).waitFor();
-}
 const submit = (page) => page.locator('form[role="dialog"]').getByRole('button', { name: 'Veröffentlichen' }).click();
 const settingsButton = (page) => page.locator('form[role="dialog"]').getByRole('button', { name: 'Einstellungen' });
 /** Opens the settings menu, runs `inMenu` on the reply-audience group (or null), and closes the menu again. */

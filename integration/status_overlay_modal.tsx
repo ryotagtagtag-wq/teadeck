@@ -59,7 +59,7 @@ const StatusOverlayModal = forwardRef<HTMLDivElement, { statusId: string; onClos
   return (
     <div ref={ref} className='modal-root__modal teadeck-status-overlay' role='dialog' aria-modal='true'>
       {/* Its own scroll key: a post view may already be open behind the overlay. */}
-      <StatusPage statusId={statusId} multiColumn scrollKey='teadeck-status-overlay' />
+      <StatusPage statusId={statusId} multiColumn scrollKey='teadeck-status-overlay' withBackButton={false} />
       <IconButton className='teadeck-status-overlay__close' title={t('close', currentUiTextLocale())} icon='times' iconComponent={CloseIcon} onClick={close} />
     </div>
   );
