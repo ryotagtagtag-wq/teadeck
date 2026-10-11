@@ -34,16 +34,94 @@ diff --git a/app/javascript/mastodon/actions/streaming.js b/app/javascript/masto
            dispatch(updateNotifications(notificationJSON, messages, locale));
            // TODO: remove this once the groups feature replaces the previous one
            dispatch(processNewNotificationForGroups(notificationJSON));
+diff --git a/app/javascript/mastodon/api/collections.ts b/app/javascript/mastodon/api/collections.ts
+--- a/app/javascript/mastodon/api/collections.ts
++++ b/app/javascript/mastodon/api/collections.ts
+@@ -1,3 +1,4 @@
++import { withCapability } from '@/teadeck/api_capabilities';
+ import {
+   apiRequestPost,
+   apiRequestPut,
+@@ -31,11 +32,24 @@ export const apiGetCollection = (collectionId: string) =>
+     `v1/collections/${collectionId}`,
+   );
+ 
++// Servers without collections (GoToSocial) have none to list.
+ export const apiGetCollectionsCreatedByAccount = (accountId: string) =>
+-  apiRequestGet<ApiCollectionsJSON>(`v1/accounts/${accountId}/collections`);
++  withCapability<ApiCollectionsJSON>(
++    'collections',
++    () =>
++      apiRequestGet<ApiCollectionsJSON>(`v1/accounts/${accountId}/collections`),
++    () => ({ collections: [] }),
++  );
+ 
+ export const apiGetCollectionsFeaturingAccount = (accountId: string) =>
+-  apiRequestGet<ApiCollectionsJSON>(`v1/accounts/${accountId}/in_collections`);
++  withCapability<ApiCollectionsJSON>(
++    'collections',
++    () =>
++      apiRequestGet<ApiCollectionsJSON>(
++        `v1/accounts/${accountId}/in_collections`,
++      ),
++    () => ({ collections: [] }),
++  );
+ 
+ export const apiAddCollectionItem = (collectionId: string, accountId: string) =>
+   apiRequestPost<WrappedCollectionAccountItem>(
 diff --git a/app/javascript/mastodon/api/instance.ts b/app/javascript/mastodon/api/instance.ts
 --- a/app/javascript/mastodon/api/instance.ts
 +++ b/app/javascript/mastodon/api/instance.ts
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,8 @@
 +import { withCapability } from '@/teadeck/api_capabilities';
++import {
++  extendedDescriptionFromInstance,
++  termsOfServiceFromInstance,
++} from '@/teadeck/api_compat';
  import { apiRequestGet } from 'mastodon/api';
  import type {
    ApiTermsOfServiceJSON,
-@@ -25,8 +26,13 @@ export const apiGetExtendedDescription = () =>
-   apiRequestGet<ApiExtendedDescriptionJSON>('v1/instance/extended_description');
+@@ -8,11 +13,20 @@ import type {
+   ApiDomainBlockJSON,
+ } from 'mastodon/api_types/instance';
+ 
++// Servers without these pages (GoToSocial) carry their texts in the v1 instance.
+ export const apiGetTermsOfService = (version?: string) =>
+-  apiRequestGet<ApiTermsOfServiceJSON>(
+-    version
+-      ? `v1/instance/terms_of_service/${version}`
+-      : 'v1/instance/terms_of_service',
++  withCapability<ApiTermsOfServiceJSON>(
++    'instance.termsOfService',
++    () =>
++      apiRequestGet<ApiTermsOfServiceJSON>(
++        version
++          ? `v1/instance/terms_of_service/${version}`
++          : 'v1/instance/terms_of_service',
++      ),
++    async () =>
++      termsOfServiceFromInstance(
++        await apiRequestGet<{ terms?: string }>('v1/instance'),
++      ),
+   );
+ 
+ export const apiGetPrivacyPolicy = () =>
+@@ -22,12 +36,31 @@ export const apiGetInstance = () =>
+   apiRequestGet<ApiInstanceJSON>('v2/instance');
+ 
+ export const apiGetExtendedDescription = () =>
+-  apiRequestGet<ApiExtendedDescriptionJSON>('v1/instance/extended_description');
++  withCapability<ApiExtendedDescriptionJSON>(
++    'instance.extendedDescription',
++    () =>
++      apiRequestGet<ApiExtendedDescriptionJSON>(
++        'v1/instance/extended_description',
++      ),
++    async () =>
++      extendedDescriptionFromInstance(
++        await apiRequestGet<{ description?: string }>('v1/instance'),
++      ),
++  );
  
  export const apiGetTranslationLanguages = () =>
 -  apiRequestGet<ApiTranslationLanguagesJSON>(
@@ -58,6 +136,12 @@ diff --git a/app/javascript/mastodon/api/instance.ts b/app/javascript/mastodon/a
    );
  
  export const apiGetDomainBlocks = () =>
+-  apiRequestGet<ApiDomainBlockJSON[]>('v1/instance/domain_blocks');
++  withCapability<ApiDomainBlockJSON[]>(
++    'instance.domainBlocks',
++    () => apiRequestGet<ApiDomainBlockJSON[]>('v1/instance/domain_blocks'),
++    () => [],
++  );
 diff --git a/app/javascript/mastodon/api/notification_policies.ts b/app/javascript/mastodon/api/notification_policies.ts
 --- a/app/javascript/mastodon/api/notification_policies.ts
 +++ b/app/javascript/mastodon/api/notification_policies.ts

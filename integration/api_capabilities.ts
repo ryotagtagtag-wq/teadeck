@@ -16,7 +16,11 @@ export type Capability =
   | 'profile.write'
   | 'profile.featuredTags'
   | 'profile.tabSettings'
-  | 'interactionPolicies.defaults';
+  | 'interactionPolicies.defaults'
+  | 'instance.extendedDescription'
+  | 'instance.domainBlocks'
+  | 'instance.termsOfService'
+  | 'collections';
 
 interface StorageLike {
   getItem(key: string): string | null;

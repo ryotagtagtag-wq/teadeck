@@ -8,6 +8,8 @@ import {
   applyStatusDefaults,
   notificationGroupsFromNotifications,
   notificationParamsForV1,
+  extendedDescriptionFromInstance,
+  termsOfServiceFromInstance,
 } from '../integration/api_compat.ts';
 
 const alice = { id: 'alice' };
@@ -128,4 +130,11 @@ test('a hashtag search keeps its source and pages by max_id', async () => {
   // A new search for the same query decides again.
   pages.reset('#neuhier');
   assert.equal(pages.next('#neuhier'), undefined);
+});
+
+test('the about and terms pages of servers without these APIs come from their v1 instance', () => {
+  const gts = { description: '<p>Ein Server für Tee</p>', terms: '<p>Sei nett.</p>' };
+  assert.deepEqual(extendedDescriptionFromInstance(gts), { updated_at: '', content: '<p>Ein Server für Tee</p>' });
+  assert.deepEqual(termsOfServiceFromInstance(gts), { effective_date: '', effective: true, succeeded_by: null, content: '<p>Sei nett.</p>' });
+  assert.equal(termsOfServiceFromInstance({}).content, '');
 });

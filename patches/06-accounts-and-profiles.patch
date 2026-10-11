@@ -231,6 +231,142 @@ diff --git a/app/javascript/mastodon/features/account_edit/modals/profile_displa
          <ToggleField
            checked={!profile.hideCollections}
            onChange={handleToggleChange}
+diff --git a/app/javascript/mastodon/features/account_featured/components/empty_message.tsx b/app/javascript/mastodon/features/account_featured/components/empty_message.tsx
+--- a/app/javascript/mastodon/features/account_featured/components/empty_message.tsx
++++ b/app/javascript/mastodon/features/account_featured/components/empty_message.tsx
+@@ -12,6 +12,7 @@ import { LimitedAccountHint } from '@/mastodon/components/limited_account_hint';
+ import { useAccount } from '@/mastodon/hooks/useAccount';
+ import { useCurrentAccountId } from '@/mastodon/hooks/useAccountId';
+ import { useAppDispatch } from '@/mastodon/store';
++import { collectionsAvailable } from '@/teadeck/server_features';
+ 
+ interface EmptyMessageProps {
+   suspended: boolean;
+@@ -49,7 +50,8 @@ export const EmptyMessage: React.FC<EmptyMessageProps> = ({
+   let title: React.ReactNode = null;
+   let message: React.ReactNode = null;
+ 
+-  if (me === accountId) {
++  // Teadeck: without collections on the server, the plain empty state.
++  if (me === accountId && collectionsAvailable()) {
+     // Return only here to insert the "Create a collection" button as the action for the empty state.
+     return (
+       <EmptyState
+diff --git a/app/javascript/mastodon/features/account_featured/index.tsx b/app/javascript/mastodon/features/account_featured/index.tsx
+--- a/app/javascript/mastodon/features/account_featured/index.tsx
++++ b/app/javascript/mastodon/features/account_featured/index.tsx
+@@ -31,6 +31,7 @@ import { useAppDispatch, useAppSelector } from '@/mastodon/store';
+ import { isRedesignEnabled } from '@/mastodon/utils/environment';
+ import AddIcon from '@/material-icons/400-24px/add.svg?react';
+ 
++import { collectionsAvailable } from '@/teadeck/server_features';
+ import { CollectionListItem } from '../collections/components/collection_list_item';
+ import { useCollectionsCreatedBy } from '../collections/overview/created_by_account';
+ 
+@@ -170,53 +171,58 @@ const AccountFeatured: React.FC<{ multiColumn: boolean }> = ({
+             </ItemList>
+           </>
+         )}
+-        <Subheading as='header'>
+-          <h2>
+-            <FormattedMessage
+-              id='account.featured.collections'
+-              defaultMessage='Collections'
+-            />
+-          </h2>
+-          {isOwnProfile && (
+-            <SubheadingLink to='/collections/new' icon={AddIcon}>
+-              <FormattedMessage
+-                id='account.featured.new_collection'
+-                defaultMessage='New collection'
+-              />
+-            </SubheadingLink>
+-          )}
+-        </Subheading>
+-        {hasCollections ? (
+-          <ItemList>
+-            <TruncatedListItems
+-              visibleItems={listedCollections}
+-              truncatedItems={isOwnProfile ? unlistedCollections : []}
+-              toggleButton={{
+-                title: (
+-                  <FormattedMessage
+-                    id='collections.unlisted_collections_with_count'
+-                    defaultMessage='Unlisted collections ({count})'
+-                    values={{ count: unlistedCollections.length }}
+-                  />
+-                ),
+-                subtitle: (
++        {/* Teadeck: only where the server has collections. */}
++        {collectionsAvailable() && (
++          <>
++            <Subheading as='header'>
++              <h2>
++                <FormattedMessage
++                  id='account.featured.collections'
++                  defaultMessage='Collections'
++                />
++              </h2>
++              {isOwnProfile && (
++                <SubheadingLink to='/collections/new' icon={AddIcon}>
+                   <FormattedMessage
+-                    id='collections.unlisted_collections_description'
+-                    defaultMessage='These don’t appear on your profile to others. Anyone with the link can discover them.'
++                    id='account.featured.new_collection'
++                    defaultMessage='New collection'
+                   />
+-                ),
+-              }}
+-              renderListItem={renderListItem}
+-            />
+-          </ItemList>
+-        ) : (
+-          <EmptyMessage
+-            withoutAddCollectionButton
+-            blockedBy={blockedBy}
+-            hidden={hidden}
+-            suspended={suspended}
+-            accountId={accountId}
+-          />
++                </SubheadingLink>
++              )}
++            </Subheading>
++            {hasCollections ? (
++              <ItemList>
++                <TruncatedListItems
++                  visibleItems={listedCollections}
++                  truncatedItems={isOwnProfile ? unlistedCollections : []}
++                  toggleButton={{
++                    title: (
++                      <FormattedMessage
++                        id='collections.unlisted_collections_with_count'
++                        defaultMessage='Unlisted collections ({count})'
++                        values={{ count: unlistedCollections.length }}
++                      />
++                    ),
++                    subtitle: (
++                      <FormattedMessage
++                        id='collections.unlisted_collections_description'
++                        defaultMessage='These don’t appear on your profile to others. Anyone with the link can discover them.'
++                      />
++                    ),
++                  }}
++                  renderListItem={renderListItem}
++                />
++              </ItemList>
++            ) : (
++              <EmptyMessage
++                withoutAddCollectionButton
++                blockedBy={blockedBy}
++                hidden={hidden}
++                suspended={suspended}
++                accountId={accountId}
++              />
++            )}
++          </>
+         )}
+         <RemoteHint accountId={accountId} />
+       </Scrollable>
 diff --git a/app/javascript/mastodon/features/account_timeline/components/tags_suggestions.tsx b/app/javascript/mastodon/features/account_timeline/components/tags_suggestions.tsx
 --- a/app/javascript/mastodon/features/account_timeline/components/tags_suggestions.tsx
 +++ b/app/javascript/mastodon/features/account_timeline/components/tags_suggestions.tsx

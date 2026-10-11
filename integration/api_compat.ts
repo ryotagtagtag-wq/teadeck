@@ -189,3 +189,18 @@ export function createHashtagSearchPages() {
     },
   };
 }
+
+interface InstanceV1Like { description?: string | null; terms?: string | null }
+
+/**
+ * `/api/v1/instance/extended_description` for servers without it (GoToSocial):
+ * their v1 instance carries the long description itself.
+ */
+export function extendedDescriptionFromInstance(instance: InstanceV1Like) {
+  return { updated_at: '', content: instance.description ?? '' };
+}
+
+/** `/api/v1/instance/terms_of_service` for servers without it: GoToSocial's v1 instance has `terms`. */
+export function termsOfServiceFromInstance(instance: InstanceV1Like) {
+  return { effective_date: '', effective: true, succeeded_by: null, content: instance.terms ?? '' };
+}
