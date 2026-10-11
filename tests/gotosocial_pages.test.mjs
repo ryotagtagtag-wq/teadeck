@@ -49,6 +49,9 @@ test('on GoToSocial, About and the terms show the server\'s texts without an err
 
   await page.evaluate(() => { history.pushState(null, '', '/about'); dispatchEvent(new PopStateEvent('popstate')); });
   await page.getByText('Teadeck test about text 4b1e').waitFor();
+  // Nothing about Mastodon on a GoToSocial server's About page.
+  assert.equal(await page.locator('a[href*="joinmastodon.org"]').count(), 0);
+  assert.equal(await page.getByText(/powered by/i).count(), 0);
 
   await page.evaluate(() => { history.pushState(null, '', '/terms-of-service'); dispatchEvent(new PopStateEvent('popstate')); });
   await page.getByText('Teadeck test terms 7d2a').waitFor();

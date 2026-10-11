@@ -18,6 +18,39 @@ diff --git a/app/javascript/mastodon/components/empty_state/index.tsx b/app/java
    error: (
      <GIF src='/oops.gif' staticSrc='/oops.png' className={classes.errorImage} />
    ),
+diff --git a/app/javascript/mastodon/components/error_boundary.jsx b/app/javascript/mastodon/components/error_boundary.jsx
+--- a/app/javascript/mastodon/components/error_boundary.jsx
++++ b/app/javascript/mastodon/components/error_boundary.jsx
+@@ -7,7 +7,7 @@ import { Helmet } from '@unhead/react/helmet';
+ 
+ import StackTrace from 'stacktrace-js';
+ 
+-import { version, source_url } from 'mastodon/initial_state';
++import { source_url } from 'mastodon/initial_state';
+ 
+ export default class ErrorBoundary extends PureComponent {
+ 
+@@ -98,7 +98,7 @@ export default class ErrorBoundary extends PureComponent {
+             )}
+           </p>
+ 
+-          <p className='error-boundary__footer'>Mastodon v{version} · <a href={source_url} rel='noopener' target='_blank'><FormattedMessage id='errors.unexpected_crash.report_issue' defaultMessage='Report issue' /></a> · <button type='button' onClick={this.handleCopyStackTrace} className={copied ? 'copied' : ''}><FormattedMessage id='errors.unexpected_crash.copy_stacktrace' defaultMessage='Copy stacktrace to clipboard' /></button></p>
++          <p className='error-boundary__footer'>Teadeck · <a href={source_url} rel='noopener' target='_blank'><FormattedMessage id='errors.unexpected_crash.report_issue' defaultMessage='Report issue' /></a> · <button type='button' onClick={this.handleCopyStackTrace} className={copied ? 'copied' : ''}><FormattedMessage id='errors.unexpected_crash.copy_stacktrace' defaultMessage='Copy stacktrace to clipboard' /></button></p>
+         </div>
+ 
+         <Helmet>
+diff --git a/app/javascript/mastodon/features/about/index.jsx b/app/javascript/mastodon/features/about/index.jsx
+--- a/app/javascript/mastodon/features/about/index.jsx
++++ b/app/javascript/mastodon/features/about/index.jsx
+@@ -111,7 +111,7 @@ class About extends PureComponent {
+                 {isLoading ? <Skeleton width='10ch' /> : domain}
+               </NavigationFocusTarget>
+             }
+-            <p><FormattedMessage id='about.powered_by' defaultMessage='Decentralized social media powered by {mastodon}' values={{ mastodon: <a href='https://joinmastodon.org' className='about__mail' target='_blank' rel='noopener'>Mastodon</a> }} /></p>
++            {/* Teadeck: no "powered by Mastodon", the server may run other software. */}
+           </div>
+ 
+           <div className='about__meta'>
 diff --git a/app/javascript/mastodon/features/announcements/index.tsx b/app/javascript/mastodon/features/announcements/index.tsx
 --- a/app/javascript/mastodon/features/announcements/index.tsx
 +++ b/app/javascript/mastodon/features/announcements/index.tsx
