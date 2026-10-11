@@ -27,6 +27,7 @@ export const shellMessages = {
   signOut: { en: 'Logout', upstream: 'yml:auth.logout' },
   continueAs: { en: 'Continue as', de: 'Weiter als' },
   sourceCode: { en: 'View source code', upstream: 'js:footer.source_code' },
+  language: { en: 'Language', upstream: 'js:about.language_label' },
 
   connecting: { en: 'Connecting…', de: 'Verbinde …' },
   retry: { en: 'Try again', upstream: 'js:bundle_column_error.retry' },

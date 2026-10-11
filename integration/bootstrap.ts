@@ -13,10 +13,11 @@ import type { DefaultInteractionPolicies } from './gotosocial';
 import { initCapabilities, setSupport, support } from './api_capabilities';
 import { defaultFrontendSettings, frontendSettingsKey, frontendSettingsMeta, layoutStartPath, readDeploymentDefaults, resolveFrontendSettings } from './frontend_settings';
 import { withFilterBarDefault } from './notification_settings';
-import { applyAppearance, lastAppearance, lastLocale } from './appearance';
+import { applyAppearance, lastAppearance, lastLocale, rememberLocale } from './appearance';
 import { brandLogoMarkup, setBrandLogo } from './brand_logo';
 import { resolveLocale } from './ui_locale';
 import { applyDocumentLanguage, shellLocale, t, translateShell } from './shell_i18n';
+import { setUpLanguagePicker } from './shell_language';
 import { ShellError } from './shell_strings';
 import type { ShellMessageId } from './shell_strings';
 import { stripAxiosUserAgent } from './fetch_patch';
@@ -147,6 +148,10 @@ async function boot() {
   if (await applyWaitingUpdate().catch(() => false)) return;
   // Awaited where something is shown; a signed-in account's language replaces it below.
   shellText = translateShell(shellLocale(lastLocale()));
+  setUpLanguagePicker(document.getElementById('teadeck-shell-language') as HTMLSelectElement, shellLocale(lastLocale()), (chosen) => {
+    rememberLocale(chosen);
+    shellText = translateShell(chosen);
+  });
   const notice = sessionStorage.getItem('teadeck.notice');
   if (notice) { setStatusMessage(notice as ShellMessageId, 'warning'); sessionStorage.removeItem('teadeck.notice'); }
   if (location.pathname === '/oauth/callback') await finishLogin();
@@ -208,7 +213,8 @@ async function boot() {
     readPreference(frontendSettingsKey, {}),
     defaultFrontendSettings(preferences, matchMedia('(prefers-reduced-motion: reduce)').matches, deployment),
   );
-  const locale = resolveLocale(readPreference('locale', null), navigator.languages ?? [navigator.language]);
+  // An account without a language of its own takes the one chosen on the sign-in page.
+  const locale = resolveLocale(readPreference('locale', null) ?? lastLocale(), navigator.languages ?? [navigator.language]);
   applyDocumentLanguage(locale);
   // The update notice is shown in the running app too, so it follows the account's language.
   shellText = translateShell(locale);

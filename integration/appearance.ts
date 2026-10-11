@@ -30,6 +30,14 @@ export function lastAppearance(): unknown {
   } catch { return null; }
 }
 
+/** The language chosen on the sign-in page, kept with the last appearance. */
+export function rememberLocale(locale: string) {
+  try {
+    const stored = lastAppearance();
+    localStorage.setItem(lastAppearanceKey, JSON.stringify({ ...(stored && typeof stored === 'object' ? stored : {}), locale }));
+  } catch { /* storage blocked */ }
+}
+
 export function lastLocale(): unknown {
   const stored = lastAppearance();
   return stored && typeof stored === 'object' ? (stored as { locale?: unknown }).locale : null;

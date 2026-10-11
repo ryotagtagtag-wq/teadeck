@@ -10,7 +10,7 @@ Teadeck is still in active development and has no stable release yet.
 
 ## Using Teadeck
 
-Open a Teadeck installation, enter your server's address and sign in on your server. Choose **Stay signed in** if you want to save the account in this browser. You can add more accounts and switch between them, each with its own theme and settings.
+Open a Teadeck installation, choose your language if needed, enter your server's address and sign in on your server. Choose **Stay signed in** if you want to save the account in this browser. You can add more accounts and switch between them, each with its own theme and settings.
 
 Your browser talks directly to your Mastodon or GoToSocial server.
 

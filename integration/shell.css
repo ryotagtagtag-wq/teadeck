@@ -46,6 +46,16 @@ html {
 .drawer__inner__mastodon > img.teadeck-logo { width: 88%; height: 100%; object-fit: contain; object-position: bottom center; transform: none; }
 .teadeck-shell-footer { margin-top: 30px; text-align: center; }
 .teadeck-shell-footer a { color: var(--color-text-secondary); }
+.teadeck-shell-footer p { margin-top: 12px; }
+.teadeck-shell-language { display: inline-flex; align-items: center; gap: 8px; color: var(--color-text-secondary); font-size: 14px; }
+.teadeck-shell-language select {
+  padding: 4px 8px;
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font: inherit;
+}
 body.teadeck-connected { display: flex; flex-direction: column; height: 100dvh; }
 body.teadeck-connected #mastodon { flex: 1; min-height: 0; }
 /* Only Teadeck's own shell: upstream relies on `hidden` elements that its CSS shows (e.g. toggle switches). */
