@@ -39,7 +39,7 @@ git -C .work/upstream diff -- <file> | grep -v '^index ' > patches/<nn>-<name>.p
 
 ## Tests
 
-After the first build, install Playwright's Chromium and its system dependencies:
+After the first build, install Playwright's Chromium and Firefox and their system dependencies:
 
 ```sh
 npm run test:install
@@ -48,8 +48,10 @@ npm run test:install
 Installing system dependencies may require administrator privileges. If those dependencies are already installed, download only the browser:
 
 ```sh
-node .work/upstream/node_modules/playwright/cli.js install chromium
+node .work/upstream/node_modules/playwright/cli.js install chromium firefox
 ```
+
+Most browser tests run in Chromium; those that depend on layout run in Firefox too.
 
 The production web-server tests also need nginx or a working Docker daemon. With Docker, they use `git.knubbel.me/teadeck/teadeck:latest` by default; set `TEADECK_NGINX_IMAGE` to test another compatible image. Without nginx or Docker, these tests are skipped locally. To require them:
 

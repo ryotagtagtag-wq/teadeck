@@ -13,6 +13,6 @@
     "build:fresh": "npm run prepare:upstream && npm run build",
     "test": "node scripts/verify.mjs",
     "check": "npm run build && npm test",
-    "test:install": "node .work/upstream/node_modules/playwright/cli.js install --with-deps chromium"
+    "test:install": "node .work/upstream/node_modules/playwright/cli.js install --with-deps chromium firefox"
   }
 }

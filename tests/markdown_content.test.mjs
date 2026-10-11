@@ -4,6 +4,7 @@ import { after, before, test } from 'node:test';
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { instance, status, timelineText } from './fixtures.mjs';
 import { mockMastodon } from './mastodon_mock.mjs';
+import { closeBrowsers, engines, launchBrowser } from './browsers.mjs';
 import { createStaticServer } from './server.mjs';
 
 // A post as GoToSocial renders Markdown: headings, rules, footnotes and a fenced code block.
@@ -27,6 +28,7 @@ before(async () => {
 
 after(async () => {
   await browser?.close();
+  await closeBrowsers();
   await new Promise((resolve) => server?.close(resolve));
 });
 
@@ -107,39 +109,51 @@ test('Mastodon\'s light theme shows Markdown in colours of its own, not pink', {
   await context.close();
 });
 
-test('a long line in a code block wraps under its own number, and copying the code gives it back exactly', { timeout: 90_000 }, async () => {
-  const code = `const short = 1;\n\nconst long = "${'tea '.repeat(40)}";\n  indented();`;
-  const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-  const context = await browser.newContext({ locale: 'en-US', viewport: { width: 1280, height: 900 } });
-  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin });
-  await mockMastodon(context, origin, {
-    '/api/v1/timelines/home': [{ ...status, content: `<p>${timelineText}</p><pre><code class="language-js">${escaped}\n</code></pre>` }],
-  });
-  const page = await context.newPage();
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
-  const pre = page.locator('.teadeck-code pre').first();
-  await pre.waitFor();
+for (const engine of engines) {
+  test(`a long line in a code block wraps under its own number, and copying the code gives it back exactly (${engine})`, { timeout: 90_000 }, async () => {
+    const browser = await launchBrowser(engine);
+    const code = `const short = 1;\n\nconst long = "${'tea '.repeat(40)}";\n  indented();`;
+    const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const context = await browser.newContext({ locale: 'en-US', viewport: { width: 1280, height: 900 } });
+    await mockMastodon(context, origin, {
+      '/api/v1/timelines/home': [{ ...status, content: `<p>${timelineText}</p><pre><code class="language-js">${escaped}\n</code></pre>` }],
+    });
+    const page = await context.newPage();
+    await page.goto(origin);
+    await page.locator('#teadeck-instance').fill('mastodon.test');
+    await page.locator('#teadeck-login button[type=submit]').click();
+    const pre = page.locator('.teadeck-code pre').first();
+    await pre.waitFor();
 
-  // No sideways scrolling: the long line wraps, and still counts as one line.
-  const layout = await pre.evaluate((element) => ({
-    overflows: element.scrollWidth > element.clientWidth + 1,
-    heights: [...element.querySelectorAll('.teadeck-code__line')].map((line) => line.getBoundingClientRect().height),
-  }));
-  assert.equal(layout.overflows, false);
-  assert.equal(layout.heights.length, 4);
-  assert.ok(layout.heights[2] > layout.heights[0] * 2, `wrapped: ${layout.heights.join(' ')}`);
-  assert.equal(layout.heights[1], layout.heights[0], 'the empty line keeps its height');
+    // No sideways scrolling: the long line wraps, and still counts as one line.
+    const layout = await pre.evaluate((element) => ({
+      overflows: element.scrollWidth > element.clientWidth + 1,
+      heights: [...element.querySelectorAll('.teadeck-code__line')].map((line) => line.getBoundingClientRect().height),
+    }));
+    assert.equal(layout.overflows, false);
+    assert.equal(layout.heights.length, 4);
+    assert.ok(layout.heights[2] > layout.heights[0] * 2, `wrapped: ${layout.heights.join(' ')}`);
+    // Within rounding: Firefox gives fractions of a pixel that differ in the last digits.
+    assert.ok(Math.abs(layout.heights[1] - layout.heights[0]) < 0.5, `the empty line keeps its height: ${layout.heights.join(' ')}`);
 
-  // Selected and copied by hand, the code comes back without line numbers or extra lines.
-  await pre.evaluate((element) => {
-    const range = document.createRange();
-    range.selectNodeContents(element.querySelector('code'));
-    getSelection().removeAllRanges();
-    getSelection().addRange(range);
+    // Selected and copied by hand, the code comes back without line numbers or extra lines.
+    await pre.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element.querySelector('code'));
+      getSelection().removeAllRanges();
+      getSelection().addRange(range);
+    });
+    await page.keyboard.press('Control+c');
+    // Pasted into a field, as a reader would.
+    await page.evaluate(() => {
+      const field = document.createElement('textarea');
+      field.id = 'paste-target';
+      field.style.cssText = 'position: fixed; inset: 0 auto auto 0; z-index: 99999';
+      document.body.append(field);
+      field.focus();
+    });
+    await page.keyboard.press('Control+v');
+    assert.equal(await page.locator('#paste-target').inputValue(), code);
+    await context.close();
   });
-  await page.keyboard.press('Control+c');
-  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), code);
-  await context.close();
-});
+}

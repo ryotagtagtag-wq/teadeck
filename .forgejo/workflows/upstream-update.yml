@@ -39,9 +39,9 @@ jobs:
       - name: Build
         if: steps.resolve.outputs.changed == 'true'
         run: node scripts/build.mjs
-      - name: Install Chromium for the browser tests
+      - name: Install Chromium and Firefox for the browser tests
         if: steps.resolve.outputs.changed == 'true'
-        run: node .work/upstream/node_modules/playwright/cli.js install --with-deps chromium
+        run: node .work/upstream/node_modules/playwright/cli.js install --with-deps chromium firefox
       - name: Install nginx for production configuration tests
         if: steps.resolve.outputs.changed == 'true'
         run: apt-get update && apt-get install -y --no-install-recommends nginx
