@@ -69,6 +69,17 @@ node tests/service_worker.test.mjs
 node tests/production.test.mjs
 ```
 
+## Screenshots
+
+The README's screenshots in `docs/images` come from the built client against a made-up GoToSocial server. After `npm run build`, retake all of them or only some:
+
+```sh
+npm run screenshots
+npm run screenshots -- composer themes
+```
+
+The names are `overview`, `composer`, `reply`, `overlay` and `themes`. The script writes full-colour PNGs; reduce them to a palette (for example with `pngquant`) before committing to keep the repository small.
+
 Never include access tokens, private posts or unredacted network captures in fixtures or issues.
 
 ## Package an image
