@@ -2,7 +2,7 @@
 // is still the head of the branch, so a slower older build cannot move it back.
 //
 // Usage (CI, in a checkout of the repository): node scripts/promote_image.mjs
-//   --image git.knubbel.me/knubbel/teadeck --from sha-<12> --to latest --commit <sha> --branch main
+//   --image git.knubbel.me/teadeck/teadeck --from sha-<12> --to latest --commit <sha> --branch main
 // Environment: REGISTRY_USER, REGISTRY_TOKEN (push to the image).
 import { spawnSync } from 'node:child_process';
 

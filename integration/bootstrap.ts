@@ -262,7 +262,7 @@ async function boot() {
       ...frontendSettingsMeta(frontendSettings),
       limited_federation_mode: false, mascot: null, profile_directory: true,
       registrations_open: instance.registrations?.enabled ?? false,
-      repository: 'knubbel/teadeck', source_url: 'https://git.knubbel.me/knubbel/teadeck',
+      repository: 'Teadeck/teadeck', source_url: 'https://git.knubbel.me/Teadeck/teadeck',
       search_enabled: true, trends_enabled: true, show_trends: true,
       single_user_mode: false, custom_app_icon: null, landing_page: 'about',
       local_live_feed_access: 'authenticated', remote_live_feed_access: 'authenticated',

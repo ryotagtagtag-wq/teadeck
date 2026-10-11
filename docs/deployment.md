@@ -39,6 +39,8 @@ docker compose ps
 
 If you set `TEADECK_TAG`, change it to the desired tag first.
 
+The image is published as `git.knubbel.me/teadeck/teadeck`. Installations set up with the earlier `git.knubbel.me/knubbel/teadeck` change the `image:` line in their `compose.yml` once, as in [compose.yml.example](../compose.yml.example).
+
 Open tabs show a notice and switch to the new version when reloaded. Copy any unsent post first.
 
 ## Choose a version or roll back

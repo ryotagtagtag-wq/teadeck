@@ -1,7 +1,7 @@
 services:
   teadeck:
     # Set TEADECK_TAG in .env to choose an existing tag instead of latest.
-    image: git.knubbel.me/knubbel/teadeck:${TEADECK_TAG:-latest}
+    image: git.knubbel.me/teadeck/teadeck:${TEADECK_TAG:-latest}
     ports:
       # Host port; override in .env, for example TEADECK_PUBLISH=8099.
       - "${TEADECK_PUBLISH:-8080}:8080"

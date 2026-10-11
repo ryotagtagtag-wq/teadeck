@@ -90,7 +90,7 @@ test('static SPA completes OAuth and renders the Mastodon home timeline', { time
   await page.waitForURL(`${origin}/deck/home`);
   await page.getByText(timelineText).first().waitFor();
   assert.equal(await page.evaluate(() => JSON.parse(localStorage[Object.keys(localStorage).find((key) => key.endsWith(':advancedLayout'))]).valueOf()), true);
-  assert.equal(await page.locator('a[href="https://git.knubbel.me/knubbel/teadeck"]').count() > 0, true);
+  assert.equal(await page.locator('a[href="https://git.knubbel.me/Teadeck/teadeck"]').count() > 0, true);
 
   await signOut(page);
   await page.waitForURL(`${origin}/login`);

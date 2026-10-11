@@ -132,7 +132,7 @@ test('a link pasted into the compose form is looked up without an error', { time
   await page.getByText(timelineText).waitFor();
 
   // Upstream's compose form hands the search a URL object, not a string.
-  const link = 'https://git.knubbel.me/knubbel/teadeck';
+  const link = 'https://git.knubbel.me/Teadeck/teadeck';
   await openComposer(page);
   const compose = composerText(page);
   await compose.click();

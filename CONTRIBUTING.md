@@ -51,7 +51,7 @@ Installing system dependencies may require administrator privileges. If those de
 node .work/upstream/node_modules/playwright/cli.js install chromium
 ```
 
-The production web-server tests also need nginx or a working Docker daemon. With Docker, they use `git.knubbel.me/knubbel/teadeck:latest` by default; set `TEADECK_NGINX_IMAGE` to test another compatible image. Without nginx or Docker, these tests are skipped locally. To require them:
+The production web-server tests also need nginx or a working Docker daemon. With Docker, they use `git.knubbel.me/teadeck/teadeck:latest` by default; set `TEADECK_NGINX_IMAGE` to test another compatible image. Without nginx or Docker, these tests are skipped locally. To require them:
 
 ```sh
 TEADECK_REQUIRE_NGINX=1 npm test

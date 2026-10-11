@@ -8,7 +8,7 @@ FROM alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6ee
 
 LABEL org.opencontainers.image.title="Teadeck" \
       org.opencontainers.image.description="Browser-based Mastodon/GoToSocial client, static files served by nginx" \
-      org.opencontainers.image.source="https://git.knubbel.me/knubbel/teadeck" \
+      org.opencontainers.image.source="https://git.knubbel.me/Teadeck/teadeck" \
       org.opencontainers.image.licenses="AGPL-3.0-or-later"
 
 # nginx from Alpine's package repository.

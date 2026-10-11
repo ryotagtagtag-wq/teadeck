@@ -95,7 +95,7 @@ export async function startNginx({ builds, config = productionConfig, logo }) {
   if (runner === 'binary') {
     process_ = spawn(process.env.TEADECK_NGINX ?? 'nginx', ['-p', dir, '-c', configPath, '-e', 'stderr', '-g', 'daemon off;'], { stdio: ['ignore', 'ignore', 'inherit'] });
   } else {
-    const image = process.env.TEADECK_NGINX_IMAGE ?? 'git.knubbel.me/knubbel/teadeck:latest';
+    const image = process.env.TEADECK_NGINX_IMAGE ?? 'git.knubbel.me/teadeck/teadeck:latest';
     const run = spawnSync('docker', ['run', '-d', '--rm', '--network', 'host', ...mounts, image, '-c', `${base}/nginx.conf`], { encoding: 'utf8' }); // Appended to the image's entrypoint.
     if (run.status !== 0) throw new Error(`docker run failed: ${run.stderr}`);
     container = run.stdout.trim();
