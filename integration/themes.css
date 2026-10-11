@@ -53,7 +53,7 @@
   font-display: swap;
 }
 
-/* Assam: warm brown ground, the copper of its liquor as the only accent. */
+/* Assam, dark. */
 html[data-teadeck-theme='assam'][data-color-scheme='dark'] {
   --color-grey-50: #f7efe3;
   --color-grey-100: #ece0d0;
@@ -79,11 +79,11 @@ html[data-teadeck-theme='assam'][data-color-scheme='dark'] {
   --color-indigo-900: #533018;
   --color-indigo-950: #351d0f;
 
-  /* The tea in the cup: the accent itself, one step deeper than the text colour. */
+  /* Tea colour of the logo (logos/*.svg). */
   --teadeck-logo-tea: var(--color-indigo-600);
 }
 
-/* Silver Needle: ivory and silver, the pale straw gold of its liquor as the accent. */
+/* Assam, light. */
 html[data-teadeck-theme='assam'][data-color-scheme='light'] {
   --color-grey-50: #faf8f2;
   --color-grey-100: #f1ece0;
@@ -109,14 +109,12 @@ html[data-teadeck-theme='assam'][data-color-scheme='light'] {
   --color-indigo-900: #473c19;
   --color-indigo-950: #2c2510;
 
-  /* Ivory rather than plain white: the panels are paper, too. */
   --color-bg-primary: #fffdf7;
 
-  /* A white tea brews pale: straw gold rather than amber. */
   --teadeck-logo-tea: #c9ac4e;
 }
 
-/* Sencha: charcoal ground, its yellow-green liquor, honey as the second tone. */
+/* Sencha, dark. */
 html[data-teadeck-theme='sencha'][data-color-scheme='dark'] {
   --color-grey-50: #f3f8f4;
   --color-grey-100: #e7efe9;
@@ -142,11 +140,10 @@ html[data-teadeck-theme='sencha'][data-color-scheme='dark'] {
   --color-indigo-900: #2c4427;
   --color-indigo-950: #1a2a17;
 
-  /* The brewed leaf in the cup; honey stays the interface's second tone. */
   --teadeck-logo-tea: #a8b23f;
 }
 
-/* Jasmine: warm rice paper, leaf green, the pale gold of jasmine tea. */
+/* Sencha, light. */
 html[data-teadeck-theme='sencha'][data-color-scheme='light'] {
   --color-grey-50: #faf7ef;
   --color-grey-100: #f2ece0;
@@ -172,7 +169,6 @@ html[data-teadeck-theme='sencha'][data-color-scheme='light'] {
   --color-indigo-900: #2a4527;
   --color-indigo-950: #182b17;
 
-  /* Rice paper, a shade warmer than the ivory of the white tea. */
   --color-bg-primary: #fbf8ef;
 
   --teadeck-logo-tea: #cbbd62;
@@ -212,7 +208,6 @@ html[data-teadeck-theme][data-color-scheme='light'] {
 
 html[data-teadeck-theme] {
   --font-monospace: 'Teadeck IBM Plex Mono', mastodon-font-monospace, monospace;
-  /* 8px radii: flatter than Mastodon's, and the same everywhere. */
   --radius-xs: 8px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -239,7 +234,7 @@ html[data-teadeck-theme] .status__content__text strong {
   font-family: var(--font-heading);
 }
 
-/* An outlined primary button instead of a filled surface; the accent stays a line. */
+/* Outlined primary buttons (legacy views and the sign-in page). */
 html[data-teadeck-theme] .button:not(:disabled):not(.disabled):not(.button-secondary):not(.button--plain) {
   background-color: transparent;
   border-color: var(--color-border-brand);
@@ -254,7 +249,7 @@ html[data-teadeck-theme] .button:not(:disabled):not(.disabled):not(.button-secon
   color: var(--color-text-brand);
 }
 
-/* The sign-in page follows the same rules; it uses Mastodon's auth button class. */
+/* The sign-in page uses Mastodon's auth button class. */
 html[data-teadeck-theme] #teadeck-shell .btn,
 html[data-teadeck-theme] #teadeck-shell .button {
   background-color: transparent;
@@ -269,10 +264,9 @@ html[data-teadeck-theme] #teadeck-shell .btn:focus {
 }
 
 /*
- * Post content: Markdown as GoToSocial renders it (headings, lists, quotes,
- * code). Each half of each tea has its own colours; Mastodon's own rich-text
- * colours (a pink) are replaced by them. Mastodon's own theme gets colours of
- * its own and keeps its fonts, apart from JetBrains Mono for code.
+ * Post content (headings, lists, quotes, code) per design, replacing Mastodon's
+ * rich-text colours. Mastodon's own design gets colours here too and keeps its
+ * fonts, apart from JetBrains Mono for code.
  */
 html[data-teadeck-theme='assam'][data-color-scheme='dark'] {
   --md-heading: #ece3da;

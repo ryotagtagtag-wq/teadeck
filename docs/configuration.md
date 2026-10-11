@@ -49,18 +49,23 @@ Open **Settings** in the account menu (**⋯** next to your name at the bottom o
 
 ## Markdown
 
-The Markdown button is next to the emoji button at the bottom of the composer. It is highlighted when Markdown is selected; click it to switch between Markdown and plain text. Teadeck remembers an override per account. Choosing the account's default again clears that override so later changes to the server-side default can take effect.
-
-When editing a post, Teadeck keeps the post's original format.
+If the server accepts both `text/plain` and `text/markdown`, as GoToSocial does, the composer has a Markdown button next to the emoji button. It starts with the format set for your account on the server; a different choice is remembered per account, and choosing the account's format again clears it. Editing a post keeps its original format.
 
 ## Large composer
 
-For longer posts, open the large composer with the right part of the **New post** button, next to the divider. It has the same settings as the regular composer and is as large as the post overlay; long posts scroll inside it. The button next to **Minimize** in the composer's header switches between the regular and the large composer without losing what you wrote.
-
-With Markdown on, the large composer shows a preview below the text and links to a Markdown cheat sheet. The preview is an approximation: your server renders the final post.
-
-The button appears only if the server advertises both `text/plain` and `text/markdown`, as GoToSocial does.
+The right part of the **New post** button opens the large composer, with the same settings as the regular one. The button next to **Minimize** switches between both sizes without losing what you wrote. With Markdown on, a preview follows the text, with a link to a cheat sheet; your server renders the final post, so the preview is an approximation.
 
 ## Who can reply
 
-On GoToSocial, the composer's settings menu (the gear) has a **Who can reply** section next to **Who can quote**. Teadeck remembers the last choice per account. **Account default** sends nothing and leaves the decision to the server.
+On GoToSocial, the composer's settings menu has a **Who can reply** section: everyone, followers, accounts you follow, mutual followers or only mentioned accounts. **Account default** sends nothing and leaves the decision to the server. Choices that do not fit the post's visibility are disabled. Favourites and boosts follow your account's defaults; if Teadeck cannot load them, it does not send the post. The last choice is remembered per account.
+
+## GoToSocial
+
+| Mastodon feature | On GoToSocial |
+| --- | --- |
+| Grouped notifications | Built from the ungrouped ones |
+| Custom emoji | Loaded with your sign-in |
+| Profile editing | Through `update_credentials` |
+| Hashtag search | Shows the tag's timeline |
+| About, terms of service | Taken from the instance information |
+| Collections | Not offered |

@@ -35,10 +35,7 @@ jobs:
           persist-credentials: false
       - name: Import upstream and apply patches
         run: node scripts/prepare.mjs
-      # No cache for the dependencies on purpose: measured on 18 September 2026,
-      # a cold install of all 1250 packages (543 MiB) takes 7.6 s of download,
-      # 14.5 s in total against 8.6 s with a full cache. Keeping half a gigabyte
-      # per upstream commit in the runner's store would buy about six seconds.
+      # No dependency cache: a cold install takes seconds, a cache per upstream commit half a gigabyte.
       - name: Build
         run: node scripts/build.mjs
       - name: Install Chromium for the browser tests

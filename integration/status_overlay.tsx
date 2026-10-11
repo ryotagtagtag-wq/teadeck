@@ -1,10 +1,6 @@
 /**
- * Opening a post with its thread in an overlay in the middle of the window.
- *
- * With the setting on, a click on a post's time opens the overlay instead of
- * the post view. With it off, the time behaves as upstream's does, and each
- * post's action bar gets a button for the overlay. The setting takes effect at
- * once, in every post already on screen.
+ * Opening a post in the overlay (status_overlay_modal.tsx): from a button in
+ * the action bar or, with the setting on, from the post's time.
  */
 
 import { useCallback, useSyncExternalStore } from 'react';

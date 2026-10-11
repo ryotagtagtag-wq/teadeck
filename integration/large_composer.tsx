@@ -1,9 +1,6 @@
 /**
- * The large composer: upstream's composer with all its settings, shown in the
- * middle of the window at the size of the status overlay, for longer posts.
- * With Markdown on, a preview of the post follows the text. It opens from the
- * right part of the "New post" button and switches to and from the regular
- * composer in the composer's header; the text and settings stay as they are.
+ * The large composer is upstream's composer, only placed differently
+ * (large_composer.css), so switching sizes keeps the post as it is.
  */
 
 import { createElement, useCallback, useMemo, useSyncExternalStore } from 'react';
