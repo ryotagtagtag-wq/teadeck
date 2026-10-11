@@ -53,6 +53,12 @@ The Markdown button is next to the emoji button at the bottom of the composer. I
 
 When editing a post, Teadeck keeps the post's original format.
 
+## Large composer
+
+For longer posts, open the large composer with the right part of the **New post** button, next to the divider. It has the same settings as the regular composer and is as large as the post overlay; long posts scroll inside it. The button next to **Minimize** in the composer's header switches between the regular and the large composer without losing what you wrote.
+
+With Markdown on, the large composer shows a preview below the text and links to a Markdown cheat sheet. The preview is an approximation: your server renders the final post.
+
 The button appears only if the server advertises both `text/plain` and `text/markdown`, as GoToSocial does.
 
 ## Who can reply

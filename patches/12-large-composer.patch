@@ -1,0 +1,138 @@
+diff --git a/app/javascript/mastodon/features/compose/redesign/header.tsx b/app/javascript/mastodon/features/compose/redesign/header.tsx
+--- a/app/javascript/mastodon/features/compose/redesign/header.tsx
++++ b/app/javascript/mastodon/features/compose/redesign/header.tsx
+@@ -18,6 +18,7 @@ import {
+ 
+ import { selectComposeType } from './selectors';
+ import classes from './styles.module.scss';
++import { ComposerSizeToggle } from '@/teadeck/large_composer';
+ 
+ const messages = defineMessages({
+   postNew: {
+@@ -86,6 +87,8 @@ export const ComposeFormHeader: React.FC<{
+     <header className={classes.header}>
+       <h2 id={id}>{intl.formatMessage(titleMessage)}</h2>
+ 
++      {!isMinimized && <ComposerSizeToggle />}
++
+       {!noMinimize && (
+         <IconButton
+           size='sm'
+diff --git a/app/javascript/mastodon/features/compose/redesign/index.tsx b/app/javascript/mastodon/features/compose/redesign/index.tsx
+--- a/app/javascript/mastodon/features/compose/redesign/index.tsx
++++ b/app/javascript/mastodon/features/compose/redesign/index.tsx
+@@ -25,6 +25,7 @@ import { ComposeSettingsMenu } from './settings';
+ import classes from './styles.module.scss';
+ import { ComposeTextarea } from './textarea';
+ import { ComposeVisibility } from './visibility';
++import { ComposerMarkdownPreview } from '@/teadeck/large_composer';
+ 
+ interface RedesignComposeFormProps {
+   autoFocus?: boolean;
+@@ -89,6 +90,8 @@ export const RedesignComposeForm: React.FC<
+         <ComposeAttachments className={classes.attachments} />
+       </ComposeTextarea>
+ 
++      <ComposerMarkdownPreview />
++
+       <ComposeHints />
+ 
+       <ComposeFooter onEmojiPick={onEmojiPick} />
+diff --git a/app/javascript/mastodon/features/compose/redesign/trigger.tsx b/app/javascript/mastodon/features/compose/redesign/trigger.tsx
+--- a/app/javascript/mastodon/features/compose/redesign/trigger.tsx
++++ b/app/javascript/mastodon/features/compose/redesign/trigger.tsx
+@@ -22,6 +22,7 @@ import { useBreakpoint } from '../../ui/hooks/useBreakpoint';
+ 
+ import { ComposeFormHeader } from './header';
+ import classes from './trigger.module.scss';
++import { useComposerLarge } from '@/teadeck/large_composer';
+ 
+ const ComposeLazyForm = lazy(() =>
+   import('./index').then(({ RedesignComposeForm }) => ({
+@@ -67,6 +68,8 @@ export const ComposeRedesignButton: React.FC<{
+   }, [dispatch]);
+ 
+   const { signedIn } = useIdentity();
++  // Teadeck's large composer: the same form, in the middle of the window.
++  const isLarge = useComposerLarge() && !isMobile;
+ 
+   if (!isRedesignEnabled() || !signedIn) {
+     return null;
+@@ -112,7 +115,15 @@ export const ComposeRedesignButton: React.FC<{
+           </FloatingActionButton>
+         }
+       >
+-        <ComposeLazyForm autoFocus className={classes.composer} style={style} />
++        {isLarge && <div className='teadeck-large-composer__backdrop' />}
++        <ComposeLazyForm
++          autoFocus
++          className={classNames(
++            classes.composer,
++            isLarge && 'teadeck-large-composer',
++          )}
++          style={style}
++        />
+       </Suspense>
+     );
+   }
+diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/index.tsx b/app/javascript/mastodon/features/navigation_panel/redesign/index.tsx
+--- a/app/javascript/mastodon/features/navigation_panel/redesign/index.tsx
++++ b/app/javascript/mastodon/features/navigation_panel/redesign/index.tsx
+@@ -5,7 +5,6 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+ import type { Map as ImmutableMap } from 'immutable';
+ 
+ import {
+-  PenNibIcon,
+   HouseIcon,
+   MagnifyingGlassIcon,
+   RssSimpleIcon,
+@@ -21,7 +20,6 @@ import { fetchFollowRequests } from '@/mastodon/actions/accounts';
+ import { fetchLists } from '@/mastodon/actions/lists';
+ import { closeNavigation } from '@/mastodon/actions/navigation';
+ import { fetchFollowedHashtags } from '@/mastodon/actions/tags_typed';
+-import { Button } from '@/mastodon/components/button/redesign';
+ import { Callout } from '@/mastodon/components/callout/redesign';
+ import { FOCUS_TARGET } from '@/mastodon/components/navigation_focus_target';
+ import { useScrollSensor } from '@/mastodon/hooks/useScrollSensor';
+@@ -49,6 +47,7 @@ import { ListSection } from './list_section';
+ import { DisabledAccountBanner, LoggedOutInfo } from './logged_out_info';
+ import { NavigationLink } from './navigation_link';
+ import classes from './styles.module.scss';
++import { NewPostSplitButton } from '@/teadeck/large_composer';
+ 
+ const messages = defineMessages({
+   main: {
+@@ -180,19 +179,15 @@ export const RedesignNavigationPanel: React.FC<{
+           {transientSingleColumn && <TransientSingleColumnCallout />}
+           <ul className={classes.list}>
+             <li>
+-              <Button
+-                leadingIcon={PenNibIcon}
+-                onClick={openComposer}
+-                variant='solid'
+-                color='accent'
+-                size='md'
++              <NewPostSplitButton
++                onOpen={openComposer}
+                 className={classes.newPostButton}
+               >
+                 <FormattedMessage
+                   id='tabs_bar.publish'
+                   defaultMessage='New Post'
+                 />
+-              </Button>
++              </NewPostSplitButton>
+             </li>
+             <NavigationLink to='/home' iconComponent={HouseIcon}>
+               <FormattedMessage id='tabs_bar.home' defaultMessage='Home' />
+diff --git a/app/javascript/mastodon/features/ui/components/modal_root.jsx b/app/javascript/mastodon/features/ui/components/modal_root.jsx
+--- a/app/javascript/mastodon/features/ui/components/modal_root.jsx
++++ b/app/javascript/mastodon/features/ui/components/modal_root.jsx
+@@ -115,6 +115,7 @@ export const MODAL_COMPONENTS = {
+   'NOTIFICATION_REQUESTS_SETTINGS': () => import('@/mastodon/features/notifications/components/notification_requests_settings').then(module => ({default: module.NotificationRequestsSettingsModal})),
+   'HASHTAG_SETTINGS': () => import('@/mastodon/features/hashtag_timeline/components/column_settings_modal'),
+   'TEADECK_STATUS': () => import('@/teadeck/status_overlay_modal'),
++  'TEADECK_MARKDOWN_HELP': () => import('@/teadeck/markdown_cheatsheet'),
+ };
+ 
+ /** @param {keyof import('@/mastodon/features/account_edit/modals')} type */

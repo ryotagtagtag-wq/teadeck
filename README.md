@@ -2,7 +2,7 @@
 
 Teadeck is a standalone version of [Mastodon's web interface](https://github.com/mastodon/mastodon) for Mastodon and GoToSocial servers.
 
-The idea is simple: use the Mastodon interface with your existing account, with a few additions for GoToSocial and a look of its own. You get single- and multi-column layouts, tea-inspired themes, and a Markdown button next to the emoji picker when your server supports it. GoToSocial accounts also get a control for who can reply to a post.
+The idea is simple: use the Mastodon interface with your existing account, with a few additions for GoToSocial and a look of its own. You get single- and multi-column layouts, tea-inspired themes, a large composer for longer posts, and a Markdown button next to the emoji picker with a live preview when your server supports it. GoToSocial accounts also get a control for who can reply to a post.
 
 Teadeck is still in active development and has no stable release yet.
 
