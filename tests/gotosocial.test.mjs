@@ -1,24 +1,11 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { after, test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, instance, status, timelineText } from './fixtures.mjs';
 import { mockMastodon, respond, waitUntil } from './mastodon_mock.mjs';
-import { createStaticServer } from './server.mjs';
+import { browser, origin, submitSignIn, useApp } from './harness.mjs';
 
-let server;
-let origin;
-let browser;
-
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await new Promise((resolve) => server?.close(resolve));
-});
+useApp();
 
 // Response shapes as sent by a real GoToSocial 0.22 instance: statuses without
 // Mastodon-only fields, accounts without Mastodon's profile-tab settings.
@@ -65,9 +52,7 @@ test('works against a GoToSocial-shaped API: missing status fields, v1-only noti
   });
   const paths = () => server.requests.map((request) => request.path);
 
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
+  await submitSignIn(page, origin);
   await page.getByText(timelineText).waitFor();
 
   await page.evaluate(() => { history.pushState(null, '', '/notifications'); dispatchEvent(new PopStateEvent('popstate')); });

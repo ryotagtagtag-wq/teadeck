@@ -9,6 +9,7 @@ import { writeOfflineFiles } from '../scripts/offline_manifest.mjs';
 import { account, status, timelineText } from './fixtures.mjs';
 import { mockMastodon } from './mastodon_mock.mjs';
 import { nginxSkipReason, productionConfig, startNginx } from './nginx.mjs';
+import { submitSignIn, useMultiColumnLayout } from './harness.mjs';
 
 // Runs the built client behind the real nginx configuration (CSP, cache headers),
 // and deploys a second, different build while tabs of the first are open.
@@ -102,9 +103,7 @@ async function waitUntil(page, predicate, arg, timeout = 60_000) {
 const cacheNames = (page) => page.evaluate(() => caches.keys());
 
 async function signIn(page, origin) {
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
+  await submitSignIn(page, origin);
   await page.getByText(timelineText).waitFor();
 }
 
@@ -237,7 +236,7 @@ test('a configured logo is served and shown; without one the interface has no lo
 
     await mockInstance(context, server.origin);
     // The multi-column layout, which also has the placeholder column beside the pinned ones.
-    await context.addInitScript(() => localStorage.setItem('teadeck.v1:https://mastodon.test:42:advancedLayout', 'true'));
+    await useMultiColumnLayout(context);
     const page = await context.newPage();
     await signIn(page, server.origin);
     // Put into the page (so it can follow the design), and actually drawn.

@@ -1,11 +1,10 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { before, test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
-import { instance, status, timelineText } from './fixtures.mjs';
+import { status, timelineText } from './fixtures.mjs';
 import { mockMastodon } from './mastodon_mock.mjs';
-import { closeBrowsers, engines, launchBrowser } from './browsers.mjs';
-import { createStaticServer } from './server.mjs';
+import { engines, launchBrowser } from './browsers.mjs';
+import { browser, collectPageErrors, origin, submitSignIn, useApp } from './harness.mjs';
 
 // A post as GoToSocial renders Markdown: headings, rules, footnotes and a fenced code block.
 const content = [
@@ -17,20 +16,7 @@ const content = [
   '<div class="footnotes" role="doc-endnotes"><hr><ol><li id="fn:1"><p>Footnote text</p></li></ol></div>',
 ].join('');
 
-let server;
-let origin;
-let browser;
-
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await closeBrowsers();
-  await new Promise((resolve) => server?.close(resolve));
-});
+useApp();
 
 /** Signs in with the given design and returns the page with the post on screen. */
 async function openPost(design) {
@@ -42,11 +28,8 @@ async function openPost(design) {
   });
 
   const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
+  const pageErrors = collectPageErrors(page);
+  await submitSignIn(page, origin);
   const post = page.locator('.status__content__text').filter({ hasText: timelineText }).first();
   await post.waitFor();
   return { context, page, pageErrors, post };
@@ -119,9 +102,7 @@ for (const engine of engines) {
       '/api/v1/timelines/home': [{ ...status, content: `<p>${timelineText}</p><pre><code class="language-js">${escaped}\n</code></pre>` }],
     });
     const page = await context.newPage();
-    await page.goto(origin);
-    await page.locator('#teadeck-instance').fill('mastodon.test');
-    await page.locator('#teadeck-login button[type=submit]').click();
+    await submitSignIn(page, origin);
     const pre = page.locator('.teadeck-code pre').first();
     await pre.waitFor();
 

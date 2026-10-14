@@ -1,43 +1,20 @@
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, instance, timelineText } from './fixtures.mjs';
-import { mockMastodon, signIn, openAccountMenu, openPreferences, signOut } from './mastodon_mock.mjs';
+import { openAccountMenu, openPreferences, signOut } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
+import { browser, collectPageErrors, origin, signedInPage, useApp } from './harness.mjs';
 
 // The settings page keeps and applies a change the moment it is made: no reload,
 // no losing the page, no jumping scroll position.
-let server;
-let origin;
-let browser;
+useApp();
 
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await new Promise((resolve) => server?.close(resolve));
-});
-
-async function signedInPage({ deployment } = {}) {
-  const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1280, height: 620 } });
-  if (deployment) {
-    // What container/entrypoint.sh writes from TEADECK_THEME / TEADECK_COLOR_SCHEME.
-    await context.route(`${origin}/teadeck.json`, (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(deployment) }));
-  }
-  await mockMastodon(context, origin);
-  const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
-  await signIn(page, origin);
-  return { context, page, pageErrors };
-}
+/** Short enough that the settings page scrolls. */
+const settingsPage = (options) => signedInPage({ viewport: { width: 1280, height: 620 }, ...options });
 
 test('a changed setting takes effect at once, and the page stays where it was', { timeout: 120_000 }, async () => {
-  const { context, page, pageErrors } = await signedInPage();
+  const { context, page, pageErrors } = await settingsPage();
   try {
     let loads = 0;
     page.on('load', () => loads++);
@@ -76,7 +53,7 @@ test('a changed setting takes effect at once, and the page stays where it was', 
 });
 
 test('a setting the interface only reads at startup is kept and offers a reload', { timeout: 120_000 }, async () => {
-  const { context, page, pageErrors } = await signedInPage();
+  const { context, page, pageErrors } = await settingsPage();
   try {
     let loads = 0;
     page.on('load', () => loads++);
@@ -102,7 +79,7 @@ test('a setting the interface only reads at startup is kept and offers a reload'
 });
 
 test('which notifications appear takes effect without a reload', { timeout: 120_000 }, async () => {
-  const { context, page, pageErrors } = await signedInPage();
+  const { context, page, pageErrors } = await settingsPage();
   try {
     let loads = 0;
     page.on('load', () => loads++);
@@ -125,7 +102,7 @@ test('which notifications appear takes effect without a reload', { timeout: 120_
 });
 
 test('the account menu sends server-only pages to the instance and keeps local views in Teadeck', { timeout: 60_000 }, async () => {
-  const { context, page, pageErrors } = await signedInPage();
+  const { context, page, pageErrors } = await settingsPage();
   try {
     await openAccountMenu(page);
     const links = await page.locator('a[href]').filter({ visible: true }).evaluateAll((items) => items.map((item) => ({ text: item.textContent.trim(), href: item.href })));
@@ -149,7 +126,7 @@ test('the account menu sends server-only pages to the instance and keeps local v
   }
 });
 test('the design this deployment starts with applies, and a reader\'s own choice wins over it', { timeout: 120_000 }, async () => {
-  const { context, page, pageErrors } = await signedInPage({ deployment: { theme: 'sencha', colorScheme: 'dark' } });
+  const { context, page, pageErrors } = await settingsPage({ deployment: { theme: 'sencha', colorScheme: 'dark' } });
   try {
     // Nothing chosen yet: the interface starts in the design of this installation.
     assert.equal(await page.evaluate(() => document.documentElement.dataset.teadeckTheme), 'sencha');
@@ -171,7 +148,7 @@ test('the design this deployment starts with applies, and a reader\'s own choice
 });
 
 test('an installation that configured nothing starts in Teadeck\'s own design', { timeout: 120_000 }, async () => {
-  const { context, page } = await signedInPage();
+  const { context, page } = await settingsPage();
   try {
     assert.equal(await page.evaluate(() => document.documentElement.dataset.teadeckTheme), 'assam');
   } finally {
@@ -193,8 +170,7 @@ test('the sign-in page shows the configured logo and follows the design of this 
   const context = await browser.newContext({ locale: 'de-DE' });
   try {
     const page = await context.newPage();
-    const pageErrors = [];
-    page.on('pageerror', (error) => pageErrors.push(error.message));
+    const pageErrors = collectPageErrors(page);
     await page.goto(`${ownOrigin}/login`);
     await page.locator('#teadeck-login').waitFor();
 
@@ -228,7 +204,7 @@ test('the sign-in page shows the configured logo and follows the design of this 
 });
 
 test('after signing out, the sign-in page greets in the design that was last used', { timeout: 120_000 }, async () => {
-  const { context, page } = await signedInPage({ deployment: { theme: 'assam', colorScheme: 'dark' } });
+  const { context, page } = await settingsPage({ deployment: { theme: 'assam', colorScheme: 'dark' } });
   try {
     // Someone who prefers Mastodon's look picks it, then signs out.
     await openPreferences(page);
@@ -258,7 +234,7 @@ test('after signing out, the sign-in page greets in the design that was last use
 });
 
 test('the settings page shows the design that is on screen, not the client\'s own default', { timeout: 120_000 }, async () => {
-  const { context, page } = await signedInPage({ deployment: { theme: 'sencha', colorScheme: 'dark' } });
+  const { context, page } = await settingsPage({ deployment: { theme: 'sencha', colorScheme: 'dark' } });
   try {
     // Nothing chosen yet, so this installation's design is running …
     assert.equal(await page.evaluate(() => document.documentElement.dataset.teadeckTheme), 'sencha');
@@ -273,7 +249,7 @@ test('the settings page shows the design that is on screen, not the client\'s ow
 });
 
 test('a setting changed after reopening the settings keeps the one changed before', { timeout: 120_000 }, async () => {
-  const { context, page, pageErrors } = await signedInPage({ deployment: { theme: 'sencha' } });
+  const { context, page, pageErrors } = await settingsPage({ deployment: { theme: 'sencha' } });
   try {
     await openPreferences(page);
     await page.locator('#teadeck-settings-theme').selectOption('assam');

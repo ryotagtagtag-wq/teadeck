@@ -8,6 +8,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
+import { storageKeys } from '../integration/browser_storage.ts';
 import { designs } from '../integration/themes/index.ts';
 import { account as baseAccount, instance } from '../tests/fixtures.mjs';
 import { mockMastodon, respond } from '../tests/mastodon_mock.mjs';
@@ -73,7 +74,7 @@ const browser = await chromium.launch({ headless: true });
 async function open({ theme = 'assam', scheme = 'dark', advanced = false, width = 1440, height = 900 } = {}) {
   const context = await browser.newContext({ locale: 'en-US', colorScheme: scheme, viewport: { width, height } });
   await context.route(`${origin}/teadeck.json`, (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ theme, colorScheme: scheme }) }));
-  if (advanced) await context.addInitScript(() => localStorage.setItem('teadeck.v1:https://mastodon.test:42:advancedLayout', 'true'));
+  if (advanced) await context.addInitScript((key) => localStorage.setItem(key, 'true'), `${storageKeys.accountPrefix}https://mastodon.test:42:advancedLayout`);
   const notFound = respond(404, { error: 'Not Found' });
   await mockMastodon(context, origin, {
     '/api/v2/instance': server, '/api/v1/accounts/verify_credentials': me, '/api/v1/markers': {},

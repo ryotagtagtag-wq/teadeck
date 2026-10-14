@@ -4,9 +4,10 @@ import { join } from 'node:path';
 import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
-import { status, timelineText } from './fixtures.mjs';
+import { timelineText } from './fixtures.mjs';
 import { mockMastodon, signIn, openPreferences } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
+import { collectPageErrors, useMultiColumnLayout } from './harness.mjs';
 
 // The configured logo is put into the page (not loaded as an image), so a drawing
 // whose colours are CSS variables follows the chosen design.
@@ -22,12 +23,11 @@ async function signedInPage(logo, { advancedLayout = false } = {}) {
   });
   const context = await browser.newContext({ locale: 'de-DE' });
   if (advancedLayout) {
-    await context.addInitScript(() => localStorage.setItem('teadeck.v1:https://mastodon.test:42:advancedLayout', 'true'));
+    await useMultiColumnLayout(context);
   }
   await mockMastodon(context, origin);
   const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const pageErrors = collectPageErrors(page);
   await signIn(page, origin);
   return { context, page, origin, pageErrors, stop: async () => { await context.close(); server.closeAllConnections(); server.close(); } };
 }

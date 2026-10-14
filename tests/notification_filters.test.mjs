@@ -1,11 +1,10 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
-import { account, instance } from './fixtures.mjs';
+import { account } from './fixtures.mjs';
 import { mockMastodon } from './mastodon_mock.mjs';
-import { createStaticServer } from './server.mjs';
 import { withFilterBarDefault } from '../integration/notification_settings.ts';
+import { browser, collectPageErrors, origin, preferenceKey, submitSignIn, useApp, useMultiColumnLayout } from './harness.mjs';
 
 /**
  * The notifications column sorts by kind from the start: upstream hides every
@@ -39,36 +38,21 @@ test('the full bar is switched on once, and every later choice wins', () => {
   assert.deepEqual(merged.notifications.shows, { follow: false });
 });
 
-let server;
-let origin;
-let browser;
-
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await new Promise((resolve) => server?.close(resolve));
-});
+useApp();
 
 async function signedInDeck({ storedSettings } = {}) {
   const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1400, height: 800 } });
-  await context.addInitScript((settings) => {
-    localStorage.setItem('teadeck.v1:https://mastodon.test:42:advancedLayout', 'true');
+  await useMultiColumnLayout(context);
+  await context.addInitScript(({ key, settings }) => {
     if (settings && !sessionStorage.getItem('seeded')) {
-      localStorage.setItem('teadeck.v1:https://mastodon.test:42:settings', JSON.stringify(settings));
+      localStorage.setItem(key, JSON.stringify(settings));
       sessionStorage.setItem('seeded', '1');
     }
-  }, storedSettings ?? null);
+  }, { key: preferenceKey('settings'), settings: storedSettings ?? null });
   await mockMastodon(context, origin);
   const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
+  const pageErrors = collectPageErrors(page);
+  await submitSignIn(page, origin);
   const filters = page.locator('.notification__filter-bar button');
   await filters.first().waitFor({ timeout: 30_000 });
   const titles = () => filters.evaluateAll((buttons) => buttons.map((button) => button.title || button.textContent.trim()));

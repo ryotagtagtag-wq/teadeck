@@ -1,36 +1,15 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { designs } from '../integration/themes/index.ts';
 import { timelineText } from './fixtures.mjs';
-import { mockMastodon, signIn, openPreferences } from './mastodon_mock.mjs';
-import { createStaticServer } from './server.mjs';
+import { openPreferences } from './mastodon_mock.mjs';
+import { origin, signedInPage, useApp } from './harness.mjs';
 
 // Teadeck's own designs (Assam, Sencha, Hibiscus) are a layer of CSS variables
 // over Mastodon's theme, chosen on the settings page; Hibiscus restyles a few
 // components too.
-let server;
-let origin;
-let browser;
-
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await new Promise((resolve) => server?.close(resolve));
-});
-
-async function signedInPage() {
-  const context = await browser.newContext({ locale: 'de-DE' });
-  await mockMastodon(context, origin);
-  const page = await context.newPage();
-  await signIn(page, origin);
-  return { context, page };
-}
+useApp();
 
 /** Chooses design and colour scheme on the settings page and returns what the interface looks like afterwards. */
 async function choose(page, { theme, colorScheme }) {

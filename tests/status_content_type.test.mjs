@@ -1,15 +1,14 @@
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, instance, status } from './fixtures.mjs';
 import { mockMastodon, waitUntil } from './mastodon_mock.mjs';
-import { createStaticServer } from './server.mjs';
 import { supportsStatusFormat } from '../integration/server_features.ts';
 import {
   accountStatusFormat, effectiveStatusFormat, statusContentType, statusFormatChoice,
   statusFormatFromStored, statusFormatOfSource,
 } from '../integration/status_format.ts';
+import { browser, collectPageErrors, origin, preferenceKey, submitSignIn, useApp } from './harness.mjs';
 
 /**
  * GoToSocial parses a post as plain text or as Markdown, with a default per
@@ -65,26 +64,13 @@ test('only an override is sent; the account setting sends nothing', () => {
   assert.equal(statusFormatOfSource(undefined), 'default');
 });
 
-let server;
-let origin;
-let browser;
-
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await new Promise((resolve) => server?.close(resolve));
-});
+useApp();
 
 /** A signed-in page against an instance of the given shape, recording what it posts. */
 async function signedInPage({ instance: instanceBody, account: accountBody, statusSource, savedFormat }) {
   const context = await browser.newContext({ locale: 'de-DE' });
   const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const pageErrors = collectPageErrors(page);
   const posted = [];
 
   const ownStatus = { ...status, account: accountBody };
@@ -98,9 +84,7 @@ async function signedInPage({ instance: instanceBody, account: accountBody, stat
     [`PUT /api/v1/statuses/${ownStatus.id}`]: ({ body }) => { posted.push(body); return ownStatus; },
   });
 
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
+  await submitSignIn(page, origin);
   // The redesigned composer opens from its button and closes again after posting.
   const textarea = page.getByPlaceholder('Was möchtest du mitteilen?');
   const openComposer = async () => {
@@ -110,9 +94,9 @@ async function signedInPage({ instance: instanceBody, account: accountBody, stat
   };
   await openComposer();
   if (savedFormat) {
-    await page.evaluate(({ accountId, format }) => {
-      localStorage.setItem(`teadeck.v1:https://mastodon.test:${accountId}:statusFormat.v1`, JSON.stringify(format));
-    }, { accountId: accountBody.id, format: savedFormat });
+    await page.evaluate(({ key, format }) => {
+      localStorage.setItem(key, JSON.stringify(format));
+    }, { key: preferenceKey('statusFormat.v1', accountBody.id), format: savedFormat });
     await page.reload();
     await openComposer();
   }

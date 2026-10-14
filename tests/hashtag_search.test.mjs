@@ -1,30 +1,16 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { after, test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { status, timelineText } from './fixtures.mjs';
 import { composerText, mockMastodon, openComposer, respond, waitUntil } from './mastodon_mock.mjs';
-import { createStaticServer } from './server.mjs';
+import { browser, collectPageErrors, origin, submitSignIn, useApp } from './harness.mjs';
 
-let server;
-let origin;
-let browser;
-
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await new Promise((resolve) => server?.close(resolve));
-});
+useApp();
 
 test('posts for a "#tag" search come from the hashtag timeline and page by max_id', { timeout: 60_000 }, async () => {
   const context = await browser.newContext({ locale: 'de-DE' });
   const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const pageErrors = collectPageErrors(page);
   const tagRequests = [];
   // 25 posts, newest first (ids 1025 … 1001).
   const tagPosts = Array.from({ length: 25 }, (_, i) => {
@@ -44,9 +30,7 @@ test('posts for a "#tag" search come from the hashtag timeline and page by max_i
     },
   });
 
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
+  await submitSignIn(page, origin);
   await page.getByText(timelineText).waitFor();
 
   await page.evaluate(() => { history.pushState(null, '', '/search?q=%23teadecktag&type=statuses'); dispatchEvent(new PopStateEvent('popstate')); });
@@ -90,9 +74,7 @@ test('a link pasted into the compose form is looked up without an error', { time
     },
   });
 
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
+  await submitSignIn(page, origin);
   await page.getByText(timelineText).waitFor();
 
   // Upstream's compose form hands the search a URL object, not a string.

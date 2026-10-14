@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, instance, postedStatus } from './fixtures.mjs';
 import { mockMastodon, signIn, waitUntil } from './mastodon_mock.mjs';
-import { closeBrowsers, engines, launchBrowser } from './browsers.mjs';
-import { createStaticServer } from './server.mjs';
+import { engines } from './browsers.mjs';
+import { browser, collectPageErrors, origin, signedInPage, useApp, useMultiColumnLayout } from './harness.mjs';
 
 // GoToSocial with Markdown, for an account that writes Markdown.
 const gtsInstance = {
@@ -17,35 +17,21 @@ const gtsInstance = {
 const markdownAccount = { ...account, source: { ...account.source, status_content_type: 'text/markdown' } };
 const text = '# Teekanne\n\nEin **längerer** Beitrag.\n\n```js\nconst tea = "Assam";\n```';
 
-let server;
-let origin;
-let browser;
+useApp();
 
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await closeBrowsers();
-  await new Promise((resolve) => server?.close(resolve));
-});
-
-async function signedInPage({ instanceFixture = gtsInstance, accountFixture = markdownAccount, engine = 'chromium' } = {}) {
-  const context = await (engine === 'chromium' ? browser : await launchBrowser(engine)).newContext({ locale: 'de-DE', viewport: { width: 1400, height: 900 } });
+async function composerPage({ instanceFixture = gtsInstance, accountFixture = markdownAccount, engine = 'chromium' } = {}) {
   const posted = [];
-  await mockMastodon(context, origin, {
-    '/api/v2/instance': instanceFixture,
-    '/api/v1/accounts/verify_credentials': accountFixture,
-    '/api/v1/markers': {},
-    'POST /api/v1/statuses': ({ body }) => { posted.push(body); return postedStatus(body); },
+  const signedIn = await signedInPage({
+    engine,
+    viewport: { width: 1400, height: 900 },
+    routes: {
+      '/api/v2/instance': instanceFixture,
+      '/api/v1/accounts/verify_credentials': accountFixture,
+      '/api/v1/markers': {},
+      'POST /api/v1/statuses': ({ body }) => { posted.push(body); return postedStatus(body); },
+    },
   });
-  const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
-  await signIn(page, origin);
-  return { context, page, posted, pageErrors };
+  return { ...signedIn, posted };
 }
 
 const form = (page) => page.locator('form[role="dialog"]');
@@ -53,7 +39,7 @@ const textarea = (page) => form(page).locator('textarea').first();
 
 for (const engine of engines) {
   test(`the large composer opens from the right part of "New post", previews Markdown and switches size without losing the post (${engine})`, { timeout: 90_000 }, async () => {
-    const { context, page, posted, pageErrors } = await signedInPage({ engine });
+    const { context, page, posted, pageErrors } = await composerPage({ engine });
     try {
       await page.getByRole('button', { name: 'Neuer Beitrag im großen Eingabefeld' }).click();
       await textarea(page).fill(text);
@@ -103,7 +89,7 @@ for (const engine of engines) {
 }
 
 test('the left part of "New post" opens the regular composer, and without Markdown there is no preview', { timeout: 60_000 }, async () => {
-  const { context, page, pageErrors } = await signedInPage({ instanceFixture: instance, accountFixture: account });
+  const { context, page, pageErrors } = await composerPage({ instanceFixture: instance, accountFixture: account });
   try {
     await page.locator('.teadeck-new-post').getByRole('button', { name: 'Neuer Beitrag', exact: true }).click();
     await textarea(page).fill(text);
@@ -121,11 +107,10 @@ test('the left part of "New post" opens the regular composer, and without Markdo
 
 test('in the multi-column layout the large composer lies above the columns, and a click beside it makes it the regular one', { timeout: 60_000 }, async () => {
   const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1400, height: 900 } });
-  await context.addInitScript(() => localStorage.setItem('teadeck.v1:https://mastodon.test:42:advancedLayout', 'true'));
+  await useMultiColumnLayout(context);
   await mockMastodon(context, origin, { '/api/v2/instance': gtsInstance, '/api/v1/accounts/verify_credentials': markdownAccount, '/api/v1/markers': {} });
   const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const pageErrors = collectPageErrors(page);
   await signIn(page, origin);
 
   await page.getByRole('button', { name: 'Neuer Beitrag im großen Eingabefeld' }).click();
@@ -148,11 +133,10 @@ test('in the multi-column layout the large composer lies above the columns, and 
 
 test('in the multi-column layout, /deck/publish shows the redesigned composer, not the legacy form', { timeout: 60_000 }, async () => {
   const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1400, height: 900 } });
-  await context.addInitScript(() => localStorage.setItem('teadeck.v1:https://mastodon.test:42:advancedLayout', 'true'));
+  await useMultiColumnLayout(context);
   await mockMastodon(context, origin, { '/api/v2/instance': gtsInstance, '/api/v1/accounts/verify_credentials': markdownAccount, '/api/v1/markers': {} });
   const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const pageErrors = collectPageErrors(page);
   await signIn(page, origin);
 
   await page.evaluate(() => { history.pushState(null, '', '/deck/publish'); dispatchEvent(new PopStateEvent('popstate')); });

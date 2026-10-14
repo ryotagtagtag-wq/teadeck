@@ -1,24 +1,11 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { after, test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { instance, postedStatus, timelineText } from './fixtures.mjs';
 import { composerText, mockMastodon, openComposer, respond, waitUntil } from './mastodon_mock.mjs';
-import { createStaticServer } from './server.mjs';
+import { browser, origin, submitSignIn, useApp } from './harness.mjs';
 
-let server;
-let origin;
-let browser;
-
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await new Promise((resolve) => server?.close(resolve));
-});
+useApp();
 
 // GoToSocial account defaults: here boosts of followers-only posts are open to followers.
 const interactionDefaults = {
@@ -59,9 +46,7 @@ test('the GoToSocial reply-audience picker stays hidden on a plain Mastodon inst
 
   await mockMastodonRest(context, { instanceFixture: instance, onStatusPosted: (status) => { posted = status; } });
 
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
+  await submitSignIn(page, origin);
   await page.getByText(timelineText).waitFor();
   await openComposer(page);
 
@@ -83,9 +68,7 @@ test('on a detected GoToSocial instance, restricting replies sends the matching 
 
   await mockMastodonRest(context, { instanceFixture: gotosocialInstance, onStatusPosted: (status) => { posted = status; } });
 
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
+  await submitSignIn(page, origin);
   await page.getByText(timelineText).waitFor();
 
   await openComposer(page);
@@ -129,9 +112,7 @@ test('without the account defaults a reply-restricted post is held back with a m
 
   await mockMastodonRest(context, { instanceFixture: gotosocialInstance, failDefaults: true, onStatusPosted: (status) => { posted = status; } });
 
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
+  await submitSignIn(page, origin);
   await page.getByText(timelineText).waitFor();
 
   await openComposer(page);

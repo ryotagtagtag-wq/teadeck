@@ -1,30 +1,16 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, instance, timelineText } from './fixtures.mjs';
 import { mockMastodon, respond, waitUntil } from './mastodon_mock.mjs';
-import { createStaticServer } from './server.mjs';
+import { browser, collectPageErrors, origin, submitSignIn, useApp } from './harness.mjs';
 
-let server;
-let origin;
-let browser;
-
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await new Promise((resolve) => server?.close(resolve));
-});
+useApp();
 
 test('"Profil bearbeiten" works on GoToSocial through verify_credentials and update_credentials', { timeout: 90_000 }, async () => {
   const context = await browser.newContext({ locale: 'de-DE' });
   const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const pageErrors = collectPageErrors(page);
 
   // A GoToSocial-shaped account that remembers updates. No /api/v1/profile on this server.
   const {
@@ -60,9 +46,7 @@ test('"Profil bearbeiten" works on GoToSocial through verify_credentials and upd
   const profileRequests = () => server.requests.filter((request) => request.path.startsWith('/api/v1/profile')).map((request) => `${request.method} ${request.path}`);
   const waitFor = (predicate, what) => waitUntil(predicate, { message: what });
 
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
+  await submitSignIn(page, origin);
   await page.getByText(timelineText).waitFor();
 
   await page.evaluate(() => { history.pushState(null, '', '/profile/edit'); dispatchEvent(new PopStateEvent('popstate')); });

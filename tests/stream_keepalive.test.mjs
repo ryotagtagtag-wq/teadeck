@@ -1,11 +1,10 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { after, test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { keepStreamingAlive, reconnectDelay } from '../integration/stream_keepalive.ts';
 import { instance, status, timelineText } from './fixtures.mjs';
 import { mockMastodon, waitUntil } from './mastodon_mock.mjs';
-import { createStaticServer } from './server.mjs';
+import { browser, origin, submitSignIn, useApp } from './harness.mjs';
 
 test('reconnect delays grow exponentially from 1 s but never exceed 30 s', () => {
   assert.equal(reconnectDelay(1, 0.999), 1_998);
@@ -70,19 +69,7 @@ test('reconnects when the network comes back, but never just because the tab was
   assert.equal(closed.length, 1);
 });
 
-let server;
-let origin;
-let browser;
-
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await new Promise((resolve) => server?.close(resolve));
-});
+useApp();
 
 test('after the streaming connection drops or the network returns, Teadeck reconnects, resubscribes and catches up', { timeout: 90_000 }, async () => {
   const context = await browser.newContext();
@@ -105,9 +92,7 @@ test('after the streaming connection drops or the network returns, Teadeck recon
   });
   const waitFor = (predicate, what) => waitUntil(predicate, { timeout: 15_000, message: what });
 
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
+  await submitSignIn(page, origin);
   await page.getByText(timelineText).waitFor();
   await waitFor(() => subscriptions.some((s) => s.socket === 1 && s.stream === 'user'), 'subscribed on the first connection');
 

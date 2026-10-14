@@ -1,24 +1,11 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { after, test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { instance } from './fixtures.mjs';
 import { mockMastodon, signIn, composerText, openComposer, publishButton } from './mastodon_mock.mjs';
-import { createStaticServer } from './server.mjs';
+import { browser, origin, useApp } from './harness.mjs';
 
-let server;
-let origin;
-let browser;
-
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await new Promise((resolve) => server?.close(resolve));
-});
+useApp();
 
 const customEmoji = {
   shortcode: 'teadeck_test', static_url: 'https://mastodon.test/emoji/test.png',

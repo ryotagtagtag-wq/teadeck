@@ -1,23 +1,10 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { mockMastodon, signIn } from './mastodon_mock.mjs';
-import { createStaticServer } from './server.mjs';
+import { browser, collectPageErrors, origin, useApp } from './harness.mjs';
 
-let server;
-let origin;
-let browser;
-
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await new Promise((resolve) => server?.close(resolve));
-});
+useApp();
 
 test('creating a feed (list) sends it to the server and opens its members, without reloading the page', { timeout: 60_000 }, async () => {
   const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1400, height: 900 } });
@@ -33,8 +20,7 @@ test('creating a feed (list) sends it to the server and opens its members, witho
     '/api/v1/lists/7': { id: '7', title: 'Teeliste', exclusive: false, replies_policy: 'list' },
   });
   const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const pageErrors = collectPageErrors(page);
   await signIn(page, origin);
 
   let loads = 0;

@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { after, test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import {
   defaultFrontendSettings,
   frontendSettingsMeta,
@@ -12,7 +11,7 @@ import { defaultNotificationShows, readNotificationShows } from '../integration/
 import { detectLocale, isRtlLocale, resolveLocale } from '../integration/ui_locale.ts';
 import { account, instance, timelineText } from './fixtures.mjs';
 import { mockMastodon, openPreferences } from './mastodon_mock.mjs';
-import { createStaticServer } from './server.mjs';
+import { browser, collectPageErrors, origin, useApp } from './harness.mjs';
 
 test('defaults follow the account reading preferences and the system motion setting', () => {
   const defaults = defaultFrontendSettings({ 'reading:expand:media': 'hide_all', 'reading:expand:spoilers': true }, true);
@@ -84,19 +83,7 @@ test('notification shows default to upstream\'s own local settings', () => {
   });
 });
 
-let server;
-let origin;
-let browser;
-
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await new Promise((resolve) => server?.close(resolve));
-});
+useApp();
 
 // The longest browser test here: it signs in, switches layout and reloads twice.
 // 120 s, because the whole suite runs its files concurrently and this one is the
@@ -104,8 +91,7 @@ after(async () => {
 test('settings buttons open a local frontend settings page; the multi-column layout shows home once', { timeout: 120_000 }, async () => {
   const context = await browser.newContext({ locale: 'de-DE' });
   const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const pageErrors = collectPageErrors(page);
 
   await mockMastodon(context, origin);
 

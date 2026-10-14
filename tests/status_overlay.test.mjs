@@ -1,30 +1,16 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { before, test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, status, timelineText } from './fixtures.mjs';
 import { mockMastodon, openPreferences, signIn } from './mastodon_mock.mjs';
-import { closeBrowsers, engines, launchBrowser } from './browsers.mjs';
-import { createStaticServer } from './server.mjs';
+import { engines, launchBrowser } from './browsers.mjs';
+import { browser, collectPageErrors, origin, useApp, useMultiColumnLayout } from './harness.mjs';
 
 const replyText = 'A reply shown in the thread 5c1e';
 const longParagraphs = Array.from({ length: 60 }, (_, index) => `<p>Line ${index} of a long reply</p>`).join('');
 const reply = { ...status, id: '101', in_reply_to_id: status.id, in_reply_to_account_id: account.id, content: `<p>${replyText}</p>${longParagraphs}` };
 
-let server;
-let origin;
-let browser;
-
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await closeBrowsers();
-  await new Promise((resolve) => server?.close(resolve));
-});
+useApp();
 
 test('a post opens with its thread in an overlay, from its own button or, when chosen, from its time', { timeout: 120_000 }, async () => {
   const context = await browser.newContext({ locale: 'en-US', viewport: { width: 1280, height: 900 } });
@@ -36,8 +22,7 @@ test('a post opens with its thread in an overlay, from its own button or, when c
   });
 
   const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const pageErrors = collectPageErrors(page);
   await signIn(page, origin);
   const home = new URL(page.url()).pathname;
   const post = page.locator('article').filter({ hasText: timelineText }).first();
@@ -103,7 +88,7 @@ for (const engine of engines) {
     // Upstream's multi-column rule for columns (fixed width, no growing) once left the
     // overlay's post list without any height.
     const context = await browser.newContext({ locale: 'en-US', viewport: { width: 1600, height: 450 } });
-    await context.addInitScript(() => localStorage.setItem('teadeck.v1:https://mastodon.test:42:advancedLayout', 'true'));
+    await useMultiColumnLayout(context);
     await mockMastodon(context, origin, {
       [`/api/v1/statuses/${status.id}`]: status,
       [`/api/v1/statuses/${status.id}/context`]: { ancestors: [], descendants: [reply] },

@@ -1,41 +1,20 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { instance, timelineText } from './fixtures.mjs';
-import { mockMastodon, openAccountMenu, signIn, signOut } from './mastodon_mock.mjs';
-import { createStaticServer } from './server.mjs';
+import { openAccountMenu, signOut } from './mastodon_mock.mjs';
+import { origin, signedInPage, useApp } from './harness.mjs';
 
-let server;
-let origin;
-let browser;
+useApp();
 
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await new Promise((resolve) => server?.close(resolve));
-});
-
-async function signedInPage({ instanceFixture, advancedLayout }) {
-  const context = await browser.newContext({ locale: 'de-DE' });
-  const pageErrors = [];
-  await mockMastodon(context, origin, {
+const pageWithPolicy = ({ instanceFixture, advancedLayout }) => signedInPage({
+  layout: advancedLayout ? 'multi' : 'single',
+  routes: {
     '/api/v2/instance': instanceFixture,
     '/api/v1/instance/privacy_policy': { updated_at: '2026-01-01T00:00:00.000Z', content: '<p>Teadeck test privacy policy 51d0</p>' },
     '/api/v1/instance/extended_description': { updated_at: '2026-01-01T00:00:00.000Z', content: '' },
-  });
-  if (advancedLayout) {
-    await context.addInitScript(() => localStorage.setItem('teadeck.v1:https://mastodon.test:42:advancedLayout', 'true'));
-  }
-  const page = await context.newPage();
-  page.on('pageerror', (error) => pageErrors.push(error.message));
-  await signIn(page, origin);
-  return { context, page, pageErrors };
-}
+  },
+});
 
 /** The account menu: Teadeck's settings, pages of the server on the server, and sign-out. */
 async function assertAccountMenu(page) {
@@ -60,7 +39,7 @@ test('advanced layout: About and the privacy policy open in the column, not in a
     rules: [{ id: '1', text: 'Teadeck test rule 8e2c', hint: '', translations: {} }],
     configuration: { ...instance.configuration, urls: { ...instance.configuration.urls, privacy_policy: 'https://mastodon.test/privacy-policy' } },
   };
-  const { context, page, pageErrors } = await signedInPage({ instanceFixture, advancedLayout: true });
+  const { context, page, pageErrors } = await pageWithPolicy({ instanceFixture, advancedLayout: true });
   try {
     await page.waitForURL(/\/deck\//);
     await assertAccountMenu(page);
@@ -94,7 +73,7 @@ test('advanced layout: About and the privacy policy open in the column, not in a
 test('single column: no privacy policy link where the instance has none; sign-out in the account menu', { timeout: 60_000 }, async () => {
   // Like GoToSocial: configuration.urls without privacy_policy / terms_of_service.
   const instanceFixture = { ...instance, configuration: { ...instance.configuration, urls: { streaming: '' } } };
-  const { context, page, pageErrors } = await signedInPage({ instanceFixture, advancedLayout: false });
+  const { context, page, pageErrors } = await pageWithPolicy({ instanceFixture, advancedLayout: false });
   try {
     await assertAccountMenu(page);
     await page.getByRole('link', { name: /^Über/ }).first().waitFor();

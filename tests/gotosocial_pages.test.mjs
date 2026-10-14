@@ -1,10 +1,9 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { instance } from './fixtures.mjs';
 import { mockMastodon, openAccountMenu, signIn } from './mastodon_mock.mjs';
-import { createStaticServer } from './server.mjs';
+import { browser, collectPageErrors, origin, useApp } from './harness.mjs';
 
 // GoToSocial: terms linked from its instance, no pages API, no collections.
 const gtsInstance = {
@@ -16,19 +15,7 @@ const gtsInstance = {
 const gtsInstanceV1 = { description: '<p>Teadeck test about text 4b1e</p>', terms: '<p>Teadeck test terms 7d2a</p>' };
 const notFound = ({ route, cors }) => route.fulfill({ status: 404, contentType: 'application/json', headers: cors, body: '{"error":"Not Found"}' });
 
-let server;
-let origin;
-let browser;
-
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await new Promise((resolve) => server?.close(resolve));
-});
+useApp();
 
 test('on GoToSocial, About and the terms show the server\'s texts without an error, and collections are not offered', { timeout: 90_000 }, async () => {
   const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1400, height: 900 } });
@@ -43,8 +30,7 @@ test('on GoToSocial, About and the terms show the server\'s texts without an err
     '/api/v1/accounts/42/collections': notFound,
   });
   const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const pageErrors = collectPageErrors(page);
   await signIn(page, origin);
 
   await page.evaluate(() => { history.pushState(null, '', '/about'); dispatchEvent(new PopStateEvent('popstate')); });

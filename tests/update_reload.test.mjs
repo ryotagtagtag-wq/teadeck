@@ -1,11 +1,10 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { after, test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { shouldReloadForUpdate } from '../integration/update_reload.ts';
 import { account, status, timelineText } from './fixtures.mjs';
 import { mockMastodon } from './mastodon_mock.mjs';
-import { createStaticServer } from './server.mjs';
+import { browser, origin, submitSignIn, useApp } from './harness.mjs';
 
 test('reloads at most once per 30 seconds', () => {
   assert.equal(shouldReloadForUpdate(0, Date.now()), true);
@@ -13,19 +12,7 @@ test('reloads at most once per 30 seconds', () => {
   assert.equal(shouldReloadForUpdate(1_000, 31_000), true);
 });
 
-let server;
-let origin;
-let browser;
-
-before(async () => {
-  ({ server, origin } = await createStaticServer());
-  browser = await chromium.launch({ headless: true });
-});
-
-after(async () => {
-  await browser?.close();
-  await new Promise((resolve) => server?.close(resolve));
-});
+useApp();
 
 test('a lazily loaded view missing after a redeploy reloads the page instead of failing', { timeout: 60_000 }, async () => {
   // The last resort when a chunk is nowhere, not even in the offline cache (which would otherwise
@@ -38,9 +25,7 @@ test('a lazily loaded view missing after a redeploy reloads the page instead of 
     [`/api/v1/accounts/${account.id}`]: account,
   });
 
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
+  await submitSignIn(page, origin);
   await page.getByText(timelineText).waitFor();
 
   // Like nginx after a redeploy: the old chunk is gone, the server answers with an HTML 404 page.

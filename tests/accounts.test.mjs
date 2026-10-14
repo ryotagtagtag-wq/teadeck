@@ -5,6 +5,7 @@ import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, timelineText } from './fixtures.mjs';
 import { authorizeWith, mockMastodon, respond, signOut } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
+import { collectPageErrors } from './harness.mjs';
 
 let staticServer;
 let origin;
@@ -125,8 +126,7 @@ test('a server that fails while starting leaves the account signed in and offers
   const context = await browser.newContext({ locale: 'en-US' });
   const server = await mockServer(context);
   const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const pageErrors = collectPageErrors(page);
   await signIn(page);
   const path = new URL(page.url()).pathname;
 

@@ -73,12 +73,17 @@ export async function waitUntil(check, { timeout = 5_000, message = 'condition n
   }
 }
 
-/** Signs in to mastodon.test and waits for the home timeline. */
-export async function signIn(page, origin, { remember = false } = {}) {
+/** Fills in the sign-in form for mastodon.test and sends it, without waiting for what follows. */
+export async function submitSignIn(page, origin, { remember = false } = {}) {
   await page.goto(origin);
   await page.locator('#teadeck-instance').fill('mastodon.test');
   if (remember) await page.locator('#teadeck-remember').check();
   await page.locator('#teadeck-login button[type=submit]').click();
+}
+
+/** Signs in to mastodon.test and waits for the home timeline. */
+export async function signIn(page, origin, options) {
+  await submitSignIn(page, origin, options);
   await page.getByText(timelineText).first().waitFor();
 }
 

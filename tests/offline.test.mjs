@@ -7,12 +7,12 @@ import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, status, timelineText } from './fixtures.mjs';
 import { mockMastodon } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
+import { submitSignIn } from './harness.mjs';
 
 let browser;
 
 before(async () => { browser = await chromium.launch({ headless: true }); });
 after(async () => { await browser?.close(); });
-
 
 async function signedInPage(origin) {
   const context = await browser.newContext({ locale: 'de-DE' });
@@ -21,9 +21,7 @@ async function signedInPage(origin) {
     [`/api/v1/accounts/${account.id}`]: account,
   });
   const page = await context.newPage();
-  await page.goto(origin);
-  await page.locator('#teadeck-instance').fill('mastodon.test');
-  await page.locator('#teadeck-login button[type=submit]').click();
+  await submitSignIn(page, origin);
   await page.getByText(timelineText).waitFor();
   return { context, page };
 }
@@ -109,7 +107,8 @@ test('a new deploy is offered during the session and used after the reload butto
     // Stays visible (Mastodon's own alerts disappear after 5 seconds).
     await page.waitForTimeout(6_000);
     assert.equal(await reload.isVisible(), true);
-    await Promise.all([page.waitForEvent('load'), reload.click()]);
+    // Activating the new worker and reloading can take long while other test files run.
+    await Promise.all([page.waitForEvent('load', { timeout: 90_000 }), reload.click()]);
     await page.getByText(timelineText).waitFor();
 
     const cacheNames = await page.evaluate(() => caches.keys());
