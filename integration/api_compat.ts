@@ -5,14 +5,7 @@
  */
 
 interface AccountLike { id: string }
-interface StatusLike {
-  id: string;
-  account: AccountLike;
-  content?: string;
-  spoiler_text?: string;
-  tagged_collections?: unknown[];
-  quotes_count?: number;
-}
+interface StatusLike { id: string; account: AccountLike; tagged_collections?: unknown[]; quotes_count?: number }
 interface NotificationLike {
   id: string;
   type: string;
@@ -98,46 +91,7 @@ export function credentialsUpdateFromProfileParams(params: Record<string, unknow
 export function applyStatusDefaults<T extends StatusLike>(status: T): T {
   status.tagged_collections ??= [];
   status.quotes_count ??= 0;
-  unfoldRepeatedSummary(status);
   return status;
-}
-
-const entities: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
-
-/** Text of server HTML or plain text, for comparing: no tags, single spaces. */
-function comparableText(html: string) {
-  return html
-    .replace(/<(?:br|\/(?:p|li|h\d|blockquote|div|pre))\b[^>]*>/gi, ' ')
-    .replace(/<[^>]*>/g, '')
-    .replace(/&(#x[\da-f]+|#\d+|[a-z]+);/gi, (entity, name: string) => {
-      if (name.startsWith('#')) {
-        const code = name[1] === 'x' || name[1] === 'X' ? parseInt(name.slice(2), 16) : parseInt(name.slice(1), 10);
-        return Number.isNaN(code) ? entity : String.fromCodePoint(code);
-      }
-      return entities[name.toLowerCase()] ?? entity;
-    })
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-const escapeHtml = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-/**
- * GoToSocial makes a federated object's `summary` its content warning, also
- * for events and articles, where Mastodon shows it as part of the post. Gancio
- * puts place, time and the whole description there. A warning that repeats
- * the post is none: drop it, keeping what it adds (place and time) above the text.
- */
-function unfoldRepeatedSummary(status: StatusLike) {
-  if (!status.spoiler_text || !status.content) return;
-  const content = comparableText(status.content);
-  if (content.length < 20) return;
-  const summary = comparableText(status.spoiler_text);
-  const start = summary.indexOf(content.slice(0, 80));
-  if (start < 0) return;
-  const extra = summary.slice(0, start).trim();
-  status.spoiler_text = '';
-  if (extra) status.content = `<p>${escapeHtml(extra)}</p>${status.content}`;
 }
 
 interface TagHistoryDay { accounts?: unknown; uses?: unknown }

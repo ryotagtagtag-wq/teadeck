@@ -22,34 +22,6 @@ test('fills status fields GoToSocial omits, without overwriting ones the server 
   assert.deepEqual(applyStatusDefaults({ ...mastodonStatus }), mastodonStatus);
 });
 
-// A Gancio event as GoToSocial serves it: `summary` (place, time and the
-// whole description) became the content warning.
-const eventContent = '<p>Nach dem <a href="http://DI.day" target="_blank">DI.day</a> Fediverse Punk Workshop im Februar, legen wir nach:</p><p>Dieser Workshop richtet sich an Anfänger*innen &amp; Fortgeschrittene.</p>';
-const eventSummaryHtml = `<p>Trxxxter, Sunday, November 1 at 03:00 PM GMT+1</p>${eventContent}`;
-const eventSummaryPlain = 'Trxxxter, Sunday, November 1 at 03:00 PM GMT+1\n\nNach dem DI.day Fediverse Punk Workshop im Februar, legen wir nach:\n\nDieser Workshop richtet sich an Anfänger*innen & Fortgeschrittene.';
-
-test('a content warning that repeats the post is dropped, keeping what it adds above the text', () => {
-  for (const spoiler_text of [eventSummaryPlain, eventSummaryHtml]) {
-    const status = applyStatusDefaults({ id: '3', account: alice, content: eventContent, spoiler_text });
-    assert.equal(status.spoiler_text, '');
-    assert.equal(status.content, `<p>Trxxxter, Sunday, November 1 at 03:00 PM GMT+1</p>${eventContent}`);
-  }
-  // Nothing added: the post stays as it is.
-  const same = applyStatusDefaults({ id: '4', account: alice, content: eventContent, spoiler_text: eventSummaryPlain.split('\n\n').slice(1).join('\n\n') });
-  assert.equal(same.spoiler_text, '');
-  assert.equal(same.content, eventContent);
-  // Text in the warning is escaped, not markup.
-  const tagged = applyStatusDefaults({ id: '5', account: alice, content: eventContent, spoiler_text: `1 < 2 & co\n\n${eventSummaryPlain}` });
-  assert.ok(tagged.content.startsWith('<p>1 &lt; 2 &amp; co Trxxxter'), tagged.content);
-});
-
-test('real content warnings stay, also over short posts', () => {
-  const warned = { id: '6', account: alice, content: eventContent, spoiler_text: 'Spoiler: workshop details' };
-  assert.deepEqual(applyStatusDefaults({ ...warned }), { ...warned, tagged_collections: [], quotes_count: 0 });
-  const short = { id: '7', account: alice, content: '<p>yes</p>', spoiler_text: 'yes' };
-  assert.equal(applyStatusDefaults({ ...short }).spoiler_text, 'yes');
-});
-
 test('streamed notifications without a group key stay ungrouped instead of all sharing `undefined`', () => {
   assert.equal(applyNotificationDefaults({ id: 'n1', type: 'favourite', created_at: '', account: alice }).group_key, 'ungrouped-n1');
   assert.equal(applyNotificationDefaults({ id: 'n2', type: 'favourite', created_at: '', account: alice, group_key: 'grouped-7' }).group_key, 'grouped-7');
