@@ -9,9 +9,9 @@ import { XIcon } from '@phosphor-icons/react';
 
 import { IconButton } from '@/mastodon/components/button/redesign';
 
-import { MarkdownView } from './large_composer';
-import type { SettingsStringKey, UiTextLocale } from './settings_strings';
-import { currentUiTextLocale, t } from './settings_strings';
+import { MarkdownView } from './large_composer.tsx';
+import type { SettingsStringKey, UiTextLocale } from './settings_strings.ts';
+import { currentUiTextLocale, t } from './settings_strings.ts';
 
 const examples: Record<UiTextLocale, [SettingsStringKey, string][]> = {
   de: [

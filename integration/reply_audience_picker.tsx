@@ -2,11 +2,11 @@ import { useMemo } from 'react';
 
 import { useAppSelector } from '@/mastodon/store';
 
-import type { ReplyAudience } from './gotosocial';
-import { effectiveReplyAudience, isReplyAudienceFeasible, replyAudiences } from './gotosocial';
-import { saveReplyAudience } from './reply_audience';
-import type { UiTextLocale } from './settings_strings';
-import { currentUiTextLocale } from './settings_strings';
+import type { ReplyAudience } from './gotosocial.ts';
+import { effectiveReplyAudience, isReplyAudienceFeasible, replyAudiences } from './gotosocial.ts';
+import { saveReplyAudience } from './reply_audience.ts';
+import type { UiTextLocale } from './settings_strings.ts';
+import { currentUiTextLocale } from './settings_strings.ts';
 
 // GoToSocial always lets mentioned accounts reply, whatever the policy says.
 const replyAudienceLabels: Record<UiTextLocale, Record<ReplyAudience, string>> = {

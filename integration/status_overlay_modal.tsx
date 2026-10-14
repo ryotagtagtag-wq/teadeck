@@ -12,8 +12,8 @@ import { IconButton } from '@/mastodon/components/icon_button';
 import { StatusPage } from '@/mastodon/features/status/redesign';
 import { useAppSelector } from '@/mastodon/store';
 
-import { currentUiTextLocale, t } from './settings_strings';
-import { registerStatusOverlay } from './status_overlay';
+import { currentUiTextLocale, t } from './settings_strings.ts';
+import { registerStatusOverlay } from './status_overlay.tsx';
 
 type ComposeState = { get: (key: string) => unknown };
 type StatusesState = { getIn: (path: string[]) => unknown };

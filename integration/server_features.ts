@@ -5,7 +5,7 @@
 
 import { initialState } from '@/mastodon/initial_state';
 
-import { support } from './api_capabilities';
+import { support } from './api_capabilities.ts';
 
 function isGoToSocial(): boolean {
   return Boolean((initialState?.meta as { teadeck_gotosocial?: boolean } | undefined)?.teadeck_gotosocial);

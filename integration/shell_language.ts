@@ -3,8 +3,8 @@
  * so it can be found whatever language the page is in.
  */
 
-import { availableLocales } from './ui_locale';
-import type { UiLocale } from './ui_locale';
+import { availableLocales } from './ui_locale.ts';
+import type { UiLocale } from './ui_locale.ts';
 
 function ownName(code: string): string {
   try {

@@ -11,8 +11,8 @@ import { openModal } from '@/mastodon/actions/modal';
 import { IconButton } from '@/mastodon/components/button/redesign';
 import { useAppDispatch } from '@/mastodon/store';
 
-import { currentUiTextLocale, t } from './settings_strings';
-import { readPreference, writePreference } from './storage';
+import { currentUiTextLocale, t } from './settings_strings.ts';
+import { readPreference, writePreference } from './storage.ts';
 
 const preferenceKey = 'statusOverlay';
 const listeners = new Set<() => void>();

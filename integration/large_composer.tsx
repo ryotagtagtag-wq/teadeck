@@ -14,11 +14,11 @@ import { initialState } from '@/mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from '@/mastodon/store';
 import type { OnElementHandler } from '@/mastodon/utils/html';
 
-import { CodeBlock } from './code_block';
-import type { StatusFormat } from './gotosocial';
-import { accountStatusFormat, effectiveStatusFormat } from './gotosocial';
-import { renderMarkdown } from './markdown';
-import { currentUiTextLocale, t } from './settings_strings';
+import { CodeBlock } from './code_block.tsx';
+import type { StatusFormat } from './gotosocial.ts';
+import { accountStatusFormat, effectiveStatusFormat } from './gotosocial.ts';
+import { renderMarkdown } from './markdown.ts';
+import { currentUiTextLocale, t } from './settings_strings.ts';
 import './large_composer.css';
 
 let large = false;

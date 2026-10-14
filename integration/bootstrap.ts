@@ -1,28 +1,28 @@
-import type { InitialState } from '../mastodon/initial_state';
+import type { InitialState } from '@/mastodon/initial_state';
 
-import { adoptSession, finishLogin, getSession, login, logout, request } from './session';
+import { adoptSession, finishLogin, getSession, login, logout, request } from './session.ts';
 import {
   accountKey, clearActiveAccountKey, getActiveAccountKey, listRememberedAccounts, readPreference,
   readSettings, rememberAccount, setAccountId, setActiveAccountKey,
-} from './storage';
-import { forgetAndLogout } from './logout';
-import type { RememberedAccount } from './storage';
-import { startHomeTimelinePolling } from './polling';
-import { detectGoToSocial, loadAccountInteractionDefaults, supportsStatusFormat } from './gotosocial';
-import type { DefaultInteractionPolicies } from './gotosocial';
-import { initCapabilities, setSupport, support } from './api_capabilities';
-import { defaultFrontendSettings, frontendSettingsKey, frontendSettingsMeta, layoutStartPath, readDeploymentDefaults, resolveFrontendSettings } from './frontend_settings';
-import { withFilterBarDefault } from './notification_settings';
-import { applyAppearance, lastAppearance, lastLocale, rememberLocale } from './appearance';
-import { brandLogoMarkup, setBrandLogo } from './brand_logo';
-import { resolveLocale } from './ui_locale';
-import { applyDocumentLanguage, shellLocale, t, translateShell } from './shell_i18n';
-import { setUpLanguagePicker } from './shell_language';
-import { ShellError } from './shell_strings';
-import type { ShellMessageId } from './shell_strings';
-import { stripAxiosUserAgent } from './fetch_patch';
-import { reloadOnStaleChunks } from './update_reload';
-import { applyWaitingUpdate, enableOffline } from './offline';
+} from './storage.ts';
+import { forgetAndLogout } from './logout.ts';
+import type { RememberedAccount } from './storage.ts';
+import { startHomeTimelinePolling } from './polling.ts';
+import { detectGoToSocial, loadAccountInteractionDefaults, supportsStatusFormat } from './gotosocial.ts';
+import type { DefaultInteractionPolicies } from './gotosocial.ts';
+import { initCapabilities, setSupport, support } from './api_capabilities.ts';
+import { defaultFrontendSettings, frontendSettingsKey, frontendSettingsMeta, layoutStartPath, readDeploymentDefaults, resolveFrontendSettings } from './frontend_settings.ts';
+import { withFilterBarDefault } from './notification_settings.ts';
+import { applyAppearance, lastAppearance, lastLocale, rememberLocale } from './appearance.ts';
+import { brandLogoMarkup, setBrandLogo } from './brand_logo.tsx';
+import { resolveLocale } from './ui_locale.ts';
+import { applyDocumentLanguage, shellLocale, t, translateShell } from './shell_i18n.ts';
+import { setUpLanguagePicker } from './shell_language.ts';
+import { ShellError } from './shell_strings.ts';
+import type { ShellMessageId } from './shell_strings.ts';
+import { stripAxiosUserAgent } from './fetch_patch.ts';
+import { reloadOnStaleChunks } from './update_reload.ts';
+import { applyWaitingUpdate, enableOffline } from './offline.ts';
 import './shell.css';
 // Teadeck's own designs; only active with data-teadeck-theme (see appearance.ts).
 import './themes/designs.css';
@@ -292,8 +292,8 @@ async function boot() {
 
   // Initial state is read when upstream modules are evaluated, so import only now.
   const [{ loadPolyfills }, { loadLocale }, { default: main }, { store }, { expandHomeTimeline }] = await Promise.all([
-    import('../mastodon/polyfills'), import('../mastodon/locales'), import('../mastodon/main'),
-    import('../mastodon/store'), import('../mastodon/actions/timelines'),
+    import('@/mastodon/polyfills'), import('@/mastodon/locales'), import('@/mastodon/main'),
+    import('@/mastodon/store'), import('@/mastodon/actions/timelines'),
   ]);
   await loadPolyfills();
   await loadLocale();

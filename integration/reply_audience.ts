@@ -1,6 +1,6 @@
-import type { ReplyAudience } from './gotosocial';
-import { replyAudienceFromStored } from './gotosocial';
-import { readPreference, writePreference } from './storage';
+import type { ReplyAudience } from './gotosocial.ts';
+import { replyAudienceFromStored } from './gotosocial.ts';
+import { readPreference, writePreference } from './storage.ts';
 
 const key = 'replyAudience.v2';
 

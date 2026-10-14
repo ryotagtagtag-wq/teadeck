@@ -10,8 +10,8 @@ import { useEffect, useState } from 'react';
 import ContentCopyIcon from '@/material-icons/400-24px/content_copy.svg?react';
 import { Icon } from '@/mastodon/components/icon';
 
-import { codeLanguage, highlightCode, splitTokenLines } from './code_highlight';
-import { currentUiTextLocale, t } from './settings_strings';
+import { codeLanguage, highlightCode, splitTokenLines } from './code_highlight.ts';
+import { currentUiTextLocale, t } from './settings_strings.ts';
 
 export const CodeBlock: React.FC<{ element: HTMLPreElement }> = ({ element }) => {
   const language = codeLanguage(element.querySelector('code')?.className);

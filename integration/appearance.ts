@@ -1,7 +1,7 @@
-import { isRtlLocale } from './ui_locale';
-import { updateFavicon } from './favicon';
+import { isRtlLocale } from './ui_locale.ts';
+import { updateFavicon } from './favicon.ts';
 
-import type { Contrast, ColorScheme, FrontendSettings } from './frontend_settings';
+import type { Contrast, ColorScheme, FrontendSettings } from './frontend_settings.ts';
 
 // Sets the <html> attributes and classes that Mastodon's server would render.
 const colorSchemeMediaWatcher = matchMedia('(prefers-color-scheme: dark)');

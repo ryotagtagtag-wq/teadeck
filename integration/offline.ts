@@ -1,6 +1,6 @@
 /** Registers sw.js, which lets the app start from the browser's cache. */
 
-import { latestWaitingWorker } from './offline_update';
+import { latestWaitingWorker } from './offline_update.ts';
 
 const updateCheckIntervalMs = 60 * 60 * 1000;
 

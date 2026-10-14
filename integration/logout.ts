@@ -1,5 +1,5 @@
-import { getSession, logout } from './session';
-import { accountKey, clearActiveAccountKey, forgetAccount, getAccountId, getActiveAccountKey, listRememberedAccounts } from './storage';
+import { getSession, logout } from './session.ts';
+import { accountKey, clearActiveAccountKey, forgetAccount, getAccountId, getActiveAccountKey, listRememberedAccounts } from './storage.ts';
 
 /** Signs this account out everywhere in Teadeck: forgets it if it was remembered ("Stay signed in"), then revokes the token and clears the tab session. */
 export async function forgetAndLogout() {

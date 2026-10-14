@@ -1,4 +1,4 @@
-import { getSession } from './session';
+import { getSession } from './session.ts';
 
 /** Rewrite server-rendered pages explicitly, including middle-click/new tabs. */
 export function serverUrl(path: string): string {

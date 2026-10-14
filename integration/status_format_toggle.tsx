@@ -11,11 +11,11 @@ import { ToggleIconButton } from '@/mastodon/components/button/redesign';
 import { initialState } from '@/mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from '@/mastodon/store';
 
-import type { StatusFormat } from './gotosocial';
-import { accountStatusFormat, effectiveStatusFormat, statusFormatChoice } from './gotosocial';
-import { saveStatusFormat } from './status_format';
-import type { UiTextLocale } from './settings_strings';
-import { currentUiTextLocale } from './settings_strings';
+import type { StatusFormat } from './gotosocial.ts';
+import { accountStatusFormat, effectiveStatusFormat, statusFormatChoice } from './gotosocial.ts';
+import { saveStatusFormat } from './status_format.ts';
+import type { UiTextLocale } from './settings_strings.ts';
+import { currentUiTextLocale } from './settings_strings.ts';
 
 const texts: Record<UiTextLocale, { on: string; off: string; accountDefault: string; own: string }> = {
   de: {
