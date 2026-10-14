@@ -23,6 +23,12 @@ test('every half of every design yields the same variables, all with a value', (
   for (const id of designIds) for (const scheme of ['dark', 'light']) assert.ok(css.includes(`html[data-teadeck-theme='${id}'][data-color-scheme='${scheme}'] {`), `${id}/${scheme}`);
 });
 
+test('only Hibiscus and Rooibos choose angular steam', () => {
+  for (const design of designs) for (const scheme of ['dark', 'light']) {
+    assert.equal(halfAttributes(design[scheme]).teadeckLogoSteam, design.id === 'hibiscus' ? 'angular' : 'soft', `${design.id}/${scheme}`);
+  }
+});
+
 test('the designs name nothing of Mastodon: no CSS variables, classes or selectors in their files', async () => {
   const dir = path.join(root, 'integration/themes');
   const sources = (await readdir(dir)).filter((file) => file.endsWith('.ts') && !['css.ts', 'tokens.ts', 'index.ts'].includes(file));
@@ -183,6 +189,7 @@ test('a synthetic design keeps every value it sets, whatever else it chooses', (
   const attributes = halfAttributes(synthetic);
   assert.equal(attributes.teadeckPosts, 'cards');
   assert.equal(attributes.teadeckTitles, 'centered');
+  assert.equal(attributes.teadeckLogoSteam, 'soft');
   // A rounded design gets no clips at all.
   assert.ok(halfVariables(assam).filter(([name]) => name.startsWith('--td-clip-')).every(([, value]) => value === 'none'));
 });

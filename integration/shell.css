@@ -33,6 +33,7 @@ html {
 /* Put into the page rather than loaded as an image (brand_logo.tsx), so the page sizes it. */
 .teadeck-logo { display: block; }
 .teadeck-logo > svg { display: block; width: auto; height: 100%; max-width: 100%; }
+.teadeck-logo-steam--angular { display: none; }
 .teadeck-shell-footer { margin-top: 30px; text-align: center; }
 .teadeck-shell-footer a { color: var(--td-ui-text-muted); }
 .teadeck-shell-footer p { margin-top: 12px; }

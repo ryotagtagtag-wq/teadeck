@@ -36,12 +36,14 @@ export interface Half {
     text: string;
   };
   /**
-   * The teacup logo's colours. The tea is the design's own; the cup's roles
+   * The teacup logo's colours and steam shape. The tea is the design's own; the cup's roles
    * left out follow the interface (line from the text, body from a raised
    * surface) and the tea's shades from the tea.
    */
   logo: {
     tea: string;
+    /** Soft wisps by default; angular steam belongs to designs such as Hibiscus. */
+    steamShape?: 'soft' | 'angular';
     teaDark?: string;
     teaLight?: string;
     teaShade?: string;

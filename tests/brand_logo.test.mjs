@@ -195,7 +195,7 @@ test('a logo the page cannot colour is still shown as an image', { timeout: 60_0
   }
 });
 
-test('in the column beside the pinned ones the cup stands at the bottom, without a decorative band', { timeout: 120_000 }, async () => {
+test('the placeholder joins the message and cup softly, with steam chosen by the design', { timeout: 120_000 }, async () => {
   const { page, origin, pageErrors, stop } = await signedInPage(flatCup, { advancedLayout: true });
   try {
     await page.waitForURL(/\/deck\//);
@@ -206,7 +206,7 @@ test('in the column beside the pinned ones the cup stands at the bottom, without
     // Mastodon's zig-zag band at the bottom of the column is gone, in every design.
     assert.equal(await page.locator('.with-zig-zag-decoration').count(), 0);
 
-    for (const [theme, colorScheme] of [['assam', 'dark'], ['sencha', 'dark'], ['sencha', 'light'], ['mastodon', 'dark']]) {
+    for (const [theme, colorScheme] of [['assam', 'dark'], ['sencha', 'dark'], ['sencha', 'light'], ['hibiscus', 'dark'], ['mastodon', 'dark']]) {
       await choose(page, origin, { theme, colorScheme });
       const drawing = await cup.boundingBox();
       const column = await page.locator('[data-column-root]').filter({ has: cup }).boundingBox();
@@ -214,6 +214,14 @@ test('in the column beside the pinned ones the cup stands at the bottom, without
       assert.ok(gap >= 0 && gap < 8, `${theme}/${colorScheme}: ${gap}px below the cup`);
       assert.ok(drawing.width > column.width * 0.7, `${theme}/${colorScheme}: the cup is ${Math.round(drawing.width)}px wide`);
       assert.equal(await page.locator('.with-zig-zag-decoration').count(), 0, `${theme}/${colorScheme}`);
+      const steam = await cup.evaluate((svg) => ({
+        soft: getComputedStyle(svg.querySelector('.teadeck-logo-steam--soft')).display,
+        angular: getComputedStyle(svg.querySelector('.teadeck-logo-steam--angular')).display,
+      }));
+      assert.equal(steam.soft === 'none', theme === 'hibiscus', `${theme}/${colorScheme}: soft steam`);
+      assert.equal(steam.angular === 'none', theme !== 'hibiscus', `${theme}/${colorScheme}: angular steam`);
+      const transition = await page.locator('.teadeck-placeholder__illustration').evaluate((element) => getComputedStyle(element).backgroundImage);
+      assert.match(transition, /^linear-gradient\(/, `${theme}/${colorScheme}: ${transition}`);
     }
     assert.deepEqual(pageErrors, []);
   } finally {

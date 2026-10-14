@@ -32,7 +32,7 @@ const look = {
 } as const satisfies Partial<Half>;
 
 /** The cup in cast iron, in both halves. */
-const castIron = { tea: '#7d1a26', teaDark: '#5c121c', teaLight: '#9c2e3a', line: '#0b0708', steam: '#7a6866', body: '#6a5856', bodyDark: '#45383a' };
+const castIron = { tea: '#7d1a26', steamShape: 'angular', teaDark: '#5c121c', teaLight: '#9c2e3a', line: '#0b0708', steam: '#7a6866', body: '#6a5856', bodyDark: '#45383a' } as const;
 
 const darkNeutral = ['#f8f3f2', '#ece2df', '#d8ccc8', '#a89995', '#857674', '#5e5051', '#3a2c2d', '#2a2223', '#1b1718', '#141112', '#0c0a0b'] as const;
 const lightNeutral = ['#fbf8f7', '#f3ecea', '#e5dad7', '#cbbcb8', '#a19390', '#7a6c69', '#5c4f4d', '#463b3a', '#322928', '#221b1a', '#160f0f'] as const;

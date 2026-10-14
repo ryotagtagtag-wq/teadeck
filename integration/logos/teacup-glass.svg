@@ -48,7 +48,12 @@
     </mask>
   </defs>
 
-  <g transform="translate(0 8)" fill="none" stroke="url(#steam-glass)" stroke-width="11" stroke-linecap="round" stroke-linejoin="miter">
+  <g class="teadeck-logo-steam--soft" transform="translate(0 8)" fill="none" stroke="url(#steam-glass)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M176 176 C151 151 190 133 173 108 C154 80 187 67 181 43"/>
+    <path d="M205 170 C181 143 225 126 205 97 C187 70 230 54 224 27"/>
+    <path d="M233 176 C215 153 252 139 239 114 C228 92 251 78 248 57"/>
+  </g>
+  <g class="teadeck-logo-steam--angular" transform="translate(0 8)" fill="none" stroke="url(#steam-glass)" stroke-width="11" stroke-linecap="round" stroke-linejoin="miter">
     <path d="M176 176 L165 144 L187 136 L171 102 L195 70"/>
     <path d="M205 170 L193 133 L221 123 L203 88 L235 58"/>
     <path d="M233 176 L225 152 L246 144 L238 114"/>

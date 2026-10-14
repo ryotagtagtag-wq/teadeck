@@ -45,6 +45,10 @@ html[data-teadeck-theme] {
   --td-divider: var(--border-thin);
 }
 
+/* A design may replace the cup's calm wisps with angular steam. */
+html[data-teadeck-logo-steam='angular'] .teadeck-logo-steam--soft { display: none; }
+html[data-teadeck-logo-steam='angular'] .teadeck-logo-steam--angular { display: inline; }
+
 /* Teadeck's variables in Mastodon's: colour ramps, ground, typefaces and radii.
    Mastodon's redesign takes surfaces and text from the accent ramp, which would
    tint each design's ground; the ground is set on its own instead. */
@@ -756,15 +760,18 @@ html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :
 /* Mastodon's app fills the page below Teadeck's own bars. */
 body.teadeck-connected #mastodon { flex: 1; min-height: 0; }
 
-/* The mascot's place in the column beside the pinned ones: at the bottom, as the design has it.
-   Upstream positions its own elephant through rules for `img` only (and mirrors it),
-   which do not apply to the drawing put into the page. */
-.drawer__inner__mastodon { display: flex; justify-content: center; }
+/* The cup below the placeholder message. Its background starts as the column's
+   ground and eases into the surface behind the drawing instead of making a hard band. */
+.teadeck-placeholder__illustration {
+  display: flex;
+  justify-content: center;
+  background: linear-gradient(to bottom, var(--td-column-ground, var(--base-color-bg)) 0, var(--td-surface, var(--color-bg-primary)) 150px);
+}
 /* The drawing fills the space the column has left and sits at its bottom edge
    (preserveAspectRatio="xMidYMax", set when inlining), so it is never cut off. */
-.drawer__inner__mastodon .teadeck-logo { width: 88%; height: 100%; }
-.drawer__inner__mastodon .teadeck-logo > svg { width: 100%; height: 100%; }
-.drawer__inner__mastodon > img.teadeck-logo { width: 88%; height: 100%; object-fit: contain; object-position: bottom center; transform: none; }
+.teadeck-placeholder__illustration .teadeck-logo { width: 88%; height: 100%; }
+.teadeck-placeholder__illustration .teadeck-logo > svg { width: 100%; height: 100%; }
+.teadeck-placeholder__illustration > img.teadeck-logo { width: 88%; height: 100%; object-fit: contain; object-position: bottom center; transform: none; }
 
 /* The post overlay (status_overlay_modal.tsx) holds Mastodon's post view. */
 /* Above upstream's `.layout-multiple-columns` column rule (fixed width, no growing), which would

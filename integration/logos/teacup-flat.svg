@@ -6,7 +6,12 @@
   </defs>
   <g stroke-linecap="round" stroke-linejoin="round">
 
-    <g fill="none" transform="translate(0 -8)">
+    <g class="teadeck-logo-steam--soft" fill="none" transform="translate(0 -8)" stroke="var(--teadeck-logo-steam, #6f7c89)" stroke-width="6.5">
+      <path d="M114 88 C98 72 124 62 112 46 C101 31 121 23 118 10"/>
+      <path d="M132 84 C117 67 145 56 133 38 C121 22 147 14 143 2"/>
+      <path d="M150 88 C139 73 161 65 153 49 C146 36 160 29 158 17"/>
+    </g>
+    <g class="teadeck-logo-steam--angular" fill="none" transform="translate(0 -8)">
       <g stroke="var(--teadeck-logo-line, #1c2229)" stroke-width="10" stroke-linejoin="miter">
         <path d="M114 88 L107 68 L121 63 L111 42 L126 22"/>
         <path d="M132 84 L125 61 L142 55 L131 33 L151 14"/>

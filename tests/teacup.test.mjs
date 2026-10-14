@@ -36,6 +36,14 @@ test('only the glass cup shows the tea through its wall', () => {
   assert.match(teacup('ceramic'), /clip-path="url\(#surface-ceramic\)"/);
 });
 
+test('each cup has soft steam and the angular alternative selected by a design', async () => {
+  for (const name of [...teacupMaterials, 'flat']) {
+    const svg = await readFile(fileFor(name), 'utf8');
+    assert.match(svg, /class="teadeck-logo-steam--soft"/);
+    assert.match(svg, /class="teadeck-logo-steam--angular"/);
+  }
+});
+
 test('every referenced gradient and clip path is defined in the same file', async () => {
   for (const name of [...teacupMaterials, 'flat']) {
     const svg = await readFile(fileFor(name), 'utf8');

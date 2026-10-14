@@ -184,7 +184,7 @@ diff --git a/app/javascript/mastodon/features/multi_column_placeholder/index.tsx
 -        <img alt='' draggable='false' src={mascot ?? elephantUIPlane} />
 -      </div>
 +      {hasBrandLogo() && (
-+        <div className='drawer__inner__mastodon'>
++        <div className='drawer__inner__mastodon teadeck-placeholder__illustration'>
 +          <BrandLogo />
 +        </div>
 +      )}
