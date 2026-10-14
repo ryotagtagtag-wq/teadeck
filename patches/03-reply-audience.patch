@@ -5,7 +5,7 @@ diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodo
  import { throttle } from 'lodash';
  
  import api from '@/mastodon/api';
-+import { InteractionDefaultsUnavailableError, interactionPolicyFor } from '@/teadeck/gotosocial';
++import { InteractionDefaultsUnavailableError, interactionPolicyFor } from '@/teadeck/reply_audience';
 +import { interactionDefaultsUnavailableMessage } from '@/teadeck/reply_audience_picker';
  import { browserHistory } from '@/mastodon/components/router';
  import { countableText } from '@/mastodon/features/compose/util/counter';
@@ -54,7 +54,7 @@ diff --git a/app/javascript/mastodon/actions/compose_typed.ts b/app/javascript/m
  import { apiGetSearch } from '@/mastodon/api/search';
  import type { ApiMediaAttachmentJSON } from '@/mastodon/api_types/media_attachments';
  import type { ApiQuotePolicy } from '@/mastodon/api_types/quotes';
-+import type { ReplyAudience } from '@/teadeck/gotosocial';
++import type { ReplyAudience } from '@/teadeck/reply_audience';
  import type { MediaAttachment } from '@/mastodon/models/media_attachment';
  import type {
    MediaAttachmentShape,

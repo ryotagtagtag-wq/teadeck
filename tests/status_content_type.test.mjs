@@ -5,10 +5,11 @@ import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, instance, status } from './fixtures.mjs';
 import { mockMastodon, waitUntil } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
+import { supportsStatusFormat } from '../integration/server_features.ts';
 import {
   accountStatusFormat, effectiveStatusFormat, statusContentType, statusFormatChoice,
-  statusFormatFromStored, statusFormatOfSource, supportsStatusFormat,
-} from '../integration/gotosocial.ts';
+  statusFormatFromStored, statusFormatOfSource,
+} from '../integration/status_format.ts';
 
 /**
  * GoToSocial parses a post as plain text or as Markdown, with a default per

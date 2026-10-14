@@ -1,3 +1,4 @@
+import { readStoredJson, storageKeys, writeStoredJson } from './browser_storage.ts';
 import { isRtlLocale } from './ui_locale.ts';
 import { updateFavicon } from './favicon.ts';
 
@@ -11,11 +12,9 @@ let watching = false;
 let current: { settings: FrontendSettings; locale: string };
 
 // Kept outside any account, for the sign-in page.
-const lastAppearanceKey = 'teadeck.appearance';
-
 function rememberAppearance(settings: FrontendSettings, locale: string) {
   try {
-    localStorage.setItem(lastAppearanceKey, JSON.stringify({ theme: settings.theme, colorScheme: settings.colorScheme, locale }));
+    writeStoredJson('local', storageKeys.appearance, { theme: settings.theme, colorScheme: settings.colorScheme, locale });
   } catch { /* storage blocked */ }
 }
 
@@ -25,16 +24,14 @@ export function appliedAppearance(): FrontendSettings | undefined {
 }
 
 export function lastAppearance(): unknown {
-  try {
-    return JSON.parse(localStorage.getItem(lastAppearanceKey) ?? 'null');
-  } catch { return null; }
+  return readStoredJson('local', storageKeys.appearance);
 }
 
 /** The language chosen on the sign-in page, kept with the last appearance. */
 export function rememberLocale(locale: string) {
   try {
     const stored = lastAppearance();
-    localStorage.setItem(lastAppearanceKey, JSON.stringify({ ...(stored && typeof stored === 'object' ? stored : {}), locale }));
+    writeStoredJson('local', storageKeys.appearance, { ...(stored && typeof stored === 'object' ? stored : {}), locale });
   } catch { /* storage blocked */ }
 }
 

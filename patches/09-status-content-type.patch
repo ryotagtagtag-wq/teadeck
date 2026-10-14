@@ -1,17 +1,16 @@
 diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodon/actions/compose.js
 --- a/app/javascript/mastodon/actions/compose.js
 +++ b/app/javascript/mastodon/actions/compose.js
-@@ -4,7 +4,8 @@ import { isCancel } from 'axios';
- import { throttle } from 'lodash';
+@@ -5,6 +5,8 @@ import { throttle } from 'lodash';
  
  import api from '@/mastodon/api';
--import { InteractionDefaultsUnavailableError, interactionPolicyFor } from '@/teadeck/gotosocial';
-+import { initialState } from '@/mastodon/initial_state';
-+import { InteractionDefaultsUnavailableError, interactionPolicyFor, statusContentType } from '@/teadeck/gotosocial';
+ import { InteractionDefaultsUnavailableError, interactionPolicyFor } from '@/teadeck/reply_audience';
++import { statusFormatAvailable } from '@/teadeck/server_features';
++import { statusContentType } from '@/teadeck/status_format';
  import { interactionDefaultsUnavailableMessage } from '@/teadeck/reply_audience_picker';
  import { browserHistory } from '@/mastodon/components/router';
  import { countableText } from '@/mastodon/features/compose/util/counter';
-@@ -103,7 +104,7 @@ export const ensureComposeIsVisible = (getState) => {
+@@ -103,7 +105,7 @@ export const ensureComposeIsVisible = (getState) => {
    }
  };
  
@@ -20,7 +19,7 @@ diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodo
    return (dispatch, getState) => {
      const maxOptions = getState().server.server.item?.configuration.polls.max_options;
  
-@@ -112,6 +113,9 @@ export function setComposeToStatus(status, text, spoiler_text) {
+@@ -112,6 +114,9 @@ export function setComposeToStatus(status, text, spoiler_text) {
        status,
        text,
        spoiler_text,
@@ -30,27 +29,26 @@ diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodo
        maxOptions,
      });
    }
-@@ -267,6 +271,7 @@ export function submitCompose(successCallback) {
+@@ -267,6 +272,7 @@ export function submitCompose(successCallback) {
          quoted_status_id: getState().getIn(['compose', 'quoted_status_id']),
          quote_approval_policy: visibility === 'private' || visibility === 'direct' ? 'nobody' : getState().getIn(['compose', 'quote_policy']),
          interaction_policy: interactionPolicy,
-+        content_type: statusContentType(getState().getIn(['compose', 'content_type'], 'default'), !!initialState?.meta?.teadeck_status_format),
++        content_type: statusContentType(getState().getIn(['compose', 'content_type'], 'default'), statusFormatAvailable()),
        },
        headers: {
          'Idempotency-Key': getState().getIn(['compose', 'idempotencyKey']),
 diff --git a/app/javascript/mastodon/actions/compose_typed.ts b/app/javascript/mastodon/actions/compose_typed.ts
 --- a/app/javascript/mastodon/actions/compose_typed.ts
 +++ b/app/javascript/mastodon/actions/compose_typed.ts
-@@ -7,7 +7,7 @@ import { apiUpdateMedia } from '@/mastodon/api/compose';
- import { apiGetSearch } from '@/mastodon/api/search';
+@@ -8,6 +8,7 @@ import { apiGetSearch } from '@/mastodon/api/search';
  import type { ApiMediaAttachmentJSON } from '@/mastodon/api_types/media_attachments';
  import type { ApiQuotePolicy } from '@/mastodon/api_types/quotes';
--import type { ReplyAudience } from '@/teadeck/gotosocial';
-+import type { ReplyAudience, StatusFormat } from '@/teadeck/gotosocial';
+ import type { ReplyAudience } from '@/teadeck/reply_audience';
++import type { StatusFormat } from '@/teadeck/status_format';
  import type { MediaAttachment } from '@/mastodon/models/media_attachment';
  import type {
    MediaAttachmentShape,
-@@ -342,6 +342,10 @@ export const setComposeReplyAudience = createAction<ReplyAudience>(
+@@ -342,6 +343,10 @@ export const setComposeReplyAudience = createAction<ReplyAudience>(
    'compose/setReplyAudience',
  );
  
@@ -68,7 +66,7 @@ diff --git a/app/javascript/mastodon/actions/statuses.js b/app/javascript/mastod
  import api from '../api';
  
  import { showAlert } from './alerts';
-+import { statusFormatOfSource } from '@/teadeck/gotosocial';
++import { statusFormatOfSource } from '@/teadeck/status_format';
 +
  import { ensureComposeIsVisible, setComposeToStatus } from './compose';
  import { importFetchedStatus, importFetchedAccount } from './importer';

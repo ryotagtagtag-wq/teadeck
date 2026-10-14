@@ -1,4 +1,5 @@
-const reloadKey = 'teadeck.reloadedForUpdate';
+import { readStored, storageKeys, writeStored } from './browser_storage.ts';
+
 const retryAfterMs = 30_000;
 
 /**
@@ -12,9 +13,11 @@ export function shouldReloadForUpdate(lastReloadAt: number, now: number) {
 
 export function reloadOnStaleChunks() {
   window.addEventListener('vite:preloadError', () => {
-    const lastReloadAt = Number(sessionStorage.getItem(reloadKey) ?? 0);
+    const lastReloadAt = Number(readStored('session', storageKeys.reloadedForUpdate) ?? 0);
     if (!shouldReloadForUpdate(lastReloadAt, Date.now())) return;
-    sessionStorage.setItem(reloadKey, String(Date.now()));
+    // Without storage the limit cannot hold, so no reload either.
+    try { writeStored('session', storageKeys.reloadedForUpdate, String(Date.now())); }
+    catch { return; }
     location.reload();
   });
 }

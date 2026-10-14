@@ -9,10 +9,10 @@ import { useCallback } from 'react';
 
 import { setComposeReplyAudience } from '@/mastodon/actions/compose_typed';
 import { MenuItemDivider, MenuItemGroup, MenuItemRadio } from '@/mastodon/components/menu';
-import { initialState } from '@/mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from '@/mastodon/store';
 
-import type { ReplyAudience } from './gotosocial.ts';
+import type { ReplyAudience } from './reply_audience.ts';
+import { isGoToSocial } from './server_features.ts';
 import { chooseReplyAudience, replyAudienceTexts, useReplyAudienceOptions } from './reply_audience_picker.tsx';
 
 export const ReplyAudienceMenuGroup: React.FC = () => {
@@ -22,7 +22,7 @@ export const ReplyAudienceMenuGroup: React.FC = () => {
     chooseReplyAudience(audience as ReplyAudience, (chosen) => dispatch(setComposeReplyAudience(chosen)));
   }, [dispatch]);
   const { effective, options, locale } = useReplyAudienceOptions(value);
-  if (!(initialState?.meta as { teadeck_gotosocial?: boolean } | undefined)?.teadeck_gotosocial) return null;
+  if (!isGoToSocial()) return null;
 
   return (
     <div className='teadeck-reply-audience-picker' data-value={effective}>

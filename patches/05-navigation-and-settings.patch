@@ -184,11 +184,12 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
 diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx b/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx
 --- a/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx
 +++ b/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx
-@@ -3,10 +3,10 @@ import { FormattedMessage } from 'react-intl';
+@@ -2,11 +2,11 @@ import { FormattedMessage } from 'react-intl';
+ 
  import { NavLink } from 'react-router-dom';
  
++import { privacyPolicyAvailable } from '@/teadeck/server_features';
  import {
-+  initialState,
    statusPageUrl,
    termsOfServiceEnabled,
    profile_directory as canViewProfileDirectory,
@@ -230,7 +231,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/footer_l
              </NavLink>
            </li>
          )}
-+        {(initialState?.meta as { teadeck_privacy_policy?: boolean } | undefined)?.teadeck_privacy_policy && (
++        {privacyPolicyAvailable() && (
          <li>
            <NavLink
              to='/privacy-policy'
@@ -376,23 +377,23 @@ diff --git a/app/javascript/mastodon/features/ui/components/hashtag_menu_control
 diff --git a/app/javascript/mastodon/features/ui/components/link_footer.tsx b/app/javascript/mastodon/features/ui/components/link_footer.tsx
 --- a/app/javascript/mastodon/features/ui/components/link_footer.tsx
 +++ b/app/javascript/mastodon/features/ui/components/link_footer.tsx
-@@ -4,20 +4,22 @@ import { Link } from 'react-router-dom';
+@@ -2,9 +2,9 @@ import { FormattedMessage } from 'react-intl';
  
+ import { Link } from 'react-router-dom';
+ 
++import { privacyPolicyAvailable } from '@/teadeck/server_features';
  import {
    domain,
 -  version,
    source_url,
    statusPageUrl,
    profile_directory as canProfileDirectory,
-   termsOfServiceEnabled,
- } from 'mastodon/initial_state';
+@@ -13,11 +13,12 @@ import {
  
-+import { initialState } from 'mastodon/initial_state';
-+
  import classes from './link_footer.module.scss';
  
-+// From the instance's configuration.urls (see teadeck/bootstrap.ts): not every server has one.
-+const hasPrivacyPolicy = Boolean((initialState?.meta as { teadeck_privacy_policy?: boolean } | undefined)?.teadeck_privacy_policy);
++// From the instance's configuration.urls (teadeck/server_features.ts): not every server has one.
++const hasPrivacyPolicy = privacyPolicyAvailable();
 +
  export const LinkFooter: React.FC<{
    context?: 'default' | 'multi-column' | 'about';
@@ -402,7 +403,7 @@ diff --git a/app/javascript/mastodon/features/ui/components/link_footer.tsx b/ap
    return (
      <footer className={classes.wrapper} data-context={context}>
        <section>
-@@ -25,7 +27,7 @@ export const LinkFooter: React.FC<{
+@@ -25,7 +26,7 @@ export const LinkFooter: React.FC<{
          <ul className={classes.list}>
            {context !== 'about' && (
              <li>
@@ -411,7 +412,7 @@ diff --git a/app/javascript/mastodon/features/ui/components/link_footer.tsx b/ap
                  <FormattedMessage
                    id='footer.about_this_server'
                    defaultMessage='About'
-@@ -51,10 +53,10 @@ export const LinkFooter: React.FC<{
+@@ -51,10 +52,10 @@ export const LinkFooter: React.FC<{
                </Link>
              </li>
            )}
@@ -423,7 +424,7 @@ diff --git a/app/javascript/mastodon/features/ui/components/link_footer.tsx b/ap
                rel='privacy-policy'
              >
                <FormattedMessage
-@@ -63,11 +65,11 @@ export const LinkFooter: React.FC<{
+@@ -63,11 +64,11 @@ export const LinkFooter: React.FC<{
                />
              </Link>
            </li>
@@ -436,7 +437,7 @@ diff --git a/app/javascript/mastodon/features/ui/components/link_footer.tsx b/ap
                  rel='terms-of-service'
                >
                  <FormattedMessage
-@@ -80,26 +82,9 @@ export const LinkFooter: React.FC<{
+@@ -80,26 +81,9 @@ export const LinkFooter: React.FC<{
          </ul>
        </section>
        <section>
@@ -465,7 +466,7 @@ diff --git a/app/javascript/mastodon/features/ui/components/link_footer.tsx b/ap
            <li>
              <Link to='/keyboard-shortcuts'>
                <FormattedMessage
-@@ -116,7 +101,6 @@ export const LinkFooter: React.FC<{
+@@ -116,7 +100,6 @@ export const LinkFooter: React.FC<{
                />
              </a>
            </li>

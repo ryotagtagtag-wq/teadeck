@@ -2,9 +2,8 @@ import { useMemo } from 'react';
 
 import { useAppSelector } from '@/mastodon/store';
 
-import type { ReplyAudience } from './gotosocial.ts';
-import { effectiveReplyAudience, isReplyAudienceFeasible, replyAudiences } from './gotosocial.ts';
-import { saveReplyAudience } from './reply_audience.ts';
+import type { ReplyAudience } from './reply_audience.ts';
+import { effectiveReplyAudience, isReplyAudienceFeasible, replyAudiences, saveReplyAudience } from './reply_audience.ts';
 import type { UiTextLocale } from './settings_strings.ts';
 import { currentUiTextLocale } from './settings_strings.ts';
 

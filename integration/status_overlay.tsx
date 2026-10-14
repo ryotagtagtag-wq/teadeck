@@ -3,7 +3,7 @@
  * the action bar or, with the setting on, from the post's time.
  */
 
-import { useCallback, useSyncExternalStore } from 'react';
+import { useCallback } from 'react';
 
 import { CornersOutIcon } from '@phosphor-icons/react';
 
@@ -12,37 +12,24 @@ import { IconButton } from '@/mastodon/components/button/redesign';
 import { useAppDispatch } from '@/mastodon/store';
 
 import { currentUiTextLocale, t } from './settings_strings.ts';
+import { createExternalState } from './external_state.ts';
 import { readPreference, writePreference } from './storage.ts';
 
 const preferenceKey = 'statusOverlay';
-const listeners = new Set<() => void>();
 
-function readSetting(): boolean {
+const enabled = createExternalState(() => {
   try { return readPreference<unknown>(preferenceKey, false) === true; }
   catch { return false; }
+});
+
+export const statusOverlayEnabled = enabled.get;
+
+export function setStatusOverlayEnabled(value: boolean) {
+  writePreference(preferenceKey, value);
+  enabled.set(value);
 }
 
-let current: boolean | undefined;
-
-export function statusOverlayEnabled(): boolean {
-  current ??= readSetting();
-  return current;
-}
-
-export function setStatusOverlayEnabled(enabled: boolean) {
-  writePreference(preferenceKey, enabled);
-  current = enabled;
-  for (const listener of listeners) listener();
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => { listeners.delete(listener); };
-}
-
-function useStatusOverlayEnabled(): boolean {
-  return useSyncExternalStore(subscribe, statusOverlayEnabled);
-}
+const useStatusOverlayEnabled = enabled.use;
 
 // Set while an overlay is open: posts opened meanwhile are shown in it.
 let showInOverlay: ((statusId: string) => void) | undefined;

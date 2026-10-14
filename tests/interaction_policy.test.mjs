@@ -11,7 +11,7 @@ import {
   replyAudienceFromStored,
   replyAudiences,
   setAccountInteractionDefaults,
-} from '../integration/gotosocial.ts';
+} from '../integration/reply_audience.ts';
 
 // Transcribed from GoToSocial's PolicyValue.FeasibleForVisibility
 // (internal/gtsmodel/interactionpolicy.go); API visibility names map as

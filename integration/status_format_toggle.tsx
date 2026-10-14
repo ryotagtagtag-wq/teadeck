@@ -8,12 +8,11 @@ import { useCallback } from 'react';
 import MarkdownIcon from './icons/markdown.svg?react';
 import { setComposeContentType } from '@/mastodon/actions/compose_typed';
 import { ToggleIconButton } from '@/mastodon/components/button/redesign';
-import { initialState } from '@/mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from '@/mastodon/store';
 
-import type { StatusFormat } from './gotosocial.ts';
-import { accountStatusFormat, effectiveStatusFormat, statusFormatChoice } from './gotosocial.ts';
-import { saveStatusFormat } from './status_format.ts';
+import { accountStatusContentType, statusFormatAvailable } from './server_features.ts';
+import type { StatusFormat } from './status_format.ts';
+import { accountStatusFormat, effectiveStatusFormat, saveStatusFormat, statusFormatChoice } from './status_format.ts';
 import type { UiTextLocale } from './settings_strings.ts';
 import { currentUiTextLocale } from './settings_strings.ts';
 
@@ -36,15 +35,14 @@ const texts: Record<UiTextLocale, { on: string; off: string; accountDefault: str
 export const StatusFormatToggleButton: React.FC = () => {
   const value = useAppSelector((state) => state.compose.get('content_type', 'default') as StatusFormat);
   const dispatch = useAppDispatch();
-  const meta = initialState?.meta as { teadeck_status_format?: boolean; teadeck_status_content_type?: unknown } | undefined;
-  const accountDefault = accountStatusFormat(meta?.teadeck_status_content_type);
+  const accountDefault = accountStatusFormat(accountStatusContentType());
   const markdown = effectiveStatusFormat(value, accountDefault) === 'markdown';
   const toggle = useCallback(() => {
     const chosen = statusFormatChoice(markdown ? 'plain' : 'markdown', accountDefault);
     saveStatusFormat(chosen);
     dispatch(setComposeContentType(chosen));
   }, [markdown, accountDefault, dispatch]);
-  if (!meta?.teadeck_status_format) return null;
+  if (!statusFormatAvailable()) return null;
   const locale = currentUiTextLocale();
 
   return (

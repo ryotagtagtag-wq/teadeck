@@ -3,41 +3,29 @@
  * (large_composer.css), so switching sizes keeps the post as it is.
  */
 
-import { createElement, useCallback, useMemo, useSyncExternalStore } from 'react';
+import { createElement, useCallback, useMemo } from 'react';
 
 import { CornersInIcon, CornersOutIcon, PenNibIcon } from '@phosphor-icons/react';
 
 import { openModal } from '@/mastodon/actions/modal';
 import { Button, IconButton } from '@/mastodon/components/button/redesign';
 import { EmojiHTML } from '@/mastodon/components/emoji/html';
-import { initialState } from '@/mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from '@/mastodon/store';
 import type { OnElementHandler } from '@/mastodon/utils/html';
 
 import { CodeBlock } from './code_block.tsx';
-import type { StatusFormat } from './gotosocial.ts';
-import { accountStatusFormat, effectiveStatusFormat } from './gotosocial.ts';
+import { accountStatusContentType, statusFormatAvailable } from './server_features.ts';
+import type { StatusFormat } from './status_format.ts';
+import { accountStatusFormat, effectiveStatusFormat } from './status_format.ts';
+import { createExternalState } from './external_state.ts';
 import { renderMarkdown } from './markdown.ts';
 import { currentUiTextLocale, t } from './settings_strings.ts';
 import './large_composer.css';
 
-let large = false;
-const listeners = new Set<() => void>();
+const large = createExternalState(() => false);
 
-export function setComposerLarge(value: boolean) {
-  if (large === value) return;
-  large = value;
-  for (const listener of listeners) listener();
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => { listeners.delete(listener); };
-}
-
-export function useComposerLarge(): boolean {
-  return useSyncExternalStore(subscribe, () => large);
-}
+export const setComposerLarge = large.set;
+export const useComposerLarge = large.use;
 
 /**
  * Upstream's "New post" button with a second part after a divider: the left
@@ -61,7 +49,7 @@ export const NewPostSplitButton: React.FC<{ onOpen: () => void; className?: stri
 /** In the composer's header: from the regular to the large composer and back. */
 export const ComposerSizeToggle: React.FC = () => {
   const isLarge = useComposerLarge();
-  const toggle = useCallback(() => { setComposerLarge(!large); }, []);
+  const toggle = useCallback(() => { setComposerLarge(!large.get()); }, []);
   return (
     <IconButton size='sm' variant='ghost' icon={isLarge ? CornersInIcon : CornersOutIcon} onClick={toggle} tooltipPlacement='top' className='teadeck-composer-size-toggle'>
       {t(isLarge ? 'composerNormal' : 'composerLarge', currentUiTextLocale())}
@@ -96,9 +84,8 @@ export const ComposerMarkdownPreview: React.FC = () => {
     dispatch(openModal({ modalType: 'TEADECK_MARKDOWN_HELP', modalProps: {} }));
   }, [dispatch]);
 
-  const meta = initialState?.meta as { teadeck_status_format?: boolean; teadeck_status_content_type?: unknown } | undefined;
-  const markdown = Boolean(meta?.teadeck_status_format)
-    && effectiveStatusFormat(chosen, accountStatusFormat(meta?.teadeck_status_content_type)) === 'markdown';
+  const markdown = statusFormatAvailable()
+    && effectiveStatusFormat(chosen, accountStatusFormat(accountStatusContentType())) === 'markdown';
   if (!isLarge || !markdown) return null;
 
   const locale = currentUiTextLocale();

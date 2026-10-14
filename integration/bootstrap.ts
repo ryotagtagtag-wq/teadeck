@@ -1,5 +1,6 @@
 import type { InitialState } from '@/mastodon/initial_state';
 
+import { takeNotice } from './browser_storage.ts';
 import { adoptSession, finishLogin, getSession, login, logout, request } from './session.ts';
 import {
   accountKey, clearActiveAccountKey, getActiveAccountKey, listRememberedAccounts, readPreference,
@@ -8,8 +9,9 @@ import {
 import { forgetAndLogout } from './logout.ts';
 import type { RememberedAccount } from './storage.ts';
 import { startHomeTimelinePolling } from './polling.ts';
-import { detectGoToSocial, loadAccountInteractionDefaults, supportsStatusFormat } from './gotosocial.ts';
-import type { DefaultInteractionPolicies } from './gotosocial.ts';
+import { loadAccountInteractionDefaults } from './reply_audience.ts';
+import type { DefaultInteractionPolicies } from './reply_audience.ts';
+import { detectServerFeatures, setServerFeatures } from './server_features.ts';
 import { initCapabilities, setSupport, support } from './api_capabilities.ts';
 import { defaultFrontendSettings, frontendSettingsKey, frontendSettingsMeta, layoutStartPath, readDeploymentDefaults, resolveFrontendSettings } from './frontend_settings.ts';
 import { withFilterBarDefault } from './notification_settings.ts';
@@ -153,8 +155,8 @@ async function boot() {
     rememberLocale(chosen);
     shellText = translateShell(chosen);
   });
-  const notice = sessionStorage.getItem('teadeck.notice');
-  if (notice) { setStatusMessage(notice as ShellMessageId, 'warning'); sessionStorage.removeItem('teadeck.notice'); }
+  const notice = takeNotice();
+  if (notice) setStatusMessage(notice as ShellMessageId, 'warning');
   if (location.pathname === '/oauth/callback') await finishLogin();
 
   let session = getSession();
@@ -223,8 +225,10 @@ async function boot() {
   setBrandLogo(logo);
 
   initCapabilities(session.origin, instance);
+  const features = detectServerFeatures(instance, account);
+  setServerFeatures(features);
   // GoToSocial: a post restricting replies copies the other defaults from these.
-  if (detectGoToSocial(instance) && support('interactionPolicies.defaults') !== 'unsupported') {
+  if (features.goToSocial && support('interactionPolicies.defaults') !== 'unsupported') {
     loadAccountInteractionDefaults(() => request('/api/v1/interaction_policies/defaults').then((defaults: DefaultInteractionPolicies) => {
       setSupport('interactionPolicies.defaults', 'supported');
       return defaults;
@@ -246,8 +250,6 @@ async function boot() {
   const state: InitialState & {
     settings: Record<string, unknown>;
     media_attachments: unknown;
-    // Read by patches (compose_form_container.js) to show GoToSocial-only controls.
-    meta: InitialState['meta'] & { teadeck_gotosocial: boolean; teadeck_privacy_policy: boolean; teadeck_status_content_type: string; teadeck_status_format: boolean };
   } = {
     accounts: { [account.id]: account },
     languages: [['en', 'English', 'English'], ['de', 'German', 'Deutsch']],
@@ -276,12 +278,6 @@ async function boot() {
       local_live_feed_access: 'authenticated', remote_live_feed_access: 'authenticated',
       local_topic_feed_access: 'authenticated', remote_topic_feed_access: 'authenticated',
       sso_redirect: '', status_page_url: '', terms_of_service_enabled: Boolean(instance.configuration?.urls?.terms_of_service),
-      teadeck_gotosocial: detectGoToSocial(instance),
-      teadeck_status_format: supportsStatusFormat(instance),
-      // GoToSocial: what this account writes posts in unless a post says otherwise.
-      teadeck_status_content_type: typeof account.source?.status_content_type === 'string' ? account.source.status_content_type : '',
-      // Only link to pages the instance has.
-      teadeck_privacy_policy: Boolean(instance.configuration?.urls?.privacy_policy),
     },
   };
   document.getElementById('initial-state')!.textContent = JSON.stringify(state);

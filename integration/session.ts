@@ -1,3 +1,4 @@
+import { leaveNotice, readStored, removeStored, storageKeys, writeStoredJson } from './browser_storage.ts';
 import { ShellError } from './shell_strings.ts';
 
 /** Browser-only OAuth. No shared application credentials or server session. */
@@ -10,8 +11,6 @@ export interface Session {
   remember: boolean;
 }
 
-const sessionKey = 'teadeck.session.v1';
-const transactionKey = 'teadeck.oauth.v1';
 const scope = 'read write follow';
 
 export function normalizeOrigin(input: string): string {
@@ -23,7 +22,7 @@ export function normalizeOrigin(input: string): string {
 }
 
 export function getSession(): Session | null {
-  const stored = sessionStorage.getItem(sessionKey);
+  const stored = readStored('session', storageKeys.session);
   if (!stored) return null;
   try {
     const session = JSON.parse(stored) as Session;
@@ -32,7 +31,7 @@ export function getSession(): Session | null {
         typeof session.remember !== 'boolean') throw new Error();
     return session;
   } catch {
-    sessionStorage.removeItem(sessionKey);
+    removeStored('session', storageKeys.session);
     return null;
   }
 }
@@ -88,10 +87,10 @@ export async function login(input: string, options: { remember?: boolean } = {})
     throw new ShellError('errorAppRegistration');
   }
   const state = randomString();
-  sessionStorage.setItem(transactionKey, JSON.stringify({
+  writeStoredJson('session', storageKeys.oauth, {
     origin, redirectUri, verifier, state, createdAt: Date.now(),
     clientId: app.client_id, clientSecret: app.client_secret, remember: options.remember ?? false,
-  }));
+  });
   const authorize = new URL('/oauth/authorize', origin);
   authorize.search = new URLSearchParams({
     client_id: app.client_id, redirect_uri: redirectUri, response_type: 'code',
@@ -103,8 +102,8 @@ export async function login(input: string, options: { remember?: boolean } = {})
 export async function finishLogin() {
   const params = new URLSearchParams(location.search);
   // Consume once, including failed/denied callbacks. Never trust a callback-supplied origin.
-  const stored = sessionStorage.getItem(transactionKey);
-  sessionStorage.removeItem(transactionKey);
+  const stored = readStored('session', storageKeys.oauth);
+  removeStored('session', storageKeys.oauth);
   history.replaceState(null, '', '/');
   if (!stored) throw new ShellError('errorLoginExpired');
   const transaction = JSON.parse(stored);
@@ -128,28 +127,28 @@ export async function finishLogin() {
   if (typeof token.access_token !== 'string' || !token.access_token || token.token_type?.toLowerCase() !== 'bearer') {
     throw new ShellError('errorNoToken');
   }
-  sessionStorage.setItem(sessionKey, JSON.stringify({ origin, accessToken: token.access_token,
+  writeStoredJson('session', storageKeys.session, { origin, accessToken: token.access_token,
     clientId: transaction.clientId, clientSecret: transaction.clientSecret,
-    remember: !!transaction.remember } satisfies Session));
+    remember: !!transaction.remember } satisfies Session);
 }
 
 /** Makes a remembered account this tab's session. */
 export function adoptSession(account: { origin: string; accessToken: string; clientId: string; clientSecret: string }) {
-  sessionStorage.setItem(sessionKey, JSON.stringify({ ...account, remember: true } satisfies Session));
+  writeStoredJson('session', storageKeys.session, { ...account, remember: true } satisfies Session);
 }
 
 /** Clears this tab's session and keeps remembered accounts. */
 export function switchAccounts() {
-  sessionStorage.removeItem(sessionKey);
-  sessionStorage.removeItem(transactionKey);
+  removeStored('session', storageKeys.session);
+  removeStored('session', storageKeys.oauth);
   location.replace('/');
 }
 
 export async function logout() {
   const session = getSession();
   // Clear locally first: network failure must never leave a usable local session behind.
-  sessionStorage.removeItem(sessionKey);
-  sessionStorage.removeItem(transactionKey);
+  removeStored('session', storageKeys.session);
+  removeStored('session', storageKeys.oauth);
   let revoked = true;
   if (session) {
     try {
@@ -158,6 +157,6 @@ export async function logout() {
       }) });
     } catch { revoked = false; }
   }
-  if (!revoked) sessionStorage.setItem('teadeck.notice', 'noticeRevokedLocally');
+  if (!revoked) leaveNotice('noticeRevokedLocally');
   location.replace('/');
 }

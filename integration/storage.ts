@@ -1,5 +1,4 @@
-// Explicit extension: lets tests import this module directly under plain
-// `node --test`, which (unlike Vite) does not resolve extensionless .ts specifiers.
+import { readStored, removeStored, storageKeys, writeStored, writeStoredJson } from './browser_storage.ts';
 import { asRecord } from './frontend_settings.ts';
 import { getSession } from './session.ts';
 import { ShellError } from './shell_strings.ts';
@@ -12,18 +11,18 @@ export function getAccountId() { return accountId; }
 export function storageKey(key: string) {
   const session = getSession();
   if (!session || !accountId) throw new ShellError('errorNoSession');
-  return `teadeck.v1:${session.origin}:${accountId}:${key}`;
+  return `${storageKeys.accountPrefix}${session.origin}:${accountId}:${key}`;
 }
 
 export function readPreference<T>(key: string, fallback: T): T {
-  const value = localStorage.getItem(storageKey(key));
+  const value = readStored('local', storageKey(key));
   if (value === null) return fallback;
   try { return JSON.parse(value) as T; }
   catch { return fallback; }
 }
 
 export function writePreference(key: string, value: unknown) {
-  localStorage.setItem(storageKey(key), JSON.stringify(value));
+  writeStoredJson('local', storageKey(key), value);
 }
 
 /** A stored object, or an empty one if what is stored is not an object. */
@@ -100,7 +99,6 @@ export async function listRememberedAccounts(): Promise<RememberedAccount[]> {
   return withAccountsStore<RememberedAccount[]>('readonly', store => store.getAll());
 }
 
-const activeAccountKeyName = 'teadeck.activeAccount';
-export function getActiveAccountKey(): string | null { return localStorage.getItem(activeAccountKeyName); }
-export function setActiveAccountKey(key: string) { localStorage.setItem(activeAccountKeyName, key); }
-export function clearActiveAccountKey() { localStorage.removeItem(activeAccountKeyName); }
+export function getActiveAccountKey(): string | null { return readStored('local', storageKeys.activeAccount); }
+export function setActiveAccountKey(key: string) { writeStored('local', storageKeys.activeAccount, key); }
+export function clearActiveAccountKey() { removeStored('local', storageKeys.activeAccount); }

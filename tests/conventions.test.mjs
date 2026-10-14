@@ -41,3 +41,24 @@ test('components style through CSS classes; an inline style only passes a value 
     assert.doesNotMatch(text, /\bstyle=\{(?!\{)/, `${file}: passes a style object; use a class`);
   }
 });
+
+test('localStorage and sessionStorage are used through browser_storage.ts only, with its key names', async () => {
+  for (const { file, text } of await sources(['.ts', '.tsx'])) {
+    if (file === 'integration/browser_storage.ts') continue;
+    const code = text.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
+    assert.doesNotMatch(code, /\b(localStorage|sessionStorage)\b/, `${file} uses the browser's storage directly`);
+    assert.doesNotMatch(code, /['"`]teadeck\.[a-zA-Z]/, `${file} names a storage key of its own`);
+  }
+});
+
+test('what the server offers is asked of server_features.ts, not read from Mastodon\'s initial state', async () => {
+  const patches = path.join(root, 'patches');
+  const files = [
+    ...(await sources(['.ts', '.tsx'])),
+    ...await Promise.all((await readdir(patches)).map(async (name) => ({ file: `patches/${name}`, text: await readFile(path.join(patches, name), 'utf8') }))),
+  ];
+  for (const { file, text } of files) {
+    const added = file.startsWith('patches/') ? text.split('\n').filter((line) => line.startsWith('+')).join('\n') : text;
+    assert.doesNotMatch(added, /initialState\??\.meta\b[^;\n]*teadeck_|meta\??\.teadeck_/, `${file} reads a teadeck_ field of initialState.meta`);
+  }
+});

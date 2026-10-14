@@ -4,6 +4,8 @@
  * stored `unsupported` expires after a day.
  */
 
+import { readStored, storageKeys, writeStored } from './browser_storage.ts';
+
 export type Support = 'unknown' | 'supported' | 'unsupported';
 
 export type Capability =
@@ -33,7 +35,6 @@ interface InstanceLike {
   configuration?: { translation?: { enabled?: boolean } };
 }
 
-const storagePrefix = 'teadeck.capabilities.v2:';
 const unsupportedTtlMs = 24 * 60 * 60 * 1000;
 
 interface Known { value: Exclude<Support, 'unknown'>; checkedAt: number }
@@ -48,9 +49,14 @@ function persist() {
   try { storage.setItem(storageKey, JSON.stringify(Object.fromEntries(known))); } catch { /* storage full or blocked */ }
 }
 
-export function initCapabilities(origin: string, instance: InstanceLike, store: StorageLike | undefined = globalThis.localStorage, clock: () => number = Date.now) {
+const browserStore: StorageLike = {
+  getItem: (key) => readStored('local', key),
+  setItem: (key, value) => { writeStored('local', key, value); },
+};
+
+export function initCapabilities(origin: string, instance: InstanceLike, store: StorageLike | undefined = browserStore, clock: () => number = Date.now) {
   storage = store;
-  storageKey = `${storagePrefix}${origin}|${instance.version ?? ''}`;
+  storageKey = `${storageKeys.capabilitiesPrefix}${origin}|${instance.version ?? ''}`;
   now = clock;
   known = new Map();
   try {
