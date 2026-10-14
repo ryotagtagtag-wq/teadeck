@@ -13,7 +13,8 @@ jobs:
   check:
     runs-on: docker
     container:
-      image: node:24-bookworm
+      # Pinned by digest like every other image and action here.
+      image: node:26-bookworm@sha256:f1233c415b41ffcf237c717b3dea92e9d4ea006e0e4c71edcb790605d74f5404
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:

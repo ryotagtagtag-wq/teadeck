@@ -19,12 +19,15 @@ jobs:
   candidate:
     runs-on: docker
     container:
-      image: node:24-bookworm
+      # Pinned by digest like every other image and action here; Node 26 no longer ships Corepack.
+      image: node:26-bookworm@sha256:f1233c415b41ffcf237c717b3dea92e9d4ea006e0e4c71edcb790605d74f5404
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Install Corepack (Mastodon's Yarn; no longer part of Node)
+        run: npm install --global corepack@0.36.0
       - name: Resolve the newest nightly
         id: resolve
         run: |
