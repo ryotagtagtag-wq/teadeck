@@ -1,0 +1,85 @@
+# Daily: has Node 26's `26-bookworm` image moved? If so, the new image has to build and pass the
+# tests first; only then is the digest pinned in build.yml, upstream-update.yml and
+# security-advisories.yml, and that change is pushed to main. Nothing is pushed if the build or
+# the tests fail on the new image: the pin stays where it was.
+# Why pinned: a commit must build the same way when it is built again later, and all three
+# workflows use the same digest, so a moving tag would make the same commit build differently
+# on different days. This job is the only thing that moves the pin.
+# Why this job uses the moving tag: it exists to test the newest image, not the pinned one.
+# Runs on the self-hosted Forgejo runner (label `docker`).
+name: node-image
+
+on:
+  schedule:
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  pin:
+    runs-on: docker
+    container:
+      # Not pinned on purpose: this job tests the newest Node 26 image. Node 26 no longer ships Corepack.
+      image: node:26-bookworm
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Resolve the digest of the newest image and compare it with the pinned one
+        id: resolve
+        run: |
+          digest="$(node scripts/node_image.mjs --resolve)"
+          pinned="$(node scripts/node_image.mjs --current)"
+          echo "Pinned: $pinned"
+          echo "Newest: $digest"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          if [ "$digest" = "$pinned" ]; then
+            echo "moved=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "moved=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install Corepack (Mastodon's Yarn; no longer part of Node)
+        if: steps.resolve.outputs.moved == 'true'
+        run: npm install --global corepack@0.36.0
+      - name: Import upstream and apply patches
+        if: steps.resolve.outputs.moved == 'true'
+        run: node scripts/prepare.mjs
+      - name: Build
+        if: steps.resolve.outputs.moved == 'true'
+        run: node scripts/build.mjs
+      - name: Install Chromium and Firefox for the browser tests
+        if: steps.resolve.outputs.moved == 'true'
+        run: node .work/upstream/node_modules/playwright/cli.js install --with-deps chromium firefox
+      - name: Install nginx for the tests against the production configuration
+        if: steps.resolve.outputs.moved == 'true'
+        run: apt-get update && apt-get install -y --no-install-recommends nginx
+      - name: Type check and tests
+        if: steps.resolve.outputs.moved == 'true'
+        env:
+          TEADECK_REQUIRE_NGINX: '1'
+        run: node scripts/verify.mjs
+      - name: Pin the new digest in the workflows
+        if: steps.resolve.outputs.moved == 'true'
+        env:
+          DIGEST: ${{ steps.resolve.outputs.digest }}
+        run: node scripts/node_image.mjs --write "$DIGEST"
+      - name: Push the pin to main
+        if: steps.resolve.outputs.moved == 'true'
+        env:
+          DIGEST: ${{ steps.resolve.outputs.digest }}
+          REPO_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          # Only this step gets repository access (not stored in .git/config for the whole job).
+          export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0="http.https://git.knubbel.me/.extraheader"
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$REPO_TOKEN" | base64 -w0)"
+          workflows=(.forgejo/workflows/build.yml .forgejo/workflows/upstream-update.yml .forgejo/workflows/security-advisories.yml)
+          if git diff --quiet -- "${workflows[@]}"; then
+            echo "The workflows already pin $DIGEST; nothing to push."
+            exit 0
+          fi
+          git config user.name "Teadeck node image update"
+          git config user.email "actions@git.knubbel.me"
+          git add "${workflows[@]}"
+          git commit -m "CI: move Node 26 image to ${DIGEST:7:12}"
+          git push origin HEAD:main

@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { test } from 'node:test';
 
+import { currentDigest, pinImage } from '../scripts/node_image.mjs';
 import { unassessed } from '../scripts/check_advisories.mjs';
 import { parseChallenge, promotionDecision } from '../scripts/promote_image.mjs';
 import { buildReport, isUpstreamTest, matches, patchedFiles } from '../scripts/upstream_report.mjs';
@@ -79,4 +82,54 @@ test('patches carry no blob hashes, which only go stale', async () => {
     const stale = source.split('\n').filter((line) => /^index [0-9a-f]+\.\.[0-9a-f]+/.test(line));
     assert.deepEqual(stale, [], `${file} carries blob hashes`);
   }
+});
+
+const oldDigest = `sha256:${'a'.repeat(64)}`;
+const newDigest = `sha256:${'b'.repeat(64)}`;
+const workflowNames = ['build.yml', 'upstream-update.yml', 'security-advisories.yml'];
+const workflowPath = (name) => join(import.meta.dirname, '..', '.forgejo', 'workflows', name);
+
+test('pinning rewrites the Node 26 image line of every workflow and leaves the rest alone', () => {
+  for (const [name, indent] of [['build', '      '], ['upstream', '      '], ['advisories', '      ']]) {
+    const text = [
+      'jobs:',
+      `${indent}# Pinned by digest.`,
+      `${indent}container:`,
+      `${indent}  image: node:26-bookworm@${oldDigest}`,
+      `${indent}steps:`,
+      `${indent}  - run: echo image: node:26-bookworm@sha256:not-an-image-line`,
+      '',
+    ].join('\n');
+    const next = pinImage(text, newDigest);
+    assert.equal(currentDigest(next), newDigest, name);
+    assert.equal(next.split('\n').length, text.split('\n').length);
+    assert.match(next, /# Pinned by digest\./);
+    assert.match(next, /run: echo image: node:26-bookworm@sha256:not-an-image-line/);
+  }
+  // An unpinned line gets pinned too.
+  assert.equal(currentDigest(pinImage('    image: node:26-bookworm\n', newDigest)), newDigest);
+});
+
+test('a malformed digest or a text without the image line is refused', () => {
+  const text = `    image: node:26-bookworm@${oldDigest}\n`;
+  for (const digest of ['sha256:abc', `sha512:${'b'.repeat(64)}`, `sha256:${'B'.repeat(64)}`, undefined]) {
+    assert.throws(() => pinImage(text, digest), /Not a sha256 digest/);
+  }
+  assert.throws(() => pinImage('    image: node:24-bookworm\n', newDigest), /No node:26-bookworm image line/);
+  assert.throws(() => currentDigest('    image: node:26-bookworm\n'), /not pinned/);
+  assert.throws(() => currentDigest(`    image: node:26-bookworm@${oldDigest}\n    image: node:26-bookworm@${newDigest}\n`), /different digests/);
+});
+
+test('build, upstream update and advisories pin the same digest; node-image uses the moving tag', async () => {
+  const digests = [];
+  for (const name of workflowNames) {
+    const text = await readFile(workflowPath(name), 'utf8');
+    assert.match(text, /^\s*image: node:26-bookworm@sha256:[0-9a-f]{64}\s*$/m, `${name} is not pinned`);
+    digests.push(currentDigest(text));
+  }
+  assert.equal(new Set(digests).size, 1, digests.join(', '));
+
+  const moving = await readFile(workflowPath('node-image.yml'), 'utf8');
+  assert.match(moving, /^\s*image: node:26-bookworm\s*$/m);
+  assert.doesNotMatch(moving, /@sha256:/);
 });
