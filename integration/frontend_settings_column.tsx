@@ -33,7 +33,7 @@ import type { ColorScheme, Contrast, DisplayMedia, EmojiStyle, FrontendSettings,
 import { frontendSettingsKey, resolveFrontendSettings } from './frontend_settings.ts';
 import type { NotificationShows } from './notification_settings.ts';
 import { readNotificationShows } from './notification_settings.ts';
-import { t, uiTextLocale } from './settings_strings.ts';
+import { currentLocale, t } from './i18n.ts';
 import { designs } from './themes/index.ts';
 import { designLabel } from './themes/tokens.ts';
 import { setStatusOverlayEnabled, statusOverlayEnabled } from './status_overlay.tsx';
@@ -80,7 +80,6 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
   const [settings, setSettings] = useState(settingsNow);
   const [advancedLayout, setAdvancedLayout] = useState(() => readPreference('advancedLayout', !forceSingleColumn));
   const [uiLocale, setUiLocale] = useState(() => document.documentElement.lang || 'en');
-  const locale = uiTextLocale(uiLocale);
   const [statusOverlay, setStatusOverlay] = useState(statusOverlayEnabled);
   const [notifications, setNotifications] = useState<NotificationShows>(() => readNotificationShows(readSettings()));
 
@@ -104,28 +103,28 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
   }, []);
 
   const toggles = useMemo((): { key: BooleanSettingKey; label: string; hint?: string }[] => [
-    { key: 'expandSpoilers', label: t('expandSpoilers', locale) },
-    { key: 'autoPlayGif', label: t('autoPlayGif', locale) },
-    { key: 'useBlurhash', label: t('useBlurhash', locale) },
-    { key: 'reduceMotion', label: t('reduceMotion', locale) },
-    { key: 'usePendingItems', label: t('usePendingItems', locale), hint: t('usePendingItemsHint', locale) },
-    { key: 'boostModal', label: t('boostModal', locale) },
-    { key: 'deleteModal', label: t('deleteModal', locale) },
-    { key: 'missingAltTextModal', label: t('missingAltTextModal', locale) },
-    { key: 'disableSwiping', label: t('disableSwiping', locale) },
-    { key: 'disableHoverCards', label: t('disableHoverCards', locale) },
-    { key: 'useSystemFont', label: t('useSystemFont', locale) },
-    { key: 'useSystemScrollbars', label: t('useSystemScrollbars', locale) },
-  ], [locale]);
+    { key: 'expandSpoilers', label: t('expandSpoilers') },
+    { key: 'autoPlayGif', label: t('autoPlayGif') },
+    { key: 'useBlurhash', label: t('useBlurhash') },
+    { key: 'reduceMotion', label: t('reduceMotion') },
+    { key: 'usePendingItems', label: t('usePendingItems'), hint: t('usePendingItemsHint') },
+    { key: 'boostModal', label: t('boostModal') },
+    { key: 'deleteModal', label: t('deleteModal') },
+    { key: 'missingAltTextModal', label: t('missingAltTextModal') },
+    { key: 'disableSwiping', label: t('disableSwiping') },
+    { key: 'disableHoverCards', label: t('disableHoverCards') },
+    { key: 'useSystemFont', label: t('useSystemFont') },
+    { key: 'useSystemScrollbars', label: t('useSystemScrollbars') },
+  ], []);
 
   const notificationToggles = useMemo(() => [
-    { key: 'follow' as const, label: t('notifyFollow', locale) },
-    { key: 'follow_request' as const, label: t('notifyFollowRequest', locale) },
-    { key: 'reblog' as const, label: t('notifyReblog', locale) },
-    { key: 'favourite' as const, label: t('notifyFavourite', locale) },
-    { key: 'mention' as const, label: t('notifyMention', locale) },
-    { key: 'quote' as const, label: t('notifyQuote', locale) },
-  ], [locale]);
+    { key: 'follow' as const, label: t('notifyFollow') },
+    { key: 'follow_request' as const, label: t('notifyFollowRequest') },
+    { key: 'reblog' as const, label: t('notifyReblog') },
+    { key: 'favourite' as const, label: t('notifyFavourite') },
+    { key: 'mention' as const, label: t('notifyMention') },
+    { key: 'quote' as const, label: t('notifyQuote') },
+  ], []);
 
   // Only a class on <html>, so they apply at once.
   const instantKeys = new Set<BooleanSettingKey>(['useSystemFont', 'useSystemScrollbars']);
@@ -187,9 +186,9 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
   }, [advancedLayout]);
 
   return (
-    <Column bindToDocument={!multiColumn} label={t('title', locale)}>
+    <Column bindToDocument={!multiColumn} label={t('title')}>
       <ColumnHeader
-        title={t('title', locale)}
+        title={t('title')}
         icon='cog'
         iconComponent={SettingsIcon}
         multiColumn={multiColumn}
@@ -198,58 +197,58 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
 
       <div className='scrollable'>
         <FormStack>
-          <p>{t('intro', locale)}</p>
+          <p>{t('intro')}</p>
 
-          <SelectField id='teadeck-settings-layout' label={t('layout', locale)} value={advancedLayout ? 'advanced' : 'simple'} onChange={handleLayout}>
-            <option value='simple'>{t('layoutSimple', locale)}</option>
-            <option value='advanced'>{t('layoutAdvanced', locale)}</option>
+          <SelectField id='teadeck-settings-layout' label={t('layout')} value={advancedLayout ? 'advanced' : 'simple'} onChange={handleLayout}>
+            <option value='simple'>{t('layoutSimple')}</option>
+            <option value='advanced'>{t('layoutAdvanced')}</option>
           </SelectField>
 
           <ToggleField
             id='teadeck-settings-status-overlay'
             name='statusOverlay'
-            label={t('statusOverlay', locale)}
-            hint={t('statusOverlayHint', locale)}
+            label={t('statusOverlay')}
+            hint={t('statusOverlayHint')}
             checked={statusOverlay}
             onChange={handleStatusOverlay}
           />
 
-          <SelectField id='teadeck-settings-locale' label={t('language', locale)} value={uiLocale} onChange={handleLocale}>
+          <SelectField id='teadeck-settings-locale' label={t('language')} value={uiLocale} onChange={handleLocale}>
             {availableLocales.map(code => (
               <option key={code} value={code}>{localeNames?.of(code) ?? code}</option>
             ))}
           </SelectField>
 
-          <h3 className='teadeck-settings__section'>{t('appearance', locale)}</h3>
+          <h3 className='teadeck-settings__section'>{t('appearance')}</h3>
 
-          <SelectField id='teadeck-settings-theme' label={t('theme', locale)} hint={t('themeHint', locale)} value={settings.theme} onChange={handleTheme}>
-            <option value='mastodon'>{t('themeMastodon', locale)}</option>
+          <SelectField id='teadeck-settings-theme' label={t('theme')} hint={t('themeHint')} value={settings.theme} onChange={handleTheme}>
+            <option value='mastodon'>{t('themeMastodon')}</option>
             {designs.map(design => (
-              <option key={design.id} value={design.id}>{designLabel(design, locale)}</option>
+              <option key={design.id} value={design.id}>{designLabel(design, currentLocale())}</option>
             ))}
           </SelectField>
 
-          <SelectField id='teadeck-settings-color-scheme' label={t('colorScheme', locale)} value={settings.colorScheme} onChange={handleColorScheme}>
-            <option value='auto'>{t('colorSchemeAuto', locale)}</option>
-            <option value='light'>{t('colorSchemeLight', locale)}</option>
-            <option value='dark'>{t('colorSchemeDark', locale)}</option>
+          <SelectField id='teadeck-settings-color-scheme' label={t('colorScheme')} value={settings.colorScheme} onChange={handleColorScheme}>
+            <option value='auto'>{t('colorSchemeAuto')}</option>
+            <option value='light'>{t('colorSchemeLight')}</option>
+            <option value='dark'>{t('colorSchemeDark')}</option>
           </SelectField>
 
-          <SelectField id='teadeck-settings-contrast' label={t('contrast', locale)} value={settings.contrast} onChange={handleContrast}>
-            <option value='auto'>{t('contrastAuto', locale)}</option>
-            <option value='high'>{t('contrastHigh', locale)}</option>
+          <SelectField id='teadeck-settings-contrast' label={t('contrast')} value={settings.contrast} onChange={handleContrast}>
+            <option value='auto'>{t('contrastAuto')}</option>
+            <option value='high'>{t('contrastHigh')}</option>
           </SelectField>
 
-          <SelectField id='teadeck-settings-emoji-style' label={t('emojiStyle', locale)} value={settings.emojiStyle} onChange={handleEmojiStyle}>
-            <option value='auto'>{t('emojiStyleAuto', locale)}</option>
-            <option value='native'>{t('emojiStyleNative', locale)}</option>
-            <option value='twemoji'>{t('emojiStyleTwemoji', locale)}</option>
+          <SelectField id='teadeck-settings-emoji-style' label={t('emojiStyle')} value={settings.emojiStyle} onChange={handleEmojiStyle}>
+            <option value='auto'>{t('emojiStyleAuto')}</option>
+            <option value='native'>{t('emojiStyleNative')}</option>
+            <option value='twemoji'>{t('emojiStyleTwemoji')}</option>
           </SelectField>
 
-          <SelectField id='teadeck-settings-display-media' label={t('displayMedia', locale)} value={settings.displayMedia} onChange={handleDisplayMedia}>
-            <option value='default'>{t('displayMediaDefault', locale)}</option>
-            <option value='show_all'>{t('displayMediaShowAll', locale)}</option>
-            <option value='hide_all'>{t('displayMediaHideAll', locale)}</option>
+          <SelectField id='teadeck-settings-display-media' label={t('displayMedia')} value={settings.displayMedia} onChange={handleDisplayMedia}>
+            <option value='default'>{t('displayMediaDefault')}</option>
+            <option value='show_all'>{t('displayMediaShowAll')}</option>
+            <option value='hide_all'>{t('displayMediaHideAll')}</option>
           </SelectField>
 
           {toggles.map(({ key, label, hint }) => (
@@ -264,8 +263,8 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
             />
           ))}
 
-          <h3 className='teadeck-settings__section'>{t('notifications', locale)}</h3>
-          <p>{t('notificationsHint', locale)}</p>
+          <h3 className='teadeck-settings__section'>{t('notifications')}</h3>
+          <p>{t('notificationsHint')}</p>
 
           {notificationToggles.map(({ key, label }) => (
             <ToggleField
@@ -280,8 +279,8 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
 
           {reloadNeeded && (
             <div id='teadeck-settings-reload'>
-              <p>{t('reloadHint', locale)}</p>
-              <Button onClick={reloadNow} text={t('reloadNow', locale)} />
+              <p>{t('reloadHint')}</p>
+              <Button onClick={reloadNow} text={t('reloadNow')} />
             </div>
           )}
         </FormStack>

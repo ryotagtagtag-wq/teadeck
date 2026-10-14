@@ -25,7 +25,7 @@ test('emoji images and illustrations load in the background after start', () => 
 });
 
 test('per-language and rarely used files are cached when first used', () => {
-  for (const file of ['intl/de-Abc123.js', 'intl/de-intl-pluralrules-X.js', 'shell-locales/de.json', 'shell-locales/zh-CN.json',
+  for (const file of ['intl/de-Abc123.js', 'intl/de-intl-pluralrules-X.js', 'texts/de.json', 'texts/zh-CN.json',
     'assets/compact-C3-puptT.json', 'assets/iamcal-DP8KB4yM.json',
     'ocr/lang-data/eng.traineddata.gz', 'assets/tesseract-core.wasm-DJna89ck.js', 'tesseract-core.wasm-DTqDpzeW.js',
     'assets/roboto-regular-webfont-BCB7oXd3.ttf', 'assets/roboto-regular-webfont-IvmaNTIq.svg']) {

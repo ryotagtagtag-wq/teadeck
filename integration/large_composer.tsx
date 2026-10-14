@@ -19,7 +19,7 @@ import type { StatusFormat } from './status_format.ts';
 import { accountStatusFormat, effectiveStatusFormat } from './status_format.ts';
 import { createExternalState } from './external_state.ts';
 import { renderMarkdown } from './markdown.ts';
-import { currentUiTextLocale, t } from './settings_strings.ts';
+import { t } from './i18n.ts';
 import './large_composer.css';
 
 const large = createExternalState(() => false);
@@ -40,7 +40,7 @@ export const NewPostSplitButton: React.FC<{ onOpen: () => void; className?: stri
         {children}
       </Button>
       <IconButton icon={CornersOutIcon} onClick={openLarge} variant='solid' color='accent' size='md' className='teadeck-new-post__large'>
-        {t('newPostLarge', currentUiTextLocale())}
+        {t('newPostLarge')}
       </IconButton>
     </div>
   );
@@ -52,7 +52,7 @@ export const ComposerSizeToggle: React.FC = () => {
   const toggle = useCallback(() => { setComposerLarge(!large.get()); }, []);
   return (
     <IconButton size='sm' variant='ghost' icon={isLarge ? CornersInIcon : CornersOutIcon} onClick={toggle} tooltipPlacement='top' className='teadeck-composer-size-toggle'>
-      {t(isLarge ? 'composerNormal' : 'composerLarge', currentUiTextLocale())}
+      {t(isLarge ? 'composerNormal' : 'composerLarge')}
     </IconButton>
   );
 };
@@ -88,17 +88,16 @@ export const ComposerMarkdownPreview: React.FC = () => {
     && effectiveStatusFormat(chosen, accountStatusFormat(accountStatusContentType())) === 'markdown';
   if (!isLarge || !markdown) return null;
 
-  const locale = currentUiTextLocale();
   return (
-    <section className='teadeck-markdown-preview' aria-label={t('markdownPreview', locale)}>
+    <section className='teadeck-markdown-preview' aria-label={t('markdownPreview')}>
       <header className='teadeck-markdown-preview__header'>
-        <h3>{t('markdownPreview', locale)}</h3>
-        <span>{t('markdownPreviewHint', locale)}</span>
+        <h3>{t('markdownPreview')}</h3>
+        <span>{t('markdownPreviewHint')}</span>
         <button type='button' className='link-button teadeck-markdown-preview__help' onClick={openHelp}>
-          {t('markdownHelp', locale)}
+          {t('markdownHelp')}
         </button>
       </header>
-      {text.trim() ? <MarkdownView source={text} /> : <p className='teadeck-markdown-preview__empty'>{t('markdownPreviewEmpty', locale)}</p>}
+      {text.trim() ? <MarkdownView source={text} /> : <p className='teadeck-markdown-preview__empty'>{t('markdownPreviewEmpty')}</p>}
     </section>
   );
 };

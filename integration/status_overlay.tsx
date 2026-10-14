@@ -11,7 +11,7 @@ import { openModal } from '@/mastodon/actions/modal';
 import { IconButton } from '@/mastodon/components/button/redesign';
 import { useAppDispatch } from '@/mastodon/store';
 
-import { currentUiTextLocale, t } from './settings_strings.ts';
+import { t } from './i18n.ts';
 import { createExternalState } from './external_state.ts';
 import { readPreference, writePreference } from './storage.ts';
 
@@ -78,7 +78,7 @@ export const StatusOverlayButton: React.FC<{ statusId: string }> = ({ statusId }
   if (enabled) return null;
   return (
     <IconButton size='sm' variant='ghost' className='teadeck-status-overlay-button' icon={CornersOutIcon} onClick={handleClick}>
-      {t('openInOverlay', currentUiTextLocale())}
+      {t('openInOverlay')}
     </IconButton>
   );
 };

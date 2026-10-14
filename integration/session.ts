@@ -1,5 +1,5 @@
 import { leaveNotice, readStored, removeStored, storageKeys, writeStoredJson } from './browser_storage.ts';
-import { ShellError } from './shell_strings.ts';
+import { ShellError } from './texts.ts';
 
 /** Browser-only OAuth. No shared application credentials or server session. */
 export interface Session {

@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 
 import { writeOfflineFiles } from './offline_manifest.mjs';
-import { writeShellLocales } from './shell_locales.mjs';
+import { writeTexts } from './texts.mjs';
 import { requireToolchain, runYarn } from './toolchain.mjs';
 import { assertPrepared, fingerprint, sourceEntries } from './build_state.mjs';
 import { designsCss } from '../integration/themes/css.ts';
@@ -73,10 +73,10 @@ await cp(path.join(root, 'integration/logos'), path.join(imageAssets, 'logos'), 
 await cp(path.join(upstream, 'app/javascript/images/logo-symbol-wordmark.svg'), path.join(imageAssets, 'logo-default.svg'));
 // The designs TEADECK_THEME may name, one per line, for the container's entrypoint.
 await writeFile(path.join(imageAssets, 'designs'), `${designIds.join('\n')}\n`);
-// The sign-in page's own texts per interface language, from upstream's translations
-// plus Teadeck's own sentences; the page runs before Mastodon's own are loaded.
-const shellLocales = await writeShellLocales(dist, upstream);
-console.log(`Sign-in page texts: ${shellLocales.locales} languages, ${shellLocales.withUpstreamTranslations} of them with upstream translations`);
+// Teadeck's own texts per interface language, from upstream's translations plus
+// Teadeck's own sentences; the sign-in page runs before Mastodon's own are loaded.
+const textFiles = await writeTexts(dist, upstream);
+console.log(`Teadeck texts: ${textFiles.locales} languages, ${textFiles.withUpstreamTranslations} of them with upstream translations`);
 // Last, so the offline file list covers the finished dist/.
 // The nginx configuration sets index.html's security headers, which the service worker stores with it.
 const offline = await writeOfflineFiles(dist, manifest, path.join(root, 'integration/sw.js'), [path.join(root, 'container/nginx.conf')]);

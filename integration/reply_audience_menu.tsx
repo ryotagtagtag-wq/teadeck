@@ -13,7 +13,8 @@ import { useAppDispatch, useAppSelector } from '@/mastodon/store';
 
 import type { ReplyAudience } from './reply_audience.ts';
 import { isGoToSocial } from './server_features.ts';
-import { chooseReplyAudience, replyAudienceTexts, useReplyAudienceOptions } from './reply_audience_picker.tsx';
+import { t } from './i18n.ts';
+import { chooseReplyAudience, useReplyAudienceOptions } from './reply_audience_picker.tsx';
 
 export const ReplyAudienceMenuGroup: React.FC = () => {
   const value = useAppSelector((state) => state.compose.get('reply_audience', 'default') as ReplyAudience);
@@ -21,12 +22,12 @@ export const ReplyAudienceMenuGroup: React.FC = () => {
   const onChange = useCallback(({ value: audience }: { value: string }) => {
     chooseReplyAudience(audience as ReplyAudience, (chosen) => dispatch(setComposeReplyAudience(chosen)));
   }, [dispatch]);
-  const { effective, options, locale } = useReplyAudienceOptions(value);
+  const { effective, options } = useReplyAudienceOptions(value);
   if (!isGoToSocial()) return null;
 
   return (
     <div className='teadeck-reply-audience-picker' data-value={effective}>
-      <MenuItemGroup label={replyAudienceTexts[locale].title}>
+      <MenuItemGroup label={t('replyAudienceTitle')}>
         {options.map((option) => (
           <MenuItemRadio
             key={option.audience}

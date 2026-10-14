@@ -13,23 +13,7 @@ import { useAppDispatch, useAppSelector } from '@/mastodon/store';
 import { accountStatusContentType, statusFormatAvailable } from './server_features.ts';
 import type { StatusFormat } from './status_format.ts';
 import { accountStatusFormat, effectiveStatusFormat, saveStatusFormat, statusFormatChoice } from './status_format.ts';
-import type { UiTextLocale } from './settings_strings.ts';
-import { currentUiTextLocale } from './settings_strings.ts';
-
-const texts: Record<UiTextLocale, { on: string; off: string; accountDefault: string; own: string }> = {
-  de: {
-    on: 'Text als Markdown: an',
-    off: 'Text als Markdown: aus',
-    accountDefault: 'Kontostandard',
-    own: 'eigene Wahl, wird gemerkt',
-  },
-  en: {
-    on: 'Text as Markdown: on',
-    off: 'Text as Markdown: off',
-    accountDefault: 'account default',
-    own: 'your own choice, remembered',
-  },
-};
+import { t } from './i18n.ts';
 
 /** Next to the composer's emoji button; reads and sets the form's state itself. */
 export const StatusFormatToggleButton: React.FC = () => {
@@ -43,7 +27,6 @@ export const StatusFormatToggleButton: React.FC = () => {
     dispatch(setComposeContentType(chosen));
   }, [markdown, accountDefault, dispatch]);
   if (!statusFormatAvailable()) return null;
-  const locale = currentUiTextLocale();
 
   return (
     <ToggleIconButton
@@ -54,7 +37,7 @@ export const StatusFormatToggleButton: React.FC = () => {
       data-value={markdown ? 'markdown' : 'plain'}
       onClick={toggle}
     >
-      {`${texts[locale][markdown ? 'on' : 'off']} · ${texts[locale][value === 'default' ? 'accountDefault' : 'own']}`}
+      {`${t(markdown ? 'statusFormatOn' : 'statusFormatOff')} · ${t(value === 'default' ? 'statusFormatAccountDefault' : 'statusFormatOwn')}`}
     </ToggleIconButton>
   );
 };

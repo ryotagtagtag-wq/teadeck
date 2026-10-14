@@ -1,7 +1,7 @@
 import { readStored, removeStored, storageKeys, writeStored, writeStoredJson } from './browser_storage.ts';
 import { asRecord } from './frontend_settings.ts';
 import { getSession } from './session.ts';
-import { ShellError } from './shell_strings.ts';
+import { ShellError } from './texts.ts';
 
 let accountId = '';
 export function setAccountId(id: string) { accountId = id; }

@@ -11,7 +11,7 @@ import ContentCopyIcon from '@/material-icons/400-24px/content_copy.svg?react';
 import { Icon } from '@/mastodon/components/icon';
 
 import { codeLanguage, highlightCode, splitTokenLines } from './code_highlight.ts';
-import { currentUiTextLocale, t } from './settings_strings.ts';
+import { t } from './i18n.ts';
 
 export const CodeBlock: React.FC<{ element: HTMLPreElement }> = ({ element }) => {
   const language = codeLanguage(element.querySelector('code')?.className);
@@ -36,7 +36,7 @@ export const CodeBlock: React.FC<{ element: HTMLPreElement }> = ({ element }) =>
         <span className='teadeck-code__language monospace'>{language}</span>
         <button type='button' className='teadeck-code__copy' onClick={copy}>
           <Icon id='copy' icon={ContentCopyIcon} />
-          {t(copied ? 'copied' : 'copy', currentUiTextLocale())}
+          {t(copied ? 'copied' : 'copy')}
         </button>
       </div>
       {/* One element per line, so a long line wraps under its own number. The numbers are

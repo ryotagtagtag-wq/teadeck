@@ -26,7 +26,7 @@ function isExcluded(file) {
  */
 export function classifyOfflineFile(file, emojiDataFiles) {
   if (isExcluded(file)) return null;
-  if (emojiDataFiles.has(file) || file.startsWith('intl/') || file.startsWith('shell-locales/')) return 'onDemand';
+  if (emojiDataFiles.has(file) || file.startsWith('intl/') || file.startsWith('texts/')) return 'onDemand';
   if (file.startsWith('emoji/')) return 'background';
   if (file.startsWith('ocr/') || /(^|\/)tesseract-core/.test(file)) return 'onDemand';
   if (/\.(woff|ttf|eot)$/.test(file) || /webfont-[^/]*\.svg$/.test(file)) return 'onDemand';

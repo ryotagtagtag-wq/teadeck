@@ -18,10 +18,10 @@ import { withFilterBarDefault } from './notification_settings.ts';
 import { applyAppearance, lastAppearance, lastLocale, rememberLocale } from './appearance.ts';
 import { brandLogoMarkup, setBrandLogo } from './brand_logo.tsx';
 import { resolveLocale } from './ui_locale.ts';
-import { applyDocumentLanguage, shellLocale, t, translateShell } from './shell_i18n.ts';
+import { applyDocumentLanguage, shellLocale, t, translateShell } from './i18n.ts';
 import { setUpLanguagePicker } from './shell_language.ts';
-import { ShellError } from './shell_strings.ts';
-import type { ShellMessageId } from './shell_strings.ts';
+import { ShellError } from './texts.ts';
+import type { TextId } from './texts.ts';
 import { stripAxiosUserAgent } from './fetch_patch.ts';
 import { reloadOnStaleChunks } from './update_reload.ts';
 import { applyWaitingUpdate, enableOffline } from './offline.ts';
@@ -83,7 +83,7 @@ function setStatus(text: string, kind: 'alert' | 'warning' | 'notice') {
 }
 
 /** Marked with its message id, so it is translated once the language has loaded. */
-function setStatusMessage(id: ShellMessageId, kind: 'alert' | 'warning' | 'notice', detail?: string) {
+function setStatusMessage(id: TextId, kind: 'alert' | 'warning' | 'notice', detail?: string) {
   setStatus(detail ? `${t(id)} (${detail})` : t(id), kind);
   if (!detail) status.dataset.teadeckText = id;
 }
@@ -156,7 +156,7 @@ async function boot() {
     shellText = translateShell(chosen);
   });
   const notice = takeNotice();
-  if (notice) setStatusMessage(notice as ShellMessageId, 'warning');
+  if (notice) setStatusMessage(notice as TextId, 'warning');
   if (location.pathname === '/oauth/callback') await finishLogin();
 
   let session = getSession();
@@ -293,6 +293,8 @@ async function boot() {
   ]);
   await loadPolyfills();
   await loadLocale();
+  // Teadeck's own texts in the account's language, before anything shows them.
+  await shellText;
   document.body.classList.add('app-body', 'teadeck-connected');
   document.getElementById('mastodon')!.hidden = false;
   await main();

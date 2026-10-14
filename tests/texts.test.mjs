@@ -5,22 +5,22 @@ import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { createStaticServer } from './server.mjs';
-import { shellMessages } from '../integration/shell_strings.ts';
+import { texts } from '../integration/texts.ts';
 import { availableLocales } from '../integration/ui_locale.ts';
-import { shellMessagesFor, upstreamEnglish, upstreamLocales } from '../scripts/shell_locales.mjs';
+import { textsFor, upstreamEnglish, upstreamLocales } from '../scripts/texts.mjs';
 
 /**
- * The sign-in page speaks the reader's language: words Mastodon itself
- * translates come from upstream's own locale files, Teadeck's own sentences
- * from its catalogue, and anything a language is missing stays English.
+ * Teadeck speaks the reader's language: words Mastodon itself translates come
+ * from upstream's own locale files, Teadeck's own sentences from its catalogue
+ * (integration/texts.ts), and anything a language is missing stays English.
  */
 
 const upstream = join(import.meta.dirname, '..', '.work/upstream');
-const distLocale = async (locale) => JSON.parse(await readFile(join(import.meta.dirname, '..', 'dist/shell-locales', `${locale}.json`), 'utf8'));
+const distLocale = async (locale) => JSON.parse(await readFile(join(import.meta.dirname, '..', 'dist/texts', `${locale}.json`), 'utf8'));
 
 test('every upstream message the catalogue points at still exists, with the same English text', async () => {
   const english = await upstreamEnglish(upstream);
-  for (const [id, message] of Object.entries(shellMessages)) {
+  for (const [id, message] of Object.entries(texts)) {
     if (!message.upstream) continue;
     const text = english(message.upstream);
     assert.ok(text, `${id}: upstream no longer has ${message.upstream}`);
@@ -34,12 +34,12 @@ test('a language takes upstream words from upstream and Teadeck sentences from i
   const german = await distLocale('de');
   assert.equal(german.signIn, 'Anmelden'); // upstream's own auth.login
   assert.equal(german.domain, 'Domain');
-  assert.equal(german.lead, shellMessages.lead.de); // Teadeck's own sentence
+  assert.equal(german.lead, texts.lead.de); // Teadeck's own sentence
   assert.equal(german.staySignedIn, 'Angemeldet bleiben');
 
   const french = await distLocale('fr');
-  assert.notEqual(french.signIn, shellMessages.signIn.en);
-  assert.equal(french.lead, shellMessages.lead.en); // no French translation of Teadeck's own text
+  assert.notEqual(french.signIn, texts.signIn.en);
+  assert.equal(french.lead, texts.lead.en); // no French translation of Teadeck's own text
 });
 
 test('every offered language has a file, and nothing in it is empty', async () => {
@@ -47,16 +47,16 @@ test('every offered language has a file, and nothing in it is empty', async () =
   assert.deepEqual([...availableLocales].sort(), offered,
     'availableLocales no longer matches upstream/app/javascript/mastodon/locales');
   for (const locale of availableLocales) {
-    const texts = await distLocale(locale);
-    assert.deepEqual(Object.keys(texts).sort(), Object.keys(shellMessages).sort(), locale);
-    for (const [id, text] of Object.entries(texts)) assert.ok(text.length > 0, `${locale}/${id}`);
+    const file = await distLocale(locale);
+    assert.deepEqual(Object.keys(file).sort(), Object.keys(texts).sort(), locale);
+    for (const [id, text] of Object.entries(file)) assert.ok(text.length > 0, `${locale}/${id}`);
   }
 });
 
 test('a language upstream does not translate falls back to English', () => {
-  const texts = shellMessagesFor('xx', null, null);
-  assert.equal(texts.signIn, shellMessages.signIn.en);
-  assert.equal(texts.lead, shellMessages.lead.en);
+  const english = textsFor('xx', null, null);
+  assert.equal(english.signIn, texts.signIn.en);
+  assert.equal(english.lead, texts.lead.en);
 });
 
 let browser;
@@ -94,16 +94,16 @@ test('German gets Teadeck\'s own sentences as well', async () => {
   const { page, stop } = await signInPage({ locale: 'de-DE' });
   try {
     assert.equal(await page.locator('#teadeck-login .title').textContent(), 'Anmelden');
-    assert.equal(await page.locator('#teadeck-login .lead').textContent(), shellMessages.lead.de);
-    assert.equal(await page.locator('label[for=teadeck-remember]').textContent(), shellMessages.staySignedIn.de);
+    assert.equal(await page.locator('#teadeck-login .lead').textContent(), texts.lead.de);
+    assert.equal(await page.locator('label[for=teadeck-remember]').textContent(), texts.staySignedIn.de);
   } finally { await stop(); }
 });
 
 test('a language Teadeck does not offer reads English, not an empty page', async () => {
   const { page, stop } = await signInPage({ locale: 'xh-ZA' });
   try {
-    assert.equal(await page.locator('#teadeck-login .title').textContent(), shellMessages.signIn.en);
-    assert.equal(await page.locator('#teadeck-login .lead').textContent(), shellMessages.lead.en);
+    assert.equal(await page.locator('#teadeck-login .title').textContent(), texts.signIn.en);
+    assert.equal(await page.locator('#teadeck-login .lead').textContent(), texts.lead.en);
     assert.equal(await page.evaluate(() => document.documentElement.lang), 'en');
   } finally { await stop(); }
 });
@@ -134,6 +134,6 @@ test('an error names its cause in the reader\'s language', async () => {
     await page.locator('#teadeck-instance').fill('http://not-https.test/path');
     await page.locator('#teadeck-login button[type=submit]').click();
     await page.locator('#teadeck-status.alert').waitFor();
-    assert.equal(await page.locator('#teadeck-status').textContent(), shellMessages.errorInstanceUrl.de);
+    assert.equal(await page.locator('#teadeck-status').textContent(), texts.errorInstanceUrl.de);
   } finally { await stop(); }
 });

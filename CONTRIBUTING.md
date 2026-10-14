@@ -37,6 +37,16 @@ git -C .work/upstream diff -- <file> | grep -v '^index ' > patches/<nn>-<name>.p
 
 `git apply` does not need those lines, and they go stale as Mastodon moves on.
 
+## Code conventions
+
+`tests/conventions.test.mjs` checks these:
+
+- Relative imports name the file with its extension (`./storage.ts`); Mastodon is imported through `@/mastodon/…`.
+- Texts go into `integration/texts.ts` with `en` and, where it differs, `de`; name a Mastodon message as `upstream` to reuse its translations. Components show them with `t(id)` from `i18n.ts`.
+- `localStorage` and `sessionStorage` are used through `browser_storage.ts`, which names every key.
+- What the server offers is asked of `server_features.ts`.
+- Components style through CSS classes; an inline style only passes a value as a `--teadeck-` variable.
+
 ## Designs
 
 Designs live in `integration/themes/`:

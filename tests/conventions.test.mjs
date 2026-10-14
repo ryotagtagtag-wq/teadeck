@@ -62,3 +62,10 @@ test('what the server offers is asked of server_features.ts, not read from Masto
     assert.doesNotMatch(added, /initialState\??\.meta\b[^;\n]*teadeck_|meta\??\.teadeck_/, `${file} reads a teadeck_ field of initialState.meta`);
   }
 });
+
+test('texts live in texts.ts and are shown through t(); no component keeps a table of its own', async () => {
+  for (const { file, text } of await sources(['.ts', '.tsx'])) {
+    if (file === 'integration/texts.ts' || file.startsWith('integration/themes/')) continue;
+    assert.doesNotMatch(text, /\bde:\s*['"`]/, `${file} keeps German texts of its own`);
+  }
+});

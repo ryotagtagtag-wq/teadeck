@@ -2,13 +2,13 @@ import { createRequire } from 'node:module';
 import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { shellMessages } from '../integration/shell_strings.ts';
+import { texts } from '../integration/texts.ts';
 import { availableLocales } from '../integration/ui_locale.ts';
 
 /**
- * Writes the sign-in page's texts for every interface language to
- * dist/shell-locales/<locale>.json, from Mastodon's translations and
- * integration/shell_strings.ts. Missing translations stay English.
+ * Writes Teadeck's texts for every interface language to
+ * dist/texts/<locale>.json, from Mastodon's translations and
+ * integration/texts.ts. Missing translations stay English.
  */
 
 /** js-yaml comes with upstream; Node has no YAML parser of its own. */
@@ -60,18 +60,18 @@ function lookup(reference, js, rails) {
 }
 
 /** The texts of one language, filled from upstream first, then Teadeck's own. */
-export function shellMessagesFor(locale, js, rails) {
+export function textsFor(locale, js, rails) {
   const own = locale.toLowerCase().startsWith('de') ? 'de' : 'en';
-  const texts = {};
-  for (const [id, message] of Object.entries(shellMessages)) {
-    texts[id] = (message.upstream && lookup(message.upstream, js, rails)) || message[own] || message.en;
+  const result = {};
+  for (const [id, message] of Object.entries(texts)) {
+    result[id] = (message.upstream && lookup(message.upstream, js, rails)) || message[own] || message.en;
   }
-  return texts;
+  return result;
 }
 
-export async function writeShellLocales(dist, upstream) {
+export async function writeTexts(dist, upstream) {
   const yaml = loadYamlParser(upstream);
-  const directory = path.join(dist, 'shell-locales');
+  const directory = path.join(dist, 'texts');
   await rm(directory, { recursive: true, force: true });
   await mkdir(directory, { recursive: true });
 
@@ -80,8 +80,7 @@ export async function writeShellLocales(dist, upstream) {
     const js = await readJson(path.join(upstream, `app/javascript/mastodon/locales/${locale}.json`));
     const rails = await readYaml(yaml, path.join(upstream, `config/locales/${locale}.yml`), locale);
     if (js || rails) translated.push(locale);
-    const texts = shellMessagesFor(locale, js, rails);
-    await writeFile(path.join(directory, `${locale}.json`), JSON.stringify(texts));
+    await writeFile(path.join(directory, `${locale}.json`), JSON.stringify(textsFor(locale, js, rails)));
   }
   return { locales: availableLocales.length, withUpstreamTranslations: translated.length };
 }

@@ -12,7 +12,7 @@ import { IconButton } from '@/mastodon/components/icon_button';
 import { StatusPage } from '@/mastodon/features/status/redesign';
 import { useAppSelector } from '@/mastodon/store';
 
-import { currentUiTextLocale, t } from './settings_strings.ts';
+import { t } from './i18n.ts';
 import { registerStatusOverlay } from './status_overlay.tsx';
 
 type ComposeState = { get: (key: string) => unknown };
@@ -58,7 +58,7 @@ const StatusOverlayModal = forwardRef<HTMLDivElement, { statusId: string; onClos
     <div ref={ref} className='modal-root__modal teadeck-status-overlay' role='dialog' aria-modal='true'>
       {/* Its own scroll key: a post view may already be open behind the overlay. */}
       <StatusPage statusId={statusId} multiColumn scrollKey='teadeck-status-overlay' withBackButton={false} />
-      <IconButton className='teadeck-status-overlay__close' title={t('close', currentUiTextLocale())} icon='times' iconComponent={CloseIcon} onClick={close} />
+      <IconButton className='teadeck-status-overlay__close' title={t('close')} icon='times' iconComponent={CloseIcon} onClick={close} />
     </div>
   );
 });

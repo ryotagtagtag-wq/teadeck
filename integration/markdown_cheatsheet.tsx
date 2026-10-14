@@ -10,53 +10,39 @@ import { XIcon } from '@phosphor-icons/react';
 import { IconButton } from '@/mastodon/components/button/redesign';
 
 import { MarkdownView } from './large_composer.tsx';
-import type { SettingsStringKey, UiTextLocale } from './settings_strings.ts';
-import { currentUiTextLocale, t } from './settings_strings.ts';
+import { t } from './i18n.ts';
+import type { TextId } from './texts.ts';
 
-const examples: Record<UiTextLocale, [SettingsStringKey, string][]> = {
-  de: [
-    ['markdownHelpHeading', '# Überschrift\n## Kleinere Überschrift'],
-    ['markdownHelpEmphasis', '**fett**, *kursiv*, ~~durchgestrichen~~'],
-    ['markdownHelpLink', '[Teadeck](https://teadeck.de)\nhttps://teadeck.de'],
-    ['markdownHelpList', '- Tee\n- Kanne\n  - Deckel'],
-    ['markdownHelpNumbered', '1. Wasser kochen\n2. Tee ziehen lassen'],
-    ['markdownHelpQuote', '> Ein Zitat'],
-    ['markdownHelpCode', 'Mit `npm test` prüfen'],
-    ['markdownHelpCodeBlock', '```js\nconst tea = "Assam";\n```'],
-    ['markdownHelpRule', 'oben\n\n---\n\nunten'],
-    ['markdownHelpEscape', '\\*kein Stern\\*'],
-  ],
-  en: [
-    ['markdownHelpHeading', '# Heading\n## Smaller heading'],
-    ['markdownHelpEmphasis', '**bold**, *italic*, ~~struck through~~'],
-    ['markdownHelpLink', '[Teadeck](https://teadeck.de)\nhttps://teadeck.de'],
-    ['markdownHelpList', '- Tea\n- Pot\n  - Lid'],
-    ['markdownHelpNumbered', '1. Boil water\n2. Let the tea steep'],
-    ['markdownHelpQuote', '> A quote'],
-    ['markdownHelpCode', 'Check with `npm test`'],
-    ['markdownHelpCodeBlock', '```js\nconst tea = "Assam";\n```'],
-    ['markdownHelpRule', 'above\n\n---\n\nbelow'],
-    ['markdownHelpEscape', '\\*no star\\*'],
-  ],
-};
+// What each row is called, and the example typed in it.
+const examples: [TextId, TextId][] = [
+  ['markdownHelpHeading', 'markdownExampleHeading'],
+  ['markdownHelpEmphasis', 'markdownExampleEmphasis'],
+  ['markdownHelpLink', 'markdownExampleLink'],
+  ['markdownHelpList', 'markdownExampleList'],
+  ['markdownHelpNumbered', 'markdownExampleNumbered'],
+  ['markdownHelpQuote', 'markdownExampleQuote'],
+  ['markdownHelpCode', 'markdownExampleCode'],
+  ['markdownHelpCodeBlock', 'markdownExampleCodeBlock'],
+  ['markdownHelpRule', 'markdownExampleRule'],
+  ['markdownHelpEscape', 'markdownExampleEscape'],
+];
 
 const MarkdownCheatsheet = forwardRef<HTMLDivElement, { onClose: (ignoreFocus?: boolean) => void }>(({ onClose }, ref) => {
-  const locale = currentUiTextLocale();
   const close = useCallback(() => { onClose(); }, [onClose]);
   return (
     <div ref={ref} className='modal-root__modal teadeck-markdown-help' role='dialog' aria-modal='true' aria-labelledby='teadeck-markdown-help-title'>
       <header className='teadeck-markdown-help__header'>
-        <h2 id='teadeck-markdown-help-title'>{t('markdownHelp', locale)}</h2>
-        <IconButton size='sm' variant='ghost' icon={XIcon} onClick={close}>{t('close', locale)}</IconButton>
+        <h2 id='teadeck-markdown-help-title'>{t('markdownHelp')}</h2>
+        <IconButton size='sm' variant='ghost' icon={XIcon} onClick={close}>{t('close')}</IconButton>
       </header>
       <div className='teadeck-markdown-help__body'>
-        <p>{t('markdownHelpIntro', locale)}</p>
+        <p>{t('markdownHelpIntro')}</p>
         <dl>
-          {examples[locale].map(([label, source]) => (
+          {examples.map(([label, example]) => (
             <div key={label} className='teadeck-markdown-help__row'>
-              <dt>{t(label, locale)}</dt>
-              <dd><pre className='teadeck-markdown-help__source'>{source}</pre></dd>
-              <dd><MarkdownView source={source} /></dd>
+              <dt>{t(label)}</dt>
+              <dd><pre className='teadeck-markdown-help__source'>{t(example)}</pre></dd>
+              <dd><MarkdownView source={t(example)} /></dd>
             </div>
           ))}
         </dl>
