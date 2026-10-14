@@ -216,6 +216,13 @@ test('in mastodon.css a choice\'s rules do only that choice\'s job', async () =>
   }
 });
 
+test('spaced columns keep the same navigation gutter as the other designs', async () => {
+  const css = withoutComments(await read('integration/themes/mastodon.css'));
+  const rule = allRules(css).find(([selector]) => selector.includes("data-teadeck-columns='spaced'") && selector.includes('multi_column__root'));
+  assert.ok(rule, 'the spaced column role has no layout rule');
+  assert.match(rule[1], /gap:\s*var\(--space-1\)/);
+});
+
 test('the shape framework reaches the visible composer and its component roles', async () => {
   const css = withoutComments(await read('integration/themes/mastodon.css'));
   const expected = [

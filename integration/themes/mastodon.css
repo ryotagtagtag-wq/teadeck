@@ -233,9 +233,10 @@ html[data-teadeck-posts='cards'] .notification-ungrouped ._comp_status__variantF
   padding-top: 0;
 }
 
-/* Columns apart, with the desktop's ground between them. */
+/* Columns apart, with the desktop's ground between them. Keep the shared
+   gutter so the navigation occupies the same horizontal measure in every design. */
 html[data-teadeck-columns='spaced'] ._comp_columns_area_styles_multi_column__root {
-  gap: 6px;
+  gap: var(--space-1);
 }
 
 /* Column titles at the start, behind a marker in the accent; the header lies
