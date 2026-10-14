@@ -330,29 +330,142 @@ html[data-teadeck-brand-name='display'] ._navigation_panel_redesign_header__serv
   letter-spacing: var(--td-brand-tracking);
 }
 
-/* Corners by the design's shape: the clips are `none` unless it is chamfered
-   (top right and bottom left cut off, sized by element). */
-html[data-teadeck-theme] :is(._comp_status__variantFeed, .notification-ungrouped, .notification-group, ._comp_modal_shell_redesign__modal, form.teadeck-large-composer, ._compose_redesign_attachments__mediaUpload, ._compose_redesign_attachments__audioWrapper, ._compose_redesign_attachments__poll) {
+/* Corners by the design's shape: the clips are `none` unless it is chamfered.
+   Windows, panels and controls have separate cuts, so the same 45-degree corner
+   keeps its visual weight from a tag up to a full-height dialog. */
+html[data-teadeck-theme] :is(._comp_modal_shell_redesign__modal, form.teadeck-large-composer) {
+  --td-chamfer-cut: var(--td-cut-overlay);
+  clip-path: var(--td-clip-overlay);
+}
+html[data-teadeck-theme] :is(._compose_redesign_attachments__mediaUpload) {
+  --td-chamfer-cut: var(--td-cut-panel);
+  clip-path: var(--td-clip-panel);
+}
+html[data-teadeck-theme] :is(._comp_status__variantFeed, .notification-ungrouped, .notification-group) {
+  --td-chamfer-cut: var(--td-cut-card);
   clip-path: var(--td-clip-card);
 }
-html[data-teadeck-theme] :is(.teadeck-new-post, ._comp_button_redesign__solid._comp_button_redesign__accent:not(.teadeck-new-post > *), .button:not(.button-secondary, .button--plain), #teadeck-shell .btn:not(.button-secondary), ._navigation_panel_redesign_account_card_and_menu__root) {
+html[data-teadeck-theme] :is(._compose_redesign_attachments__audioWrapper, ._compose_redesign_attachments__poll, ._comp_callout_redesign__rootLarge, ._comp_callout_redesign__rootSmall) {
+  --td-chamfer-cut: var(--td-cut-callout);
+  clip-path: var(--td-clip-callout);
+}
+html[data-teadeck-theme] :is(.teadeck-new-post, .button:not(.button-secondary, .button--plain), #teadeck-shell .btn:not(.button-secondary), ._navigation_panel_redesign_account_card_and_menu__root) {
+  --td-chamfer-cut: var(--td-cut-main);
   clip-path: var(--td-clip-main);
 }
-html[data-teadeck-theme] :is(select, .select-wrapper, textarea, input:not([type='checkbox'], [type='radio'], [type='range'], [type='hidden']), ._comp_callout_redesign__rootLarge, ._comp_callout_redesign__rootSmall) {
+html[data-teadeck-theme] :is(select, .select-wrapper, textarea, input:where(:not([type='checkbox'], [type='radio'], [type='range'], [type='hidden']))) {
+  --td-chamfer-cut: var(--td-cut-field);
   clip-path: var(--td-clip-field);
 }
+html[data-teadeck-theme] form.teadeck-large-composer textarea {
+  --td-chamfer-cut: var(--td-cut-panel);
+  clip-path: var(--td-clip-panel);
+}
 html[data-teadeck-theme] .account__avatar {
+  --td-chamfer-cut: var(--td-cut-avatar);
   clip-path: var(--td-clip-avatar);
 }
-html[data-teadeck-theme] :is(._comp_button_redesign__base, .button.button-secondary, #teadeck-shell .btn.button-secondary) {
+html[data-teadeck-theme] ._comp_button_redesign__base {
+  --td-chamfer-cut: var(--td-cut-secondary);
   clip-path: var(--td-clip-secondary);
 }
+html[data-teadeck-theme] :is(.button.button-secondary, #teadeck-shell .btn.button-secondary) {
+  --td-chamfer-cut: var(--td-cut-secondary);
+  clip-path: var(--td-clip-secondary);
+}
+html[data-teadeck-theme] :is(._comp_button_redesign__base._comp_button_redesign__md) {
+  --td-chamfer-cut: var(--td-cut-field);
+  clip-path: var(--td-clip-field);
+}
+html[data-teadeck-theme] :is(._comp_button_redesign__base._comp_button_redesign__lg) {
+  --td-chamfer-cut: var(--td-cut-main);
+  clip-path: var(--td-clip-main);
+}
+html[data-teadeck-theme] ._comp_button_redesign__base._comp_button_redesign__solid._comp_button_redesign__accent {
+  --td-chamfer-cut: var(--td-cut-main);
+  clip-path: var(--td-clip-main);
+}
+/* The split New Post control is clipped once as a whole, not around each half. */
+html[data-teadeck-theme] .teadeck-new-post > ._comp_button_redesign__base {
+  clip-path: none;
+}
 html[data-teadeck-theme] ._comp_status__hashtags ._comp_button_redesign__tonal {
+  --td-chamfer-cut: var(--td-cut-tag);
   clip-path: var(--td-clip-tag);
 }
-/* A clip also cuts away outlines, so focus rings move inside. */
-html[data-teadeck-shape='chamfered'] :is(button, a, select, input, textarea):focus-visible {
+
+/* The regular desktop composer is a panel rather than a full-height window. */
+@media (width >= 760px) {
+  html[data-teadeck-theme] form.teadeck-composer:not(.teadeck-large-composer) {
+    --td-chamfer-cut: var(--td-cut-panel);
+    clip-path: var(--td-clip-panel);
+  }
+}
+
+/* Native borders are rectangular and stop at a clipped corner. These background
+   strokes draw the complete polygon, including both diagonal edges. */
+html[data-teadeck-shape='chamfered'] :is(
+  form.teadeck-composer,
+  .teadeck-status-overlay,
+  .teadeck-markdown-help,
+  ._compose_redesign_attachments__audioWrapper,
+  ._compose_redesign_attachments__poll,
+  select,
+  input:where(:not([type='checkbox'], [type='radio'], [type='range'], [type='hidden'])),
+  textarea:focus-visible,
+  ._comp_button_redesign__base:focus-visible,
+  .button:not(.button-secondary, .button--plain),
+  .button.button-secondary:focus-visible,
+  #teadeck-shell .btn:not(.button-secondary),
+  #teadeck-shell .btn.button-secondary:focus-visible
+) {
+  --td-chamfer-frame-color: var(--color-border-primary);
+  --td-chamfer-frame-width: var(--bw-default, 1px);
+  border-color: transparent;
+  background-image:
+    linear-gradient(var(--td-chamfer-frame-color) 0 0),
+    linear-gradient(135deg, transparent calc(50% - var(--td-chamfer-frame-width) / 2), var(--td-chamfer-frame-color) calc(50% - var(--td-chamfer-frame-width) / 2), var(--td-chamfer-frame-color) calc(50% + var(--td-chamfer-frame-width) / 2), transparent calc(50% + var(--td-chamfer-frame-width) / 2)),
+    linear-gradient(var(--td-chamfer-frame-color) 0 0),
+    linear-gradient(var(--td-chamfer-frame-color) 0 0),
+    linear-gradient(135deg, transparent calc(50% - var(--td-chamfer-frame-width) / 2), var(--td-chamfer-frame-color) calc(50% - var(--td-chamfer-frame-width) / 2), var(--td-chamfer-frame-color) calc(50% + var(--td-chamfer-frame-width) / 2), transparent calc(50% + var(--td-chamfer-frame-width) / 2)),
+    linear-gradient(var(--td-chamfer-frame-color) 0 0);
+  background-position: top left, top right, bottom right, bottom right, bottom left, top left;
+  background-size:
+    calc(100% - var(--td-chamfer-cut)) var(--td-chamfer-frame-width),
+    var(--td-chamfer-cut) var(--td-chamfer-cut),
+    var(--td-chamfer-frame-width) calc(100% - var(--td-chamfer-cut)),
+    calc(100% - var(--td-chamfer-cut)) var(--td-chamfer-frame-width),
+    var(--td-chamfer-cut) var(--td-chamfer-cut),
+    var(--td-chamfer-frame-width) calc(100% - var(--td-chamfer-cut));
+  background-repeat: no-repeat;
+}
+html[data-teadeck-shape='chamfered'] :is(.teadeck-status-overlay, .teadeck-markdown-help) {
+  --td-chamfer-cut: var(--td-cut-overlay);
+  --td-chamfer-frame-color: var(--td-ui-line);
+}
+html[data-teadeck-shape='chamfered'] :is(._compose_redesign_attachments__audioWrapper, ._compose_redesign_attachments__poll, input._comp_form_fields_redesign__input) {
+  --td-chamfer-frame-color: var(--color-text-tertiary);
+  --td-chamfer-frame-width: var(--bw-thin, 0.5px);
+}
+html[data-teadeck-shape='chamfered'] :is(.simple_form .input.field_with_errors, [data-has-error='true']) :is(input, select, textarea) {
+  --td-chamfer-frame-color: var(--color-border-error);
+}
+html[data-teadeck-shape='chamfered'] :is(
+  ._comp_button_redesign__base,
+  .button:not(.button--plain),
+  #teadeck-shell .btn,
+  select,
+  input:where(:not([type='checkbox'], [type='radio'], [type='range'], [type='hidden'])),
+  textarea
+):focus-visible {
+  --td-chamfer-frame-color: var(--color-border-brand);
+  --td-chamfer-frame-width: var(--bw-thick, 2px);
+  outline: 0;
+}
+html[data-teadeck-shape='chamfered'] .teadeck-new-post > ._comp_button_redesign__base:focus-visible {
+  outline: var(--outline-focus-default);
   outline-offset: -3px;
+  background-image: none;
 }
 
 /* The selected tab underlined in the accent, the current navigation item on a

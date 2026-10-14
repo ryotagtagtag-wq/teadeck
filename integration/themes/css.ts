@@ -18,7 +18,7 @@ const radii = {
 } as const;
 
 /** Chamfer sizes by kind of element; the larger the element, the larger the cut. */
-const chamfers = { card: 14, main: 10, field: 8, avatar: 7, secondary: 6, tag: 5 } as const;
+const chamfers = { overlay: 28, panel: 18, card: 14, callout: 12, main: 10, field: 8, avatar: 7, secondary: 6, tag: 5 } as const;
 
 /** Top right and bottom left cut off at 45°. */
 const chamfer = (size: number) =>
@@ -102,12 +102,10 @@ export function halfVariables(half: Half): [string, string][] {
     ['--td-brand-tracking', half.brandName === 'plain' ? 'normal' : half.brandName.tracking],
     ['--td-caption-size', half.captions === 'plain' ? 'inherit' : half.captions.size],
     ['--td-caption-tracking', half.captions === 'plain' ? 'normal' : half.captions.tracking],
-    ['--td-clip-card', clip(chamfers.card)],
-    ['--td-clip-main', clip(chamfers.main)],
-    ['--td-clip-field', clip(chamfers.field)],
-    ['--td-clip-avatar', clip(chamfers.avatar)],
-    ['--td-clip-secondary', clip(chamfers.secondary)],
-    ['--td-clip-tag', clip(chamfers.tag)],
+    ...Object.entries(chamfers).flatMap(([role, size]): [string, string][] => [
+      [`--td-cut-${role}`, `${size}px`],
+      [`--td-clip-${role}`, clip(size)],
+    ]),
     ['--td-avatar-ring', half.avatars === 'framed' ? '0 0 0 1px var(--td-frame)' : 'none'],
     ['--td-hashtag-bg', tags === 'tinted' ? 'rgb(from var(--td-text-primary) r g b / 4%)' : tags.background],
     ['--td-hashtag-fg', tags === 'tinted' ? 'var(--td-text-primary)' : tags.text],

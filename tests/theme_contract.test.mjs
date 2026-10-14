@@ -175,6 +175,8 @@ test('each design choice is its own: changing one changes only its own attribute
 test('a synthetic design keeps every value it sets, whatever else it chooses', () => {
   const variables = Object.fromEntries(halfVariables(synthetic));
   // Chamfered corners without capitals.
+  assert.equal(variables['--td-cut-overlay'], '28px');
+  assert.equal(variables['--td-cut-panel'], '18px');
   assert.match(variables['--td-clip-card'], /^polygon/);
   assert.equal(variables['--td-caps'], 'none');
   // Secondary buttons in colours of their own.
@@ -198,13 +200,18 @@ test('in mastodon.css a choice\'s rules do only that choice\'s job', async () =>
   const css = withoutComments(await read('integration/themes/mastodon.css'));
   const known = new Set(designAttributeNames.map((name) => `data-${name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`));
   // The shape is geometry: corners and where focus rings sit, nothing about type or colour.
-  const geometry = new Set(['clip-path', 'outline-offset', 'border-radius']);
+  const geometry = new Set([
+    'clip-path', 'outline', 'outline-offset', 'border-radius', 'border-color',
+    'background-image', 'background-position', 'background-size', 'background-repeat',
+  ]);
   for (const [, selector, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     for (const [, attribute] of selector.matchAll(/\[(data-teadeck-[a-z-]+)=/g)) {
       assert.ok(known.has(attribute), `${attribute} is not one of designAttributeNames`);
     }
     if (selector.includes('data-teadeck-shape')) {
-      for (const [, property] of body.matchAll(/([a-z-]+)\s*:/g)) assert.ok(geometry.has(property), `shape rule sets ${property}: ${selector.trim()}`);
+      for (const [, property] of body.matchAll(/([a-z-]+)\s*:/g)) {
+        assert.ok(property.startsWith('--td-chamfer-') || geometry.has(property), `shape rule sets ${property}: ${selector.trim()}`);
+      }
     }
   }
 });
@@ -212,15 +219,22 @@ test('in mastodon.css a choice\'s rules do only that choice\'s job', async () =>
 test('the shape framework reaches the visible composer and its component roles', async () => {
   const css = withoutComments(await read('integration/themes/mastodon.css'));
   const expected = [
-    ['form.teadeck-large-composer', '--td-clip-card'],
-    ['._compose_redesign_attachments__mediaUpload', '--td-clip-card'],
-    ['._comp_callout_redesign__rootLarge', '--td-clip-field'],
+    ['form.teadeck-large-composer', '--td-clip-overlay'],
+    ['form.teadeck-composer:not(.teadeck-large-composer)', '--td-clip-panel'],
+    ['._compose_redesign_attachments__mediaUpload', '--td-clip-panel'],
+    ['._comp_callout_redesign__rootLarge', '--td-clip-callout'],
+    ['form.teadeck-large-composer textarea', '--td-clip-panel'],
     ['textarea', '--td-clip-field'],
     ['._comp_button_redesign__base', '--td-clip-secondary'],
+    ['._comp_button_redesign__base._comp_button_redesign__md', '--td-clip-field'],
+    ['._comp_button_redesign__base._comp_button_redesign__lg', '--td-clip-main'],
   ];
   for (const [selector, variable] of expected) {
     const rule = allRules(css).find(([selectors, body]) => selectors.includes(selector) && body.includes(variable));
     assert.ok(rule, `${selector} has no shape rule`);
     assert.match(rule[1], new RegExp(`clip-path\\s*:\\s*var\\(${variable.replaceAll('-', '\\-')}\\)`), selector);
   }
+  assert.match(css, /background-image:\s*linear-gradient\(/, 'chamfered frames draw their diagonal edges');
+  assert.match(await read('integration/large_composer.css'), /clip-path:\s*var\(--td-clip-overlay/);
+  assert.match(await read('integration/shell.css'), /clip-path:\s*var\(--td-clip-overlay/);
 });

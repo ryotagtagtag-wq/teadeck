@@ -61,7 +61,7 @@ diff --git a/app/javascript/mastodon/features/compose/redesign/trigger.tsx b/app
  
    if (!isRedesignEnabled() || !signedIn) {
      return null;
-@@ -104,8 +110,21 @@ export const ComposeRedesignButton: React.FC<{
+@@ -104,8 +110,22 @@ export const ComposeRedesignButton: React.FC<{
  
    if (displayState === 'showing') {
      return (
@@ -79,6 +79,7 @@ diff --git a/app/javascript/mastodon/features/compose/redesign/trigger.tsx b/app
 +          autoFocus
 +          className={classNames(
 +            classes.composer,
++            'teadeck-composer',
 +            isLarge && 'teadeck-large-composer',
 +          )}
 +        />

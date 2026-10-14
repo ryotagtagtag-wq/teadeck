@@ -126,8 +126,9 @@ test('the Hibiscus large composer takes every corner from the design framework',
 
     const shapes = await form(page).evaluate((composer) => {
       const clip = (element) => element && getComputedStyle(element).clipPath;
+      const background = (element) => element && getComputedStyle(element).backgroundImage;
       return {
-        composer: clip(composer),
+        composer: [clip(composer), background(composer)],
         textarea: clip(composer.querySelector('textarea')),
         toolbarButton: clip(composer.querySelector('button[class*="_comp_button_redesign__base"]')),
         publish: clip([...composer.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Veröffentlichen')),
@@ -135,7 +136,20 @@ test('the Hibiscus large composer takes every corner from the design framework',
         warning: clip(composer.querySelector('[class*="_comp_callout_redesign__rootLarge"]')),
       };
     });
-    for (const [part, clip] of Object.entries(shapes)) assert.match(clip, /^polygon/, `${part}: ${clip}`);
+    const [composerClip, composerFrame] = shapes.composer;
+    for (const [part, size] of Object.entries({ composer: 28, textarea: 18, toolbarButton: 6, publish: 10, attachment: 18, warning: 12 })) {
+      const clip = part === 'composer' ? composerClip : shapes[part];
+      assert.match(clip, new RegExp(`${size}px`), `${part}: ${clip}`);
+    }
+    assert.match(composerFrame, /linear-gradient/, `composer frame: ${composerFrame}`);
+
+    await page.getByRole('button', { name: 'Normales Eingabefeld' }).click();
+    const small = await form(page).evaluate((composer) => ({
+      clip: getComputedStyle(composer).clipPath,
+      frame: getComputedStyle(composer).backgroundImage,
+    }));
+    assert.match(small.clip, /18px/, `small composer: ${small.clip}`);
+    assert.match(small.frame, /linear-gradient/, `small composer frame: ${small.frame}`);
     assert.deepEqual(pageErrors, []);
   } finally {
     await context.close();
