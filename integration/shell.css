@@ -1,13 +1,12 @@
-/* The sign-in page reuses Mastodon's auth page classes (container-alt, simple_form, …); only gaps are filled here. */
+/* Teadeck's own pages and parts: the sign-in page, the logo, the post overlay. They read
+   Teadeck's variables only; what touches Mastodon's markup is in themes/mastodon.css. */
 #teadeck-status:empty { display: none; }
 #teadeck-status { overflow-wrap: anywhere; }
 #teadeck-account-list ul { display: grid; gap: 10px; margin-bottom: 30px; }
-#teadeck-account-list .btn { width: 100%; }
 /* The sign-in page: the logo large above a heading to match, both following the design. */
 .teadeck-shell-brand { display: flex; justify-content: center; margin-bottom: 8px; }
 #teadeck-shell-logo { width: min(260px, 60vw); }
 #teadeck-shell-logo > svg { width: 100%; height: auto; }
-#teadeck-shell .title { font-size: 30px; line-height: 1.2; }
 /*
  * The colour roles of the logo drawings (see integration/logos/, scripts/teacup.mjs).
  * They are derived from the theme's own colours, so a design - or a change to one -
@@ -15,15 +14,15 @@
  * overridden by a design (integration/themes/) or by hand.
  */
 html {
-  --teadeck-logo-line: var(--color-text-primary);
-  --teadeck-logo-steam: var(--color-text-secondary);
-  --teadeck-logo-body: var(--color-bg-secondary);
+  --teadeck-logo-line: var(--td-ui-text);
+  --teadeck-logo-steam: var(--td-ui-text-muted);
+  --teadeck-logo-body: var(--td-ui-surface-raised);
   --teadeck-logo-body-dark: color-mix(in oklab, var(--teadeck-logo-body), var(--teadeck-logo-line) 22%);
   --teadeck-logo-highlight: color-mix(in oklab, var(--teadeck-logo-body), white 45%);
   /*
    * The tea keeps its own colour: in this drawing it is the warmest element, not the
-   * interface accent. For a cup entirely in the design's accent colour, set
-   * --teadeck-logo-tea: var(--color-text-brand); the shades follow on their own.
+   * interface accent. A design sets it as its logo tea (integration/themes/);
+   * the shades follow on their own.
    */
   --teadeck-logo-tea: #b85c1e;
   --teadeck-logo-tea-dark: color-mix(in oklab, var(--teadeck-logo-tea), black 28%);
@@ -34,29 +33,19 @@ html {
 /* Put into the page rather than loaded as an image (brand_logo.tsx), so the page sizes it. */
 .teadeck-logo { display: block; }
 .teadeck-logo > svg { display: block; width: auto; height: 100%; max-width: 100%; }
-/* The mascot's place in the column beside the pinned ones: at the bottom, as the design has it.
-   Upstream positions its own elephant through rules for `img` only (and mirrors it),
-   which do not apply to the drawing put into the page. */
-.drawer__inner__mastodon { display: flex; justify-content: center; }
-/* The drawing fills the space the column has left and sits at its bottom edge
-   (preserveAspectRatio="xMidYMax", set when inlining), so it is never cut off. */
-.drawer__inner__mastodon .teadeck-logo { width: 88%; height: 100%; }
-.drawer__inner__mastodon .teadeck-logo > svg { width: 100%; height: 100%; }
-.drawer__inner__mastodon > img.teadeck-logo { width: 88%; height: 100%; object-fit: contain; object-position: bottom center; transform: none; }
 .teadeck-shell-footer { margin-top: 30px; text-align: center; }
-.teadeck-shell-footer a { color: var(--color-text-secondary); }
+.teadeck-shell-footer a { color: var(--td-ui-text-muted); }
 .teadeck-shell-footer p { margin-top: 12px; }
-.teadeck-shell-language { display: inline-flex; align-items: center; gap: 8px; color: var(--color-text-secondary); font-size: 14px; }
+.teadeck-shell-language { display: inline-flex; align-items: center; gap: 8px; color: var(--td-ui-text-muted); font-size: 14px; }
 .teadeck-shell-language select {
   padding: 4px 8px;
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-sm, 6px);
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
+  border: 1px solid var(--td-ui-line);
+  border-radius: var(--td-ui-radius-s);
+  background: var(--td-ui-surface);
+  color: var(--td-ui-text);
   font: inherit;
 }
 body.teadeck-connected { display: flex; flex-direction: column; height: 100dvh; }
-body.teadeck-connected #mastodon { flex: 1; min-height: 0; }
 /* Only Teadeck's own shell: upstream relies on `hidden` elements that its CSS shows (e.g. toggle switches). */
 body > [hidden], #teadeck-shell [hidden] { display: none !important; }
 /* Bottom right, clear of Mastodon's own alerts at the bottom left. Unlike those, the
@@ -68,18 +57,11 @@ body > [hidden], #teadeck-shell [hidden] { display: none !important; }
   flex-direction: column;
   width: min(960px, calc(100vw - 32px));
   height: calc(100dvh - 64px);
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-md, 12px);
+  border: 1px solid var(--td-ui-line);
+  border-radius: var(--td-ui-radius-m);
   overflow: hidden;
-  background: var(--color-bg-primary);
+  background: var(--td-ui-surface);
 }
-/* Above upstream's `.layout-multiple-columns` column rule (fixed width, no growing), which would
-   leave the post list without height. */
-.modal-root__modal.teadeck-status-overlay > [data-column-root] { flex: 1; width: 100%; max-width: none; min-height: 0; }
-.teadeck-status-overlay .scrollable { overflow-y: auto; }
-/* Room for the close button beside the post's own buttons in the header. */
-.modal-root__modal.teadeck-status-overlay > [data-column-root] > header > :first-child { padding-inline-end: 48px; }
-.teadeck-status-overlay__close.icon-button { position: absolute; top: 12px; inset-inline-end: 12px; z-index: 10; }
 @media (width <= 630px) {
   .teadeck-status-overlay { width: 100vw; height: 100dvh; border: 0; border-radius: 0; }
 }

@@ -20,6 +20,22 @@
   font-display: swap;
 }
 
+/* Teadeck's names for the interface, for its own pages and parts (shell.css,
+   large_composer.css). For every design, Mastodon's own included. */
+:root {
+  --td-ui-surface: var(--color-bg-primary);
+  --td-ui-surface-raised: var(--color-bg-secondary);
+  --td-ui-text: var(--color-text-primary);
+  --td-ui-text-muted: var(--color-text-secondary);
+  --td-ui-text-faint: var(--color-text-tertiary, var(--color-text-secondary));
+  --td-ui-line: var(--color-border-primary);
+  --td-ui-radius-s: var(--radius-sm, 6px);
+  --td-ui-radius-m: var(--radius-md, 12px);
+  --td-ui-space: var(--space-3, 12px);
+  --td-ui-font-heading: var(--font-heading, inherit);
+  --td-ui-font-code: var(--font-monospace, monospace);
+}
+
 /* The interface's own colours under Teadeck's names, for the designs' values. */
 html[data-teadeck-theme] {
   --td-brand: var(--color-bg-brand-base);
@@ -449,3 +465,74 @@ html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :
 .teadeck-code__string { color: var(--td-content-string); }
 .teadeck-code__number { color: var(--td-content-number); }
 .teadeck-code__comment { color: var(--td-content-comment); }
+
+/*
+ * Teadeck's parts in Mastodon's interface: rules that rely on Mastodon's markup
+ * (its auth page classes, the column drawer, the modal root, the composer form).
+ */
+
+/* The sign-in page reuses Mastodon's auth page classes (container-alt, simple_form, …). */
+#teadeck-account-list .btn { width: 100%; }
+#teadeck-shell .title { font-size: 30px; line-height: 1.2; }
+
+/* Mastodon's app fills the page below Teadeck's own bars. */
+body.teadeck-connected #mastodon { flex: 1; min-height: 0; }
+
+/* The mascot's place in the column beside the pinned ones: at the bottom, as the design has it.
+   Upstream positions its own elephant through rules for `img` only (and mirrors it),
+   which do not apply to the drawing put into the page. */
+.drawer__inner__mastodon { display: flex; justify-content: center; }
+/* The drawing fills the space the column has left and sits at its bottom edge
+   (preserveAspectRatio="xMidYMax", set when inlining), so it is never cut off. */
+.drawer__inner__mastodon .teadeck-logo { width: 88%; height: 100%; }
+.drawer__inner__mastodon .teadeck-logo > svg { width: 100%; height: 100%; }
+.drawer__inner__mastodon > img.teadeck-logo { width: 88%; height: 100%; object-fit: contain; object-position: bottom center; transform: none; }
+
+/* The post overlay (status_overlay_modal.tsx) holds Mastodon's post view. */
+/* Above upstream's `.layout-multiple-columns` column rule (fixed width, no growing), which would
+   leave the post list without height. */
+.modal-root__modal.teadeck-status-overlay > [data-column-root] { flex: 1; width: 100%; max-width: none; min-height: 0; }
+.teadeck-status-overlay .scrollable { overflow-y: auto; }
+/* Room for the close button beside the post's own buttons in the header. */
+.modal-root__modal.teadeck-status-overlay > [data-column-root] > header > :first-child { padding-inline-end: 48px; }
+.teadeck-status-overlay__close.icon-button { position: absolute; top: 12px; inset-inline-end: 12px; z-index: 10; }
+
+/* The same form as the regular composer, at the size of the status overlay. Its
+   header and footer stay put while the text and the preview scroll. */
+@media (width >= 760px) {
+  /* Upstream's container lets clicks through to the columns and sits just
+     above them; the large composer covers everything (with the element in the
+     selector, as upstream's own class is loaded later). */
+  div.teadeck-large-composer__root { z-index: 100; }
+  .teadeck-large-composer__backdrop { position: fixed; inset: 0; background: rgb(0 0 0 / 50%); pointer-events: auto; }
+  /* Framed like the regular composer, all round, and lifted off the page. */
+  form.teadeck-large-composer {
+    position: fixed;
+    z-index: 1;
+    border: var(--border-default);
+    border-radius: var(--radius-6);
+    box-shadow: 0 24px 64px rgb(0 0 0 / 45%);
+    inset: 32px auto auto 50%;
+    transform: translateX(-50%);
+    width: min(960px, calc(100vw - 32px));
+    max-width: none;
+    height: calc(100dvh - 64px);
+    max-height: none;
+    margin: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    transition: none;
+  }
+  form.teadeck-large-composer > header,
+  form.teadeck-large-composer > footer {
+    position: sticky;
+    z-index: 2;
+    background: var(--td-ui-surface);
+  }
+  form.teadeck-large-composer > header { top: calc(-1 * var(--space-4)); margin-top: calc(-1 * var(--space-4)); padding-top: var(--space-4); }
+  form.teadeck-large-composer > footer { bottom: calc(-1 * var(--space-4)); margin-bottom: calc(-1 * var(--space-4)); padding-block: var(--space-2) var(--space-4); }
+  /* The window scrolls instead: nothing in it is squeezed. */
+  form.teadeck-large-composer > * { flex-shrink: 0; }
+  form.teadeck-large-composer textarea { min-height: 30vh; }
+}
+

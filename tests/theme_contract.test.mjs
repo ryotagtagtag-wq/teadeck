@@ -54,6 +54,61 @@ test('mastodon.css is the only stylesheet that sets Mastodon\'s design variables
   assert.doesNotMatch(withoutComments(await read('integration/themes/mastodon.css')), /data-teadeck-theme=['"]/);
 });
 
+/** Every rule's selector and body, also inside @media and other at-rules. */
+function allRules(css) {
+  const found = [];
+  let depth = 0;
+  let start = 0;
+  const stack = [];
+  for (let index = 0; index < css.length; index++) {
+    if (css[index] === '{') {
+      stack.push(css.slice(start, index).trim());
+      start = index + 1;
+      depth++;
+    } else if (css[index] === '}') {
+      const selector = stack.pop();
+      if (!selector.startsWith('@')) found.push([selector, css.slice(start, index)]);
+      start = index + 1;
+      depth--;
+    }
+  }
+  return found;
+}
+
+test('outside mastodon.css, stylesheets read only Teadeck\'s variables and name only Teadeck\'s own markup', async () => {
+  const integration = path.join(root, 'integration');
+  const sheets = [];
+  const walk = async (dir) => {
+    for (const entry of await readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else if (entry.name.endsWith('.css') && full !== path.join(integration, 'themes/mastodon.css')) sheets.push(path.relative(root, full));
+    }
+  };
+  await walk(integration);
+  assert.ok(sheets.includes('integration/shell.css') && sheets.includes('integration/large_composer.css'), sheets.join(' '));
+  const bridge = withoutComments(await read('integration/themes/mastodon.css'));
+  const provided = new Set([
+    ...halfVariables(designs[0].dark).map(([variable]) => variable),
+    ...[...bridge.matchAll(/(--td-[\w-]+)\s*:/g)].map((match) => match[1]),
+  ]);
+  for (const sheet of sheets) {
+    const css = withoutComments(await read(sheet));
+    for (const [, name] of css.matchAll(/var\((--[\w-]+)/g)) {
+      assert.match(name, /^--(td|teadeck)-/, `${sheet} reads ${name}`);
+      if (name.startsWith('--td-')) assert.ok(provided.has(name), `${sheet} reads ${name}, which nothing sets`);
+    }
+    for (const [selector] of allRules(css)) {
+      // The last line before the brace is the selector (declarations of an enclosing rule end with ';').
+      const own = selector.split(';').at(-1).replace(/::?[\w-]+(\([^)]*\))?/g, '').replace(/\[hidden\]/g, '');
+      assert.doesNotMatch(own, /\[/, `${sheet}: ${selector} selects by an attribute of Mastodon's markup`);
+      for (const [, token] of own.matchAll(/[.#]([\w-]+)/g)) {
+        assert.match(token, /^teadeck-/, `${sheet}: ${selector} names ${token}`);
+      }
+    }
+  }
+});
+
 test('every Teadeck variable mastodon.css reads is set by each design or by mastodon.css itself', async () => {
   const css = withoutComments(await read('integration/themes/mastodon.css'));
   const provided = new Set([

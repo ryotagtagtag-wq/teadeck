@@ -44,7 +44,9 @@ Designs live in `integration/themes/`:
 - `tokens.ts` defines what a design describes, per dark and light half: colour ramps, ground, fonts and their case and weight, shape, main and secondary buttons, posts, avatars, hashtags and the colours of post content.
 - One file per design (`assam.ts`, `sencha.ts`, `hibiscus.ts`) contains only values in these terms. It never names Mastodon's variables or classes. `index.ts` lists the designs in the order the settings offer them.
 - `css.ts` turns the designs into `--td-*` variables and `@font-face` rules. The build writes them to `designs.css` and writes the list of design names for the container.
-- `mastodon.css` is the only stylesheet that applies the designs to Mastodon. When Mastodon renames a variable or a class, change it there.
+- `mastodon.css` is the only stylesheet that knows Mastodon: it applies the designs, offers Teadeck's own pages and parts (`shell.css`, `large_composer.css`) a few `--td-ui-*` variables for surfaces, text, lines, radii and fonts, and holds every rule that relies on Mastodon's markup. When Mastodon renames a variable or a class, change it there.
+
+Other stylesheets read only `--td-*` and `--teadeck-*` variables and name only Teadeck's own classes and ids (`teadeck-*`).
 
 To add a design, add its file, put it in `index.ts`, and add its row to the theme table in `docs/configuration.md` and its line to `.env.example`. The settings, the container's `TEADECK_THEME` check, the design tests and `npm run screenshots` pick it up from the registry. `tests/theme_contract.test.mjs` checks these rules.
 
