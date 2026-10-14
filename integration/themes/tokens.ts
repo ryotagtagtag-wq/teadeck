@@ -35,9 +35,25 @@ export interface Half {
     /** Text on the ground. */
     text: string;
   };
-  /** The tea in the teacup logo. */
-  logoTea: string;
+  /**
+   * The teacup logo's colours. The tea is the design's own; the cup's roles
+   * left out follow the interface (line from the text, body from a raised
+   * surface) and the tea's shades from the tea.
+   */
+  logo: {
+    tea: string;
+    teaDark?: string;
+    teaLight?: string;
+    teaShade?: string;
+    line?: string;
+    steam?: string;
+    body?: string;
+    bodyDark?: string;
+    highlight?: string;
+  };
   fonts: {
+    /** The server's name at the top of the navigation. */
+    brand: string;
     /** Headings in posts and pages. */
     heading: string;
     /** Column and dialog titles. */
@@ -61,13 +77,29 @@ export interface Half {
     headingTracking: string;
     titleTracking: string;
     labelTracking: string;
+    /** Line height of post text. */
+    bodyLeading: string;
   };
-  shape: 'rounded' | 'square';
-  /** The line around framed things (cards, framed buttons and avatars). */
+  /** Corners: round, square, or square with two cut off at 45° (top right, bottom left). */
+  shape: 'rounded' | 'square' | 'chamfered';
+  /** The line around framed things (framed buttons, avatars, fields). */
   frame: string;
-  mainButton: 'filled' | 'outlined';
-  secondaryButtons: 'tinted' | 'framed';
+  /** "New post" and other main buttons: in the accent, an outline, or colours of their own. */
+  mainButton: 'filled' | 'outlined' | { background: string; text: string; hover: string };
+  /** Secondary buttons ("Unfollow"): a faint tint, a frame, or colours of their own. */
+  secondaryButtons: 'tinted' | 'framed' | { background: string; text: string };
+  /** Posts divided by a line, or each on a card of its own on the column's ground. */
   posts: 'divided' | 'cards';
+  /** Columns side by side, or apart with the desktop's ground between them. */
+  columns: 'joined' | 'spaced';
+  /** Column titles centred, or at the start behind an accent marker. */
+  titles: 'centered' | 'marked';
+  /** The navigation's bottom links with their names, or as icons only. */
+  footerNav: 'labelled' | 'icons';
+  /** Stroke of the line icons. */
+  icons: 'regular' | 'bold';
+  /** A fine grain over the whole interface. */
+  grain: boolean;
   avatars: 'plain' | 'framed';
   hashtags: {
     look: 'tinted' | { background: string; text: string };

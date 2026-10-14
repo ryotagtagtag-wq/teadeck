@@ -1,6 +1,8 @@
 import { readStoredJson, storageKeys, writeStoredJson } from './browser_storage.ts';
 import { isRtlLocale } from './ui_locale.ts';
 import { updateFavicon } from './favicon.ts';
+import { setIconWeight } from './icon_weight.tsx';
+import { designAttributeNames, designAttributes, designIcons } from './themes/index.ts';
 
 import type { Contrast, ColorScheme, FrontendSettings } from './frontend_settings.ts';
 
@@ -49,7 +51,11 @@ export function applyAppearance(settings: FrontendSettings, locale: string) {
   if (settings.theme === 'mastodon') delete root.dataset.teadeckTheme;
   else root.dataset.teadeckTheme = settings.theme;
 
-  root.dataset.colorScheme = resolveColorScheme(settings.colorScheme, colorSchemeMediaWatcher.matches) ? 'dark' : 'light';
+  const scheme = resolveColorScheme(settings.colorScheme, colorSchemeMediaWatcher.matches) ? 'dark' : 'light';
+  root.dataset.colorScheme = scheme;
+  for (const name of designAttributeNames) delete root.dataset[name];
+  Object.assign(root.dataset, designAttributes(settings.theme, scheme));
+  setIconWeight(designIcons(settings.theme, scheme));
   root.dataset.contrast = resolveContrast(settings.contrast, contrastMediaWatcher.matches) ? 'high' : 'default';
   if (!watching) {
     watching = true;

@@ -78,6 +78,14 @@ html[data-teadeck-theme][data-color-scheme] {
   --base-color-bg-desktop: var(--td-desktop);
   --base-color-fg: var(--td-text);
   --teadeck-logo-tea: var(--td-logo-tea);
+  --teadeck-logo-tea-dark: var(--td-logo-tea-dark);
+  --teadeck-logo-tea-light: var(--td-logo-tea-light);
+  --teadeck-logo-tea-shade: var(--td-logo-tea-shade);
+  --teadeck-logo-line: var(--td-logo-line);
+  --teadeck-logo-steam: var(--td-logo-steam);
+  --teadeck-logo-body: var(--td-logo-body);
+  --teadeck-logo-body-dark: var(--td-logo-body-dark);
+  --teadeck-logo-highlight: var(--td-logo-highlight);
 
   --font-heading: var(--td-font-heading);
   --font-body: var(--td-font-body);
@@ -139,32 +147,35 @@ html[data-teadeck-theme] .account__avatar {
 html[data-teadeck-theme] ._comp_button_redesign__solid._comp_button_redesign__accent {
   --bg: var(--td-main-bg);
   --fg: var(--td-main-fg);
-  box-shadow: inset 0 0 0 var(--td-main-edge) var(--color-bg-brand-base);
+  --bg-hover: var(--td-main-hover);
+  box-shadow: inset 0 0 0 var(--td-main-edge) var(--td-main-edge-color);
 }
 html[data-teadeck-theme] .button:not(:disabled):not(.disabled):not(.button-secondary):not(.button--plain),
 html[data-teadeck-theme] #teadeck-shell .btn {
   background-color: var(--td-main-bg);
-  border: max(1px, var(--td-main-edge)) solid var(--color-bg-brand-base);
+  border: max(1px, var(--td-main-edge)) solid var(--td-main-edge-color);
   color: var(--td-main-fg);
   border-radius: var(--radius-sm);
 }
 html[data-teadeck-theme] .button:not(:disabled):not(.disabled):not(.button-secondary):not(.button--plain):is(:hover, :focus, :active),
 html[data-teadeck-theme] #teadeck-shell .btn:is(:hover, :focus) {
-  background-color: color-mix(in oklab, var(--td-main-bg) 86%, var(--td-main-fg));
-  border-color: var(--color-bg-brand-base);
+  background-color: var(--td-main-hover);
+  border-color: var(--td-main-edge-color);
   color: var(--td-main-fg);
 }
 /* The split "New post" button: one frame around both parts, so only the thin
    divider stands between them. */
 html[data-teadeck-theme] .teadeck-new-post {
   border-radius: var(--radius-round);
-  box-shadow: inset 0 0 0 var(--td-main-edge) var(--color-bg-brand-base);
+  box-shadow: inset 0 0 0 var(--td-main-edge) var(--td-main-edge-color);
 }
 html[data-teadeck-theme] .teadeck-new-post > ._comp_button_redesign__solid._comp_button_redesign__accent {
   box-shadow: none;
 }
-/* Secondary buttons: a tint or a frame. */
+/* Secondary buttons: a tint, a frame or colours of their own. */
 html[data-teadeck-theme] ._comp_button_redesign__tonal._comp_button_redesign__neutral {
+  --bg-color: var(--td-secondary-bg);
+  --fg: var(--td-secondary-fg);
   --bg-opacity: var(--td-secondary-fill);
   box-shadow: var(--td-secondary-ring);
 }
@@ -182,7 +193,6 @@ html[data-teadeck-theme] ._comp_status__hashtags ._comp_button_redesign__tonal {
 /* Posts in a feed: divided by a line, or framed cards. */
 html[data-teadeck-theme] ._comp_status__variantFeed {
   margin: var(--td-post-gap);
-  border: var(--td-post-frame);
   border-bottom: var(--td-post-divider);
   background: var(--td-post-bg);
 }
@@ -192,7 +202,6 @@ html[data-teadeck-theme] ._comp_column__root {
 /* In notifications the whole entry is the post: its heading ("Mention", "… favourited") inside the frame. */
 html[data-teadeck-theme] :is(.notification-ungrouped, .notification-group) {
   margin: var(--td-post-gap);
-  border: var(--td-post-frame);
   border-bottom: var(--td-post-divider);
   background: var(--td-post-bg);
 }
@@ -200,6 +209,247 @@ html[data-teadeck-theme] .notification-ungrouped ._comp_status__variantFeed {
   margin: 0;
   border: 0;
   background: transparent;
+}
+
+/* Cards: room inside, so the post's actions stay on the card. */
+html[data-teadeck-posts='cards'] ._comp_status__variantFeed {
+  padding: 14px 14px 10px;
+}
+html[data-teadeck-posts='cards'] .notification-ungrouped ._comp_status__variantFeed {
+  padding-top: 0;
+}
+
+/* Columns apart, with the desktop's ground between them. */
+html[data-teadeck-columns='spaced'] ._comp_columns_area_styles_multi_column__root {
+  gap: 6px;
+}
+
+/* Column titles at the start, behind a marker in the accent; the header lies
+   on the column's own ground, without the fade below it. */
+html[data-teadeck-titles='marked'] :is(._comp_column_header__root, .column-header) {
+  border: 0;
+  background: var(--td-column-ground);
+}
+html[data-teadeck-titles='marked'] ._comp_column_header__root::after {
+  display: none;
+}
+html[data-teadeck-titles='marked'] ._comp_column_header__extraStickyContent {
+  background: var(--td-column-ground);
+}
+html[data-teadeck-titles='marked'] ._comp_column_header__layout {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  text-align: start;
+}
+html[data-teadeck-titles='marked'] :is(._comp_column_header__title, .column-header__title) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 26px;
+  line-height: 1.1;
+}
+html[data-teadeck-titles='marked'] :is(._comp_column_header__title, .column-header__title)::before {
+  content: '';
+  flex: none;
+  width: 4px;
+  height: 24px;
+  background: var(--td-content-accent);
+}
+html[data-teadeck-titles='marked'] ._comp_column_header__title button {
+  text-align: start;
+}
+/* Settings sections, titled the same way. */
+html[data-teadeck-titles='marked'] .teadeck-settings__section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--td-font-title);
+  font-weight: var(--td-title-weight);
+  font-size: 22px;
+  text-transform: var(--td-caps);
+}
+html[data-teadeck-titles='marked'] .teadeck-settings__section::before {
+  content: '';
+  flex: none;
+  width: 4px;
+  height: 20px;
+  background: var(--td-content-accent);
+}
+
+/* The navigation's bottom links as icons only, on tiles of equal width; their
+   names stay for screen readers and as tooltips. */
+html[data-teadeck-footer-nav='icons'] ._navigation_panel_redesign__footerNav {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 6px;
+}
+html[data-teadeck-footer-nav='icons'] ._navigation_panel_redesign__footerNav ._navigation_panel_redesign_navigation_link__wrapper {
+  padding: 0;
+}
+html[data-teadeck-footer-nav='icons'] ._navigation_panel_redesign__footerNav ._navigation_panel_redesign_navigation_link__link {
+  height: 44px;
+  padding: 0;
+  justify-content: center;
+  background: var(--td-column-ground);
+}
+html[data-teadeck-footer-nav='icons'] ._navigation_panel_redesign__footerNav ._navigation_panel_redesign_navigation_link__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The server's name in the design's own face. */
+html[data-teadeck-theme] ._navigation_panel_redesign_header__serverName {
+  font-family: var(--td-font-brand);
+}
+html[data-teadeck-shape='chamfered'] ._navigation_panel_redesign_header__serverName {
+  font-size: 31px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Chamfered corners: top right and bottom left cut off, sized by element. A
+   clip also cuts away outlines, so focus rings sit inside. */
+html[data-teadeck-shape='chamfered'] :is(._comp_status__variantFeed, .notification-ungrouped, .notification-group) {
+  clip-path: var(--td-clip-card);
+}
+html[data-teadeck-shape='chamfered'] :is(.teadeck-new-post, ._navigation_panel_redesign_account_card_and_menu__root) {
+  clip-path: var(--td-clip-main);
+}
+html[data-teadeck-shape='chamfered'] ._navigation_panel_redesign_account_card_and_menu__root {
+  border: 0;
+  background: var(--td-column-ground);
+}
+html[data-teadeck-shape='chamfered'] :is(select, .select-wrapper) {
+  clip-path: var(--td-clip-field);
+}
+html[data-teadeck-shape='chamfered'] .account__avatar {
+  clip-path: var(--td-clip-avatar);
+}
+html[data-teadeck-shape='chamfered'] ._comp_button_redesign__tonal._comp_button_redesign__neutral {
+  clip-path: var(--td-clip-secondary);
+}
+html[data-teadeck-shape='chamfered'] ._comp_status__hashtags ._comp_button_redesign__tonal {
+  clip-path: var(--td-clip-tag);
+}
+html[data-teadeck-shape='chamfered'] :is(button, a, select, input):focus-visible {
+  outline-offset: -3px;
+}
+
+/* Active states: the selected tab underlined in the accent, the current
+   navigation item on a card, the notification badge as a small square. */
+html[data-teadeck-titles='marked'] .notification__filter-bar button.active,
+html[data-teadeck-titles='marked'] .account__section-headline a.active {
+  color: var(--td-text-primary);
+}
+html[data-teadeck-titles='marked'] :is(.notification__filter-bar button.active, .account__section-headline a.active)::before,
+html[data-teadeck-titles='marked'] :is(.notification__filter-bar button.active, .account__section-headline a.active)::after {
+  height: 2px;
+  border-radius: 0;
+  background: var(--td-content-accent);
+}
+html[data-teadeck-titles='marked'] ._navigation_panel_redesign_navigation_link__link[aria-current='page'] {
+  background: var(--td-post-bg);
+}
+html[data-teadeck-titles='marked'] ._navigation_panel_redesign_navigation_link__link[aria-current='page'] ._navigation_panel_redesign_navigation_link__icon {
+  color: var(--td-brand-text);
+}
+html[data-teadeck-shape='chamfered'] ._comp_badge_redesign__badge {
+  min-width: 0;
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border-radius: 0;
+  background: var(--td-brand-text);
+  font-size: 0;
+}
+
+/* Notification headings are h2 in Mastodon: the sentence in the body's face,
+   only the name in the label's; the kind ("Mention") as a small caption. */
+html[data-teadeck-theme] :is(.notification-group__main__header__label, .notification-ungrouped__header) {
+  font-family: var(--td-font-body);
+}
+html[data-teadeck-theme] .notification-group__main__header__label a {
+  font-family: var(--td-font-label);
+  font-weight: var(--td-label-weight);
+  text-transform: var(--td-caps);
+  letter-spacing: var(--td-label-tracking);
+}
+html[data-teadeck-shape='chamfered'] .notification-ungrouped__header {
+  font-family: var(--td-font-label);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--td-content-muted);
+}
+
+/* Settings: labels in condensed capitals, switches as a square track whose
+   knob turns to the accent when on. */
+html[data-teadeck-shape='chamfered'] ._comp_form_fields_form_field_wrapper__label {
+  font-family: var(--td-font-label);
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+html[data-teadeck-shape='chamfered'] ._comp_form_fields_toggle__wrapper {
+  --diameter: 14px;
+  --padding: 3px;
+}
+html[data-teadeck-shape='chamfered'] ._comp_form_fields_toggle__toggle {
+  width: 40px;
+  height: 22px;
+  border: 1px solid color-mix(in oklab, var(--td-content-muted) 70%, transparent);
+  border-radius: 0;
+  background: var(--td-desktop);
+}
+html[data-teadeck-shape='chamfered'] ._comp_form_fields_toggle__toggle::before {
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--td-content-muted);
+}
+html[data-teadeck-shape='chamfered'] ._comp_form_fields_toggle__input:checked + ._comp_form_fields_toggle__toggle {
+  background: var(--td-desktop);
+}
+html[data-teadeck-shape='chamfered'] ._comp_form_fields_toggle__input:checked + ._comp_form_fields_toggle__toggle::before {
+  background: var(--td-content-accent);
+  transform: translateX(18px);
+}
+
+/* Post text and links. */
+html[data-teadeck-theme] .status__content__text {
+  line-height: var(--td-body-leading);
+}
+html[data-teadeck-shape='chamfered'] .status__content__text a:not(.mention, .hashtag),
+html[data-teadeck-shape='chamfered'] .status__content__text :is(.mention, .hashtag) {
+  color: var(--td-content-link);
+  font-weight: 500;
+  text-decoration: none;
+}
+html[data-teadeck-shape='chamfered'] .status__content__text a:hover {
+  color: var(--td-hashtag-fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* A fine grain over everything, where the design has one. */
+html[data-teadeck-theme] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px;
+  opacity: var(--td-grain-opacity);
+  mix-blend-mode: overlay;
+}
+@media (prefers-reduced-transparency: reduce) {
+  html[data-teadeck-theme] body::after { display: none; }
 }
 
 /* The sign-in page. */

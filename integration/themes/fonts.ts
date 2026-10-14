@@ -19,6 +19,7 @@ export const files = {
     { family: 'Teadeck Barlow Condensed', file: 'barlow-condensed-latin-600.woff2', weight: 600 },
     { family: 'Teadeck Barlow Condensed', file: 'barlow-condensed-latin-700.woff2', weight: 700 },
   ],
+  metalMania: [{ family: 'Teadeck Metal Mania', file: 'metal-mania-latin.woff2', weight: 400 }],
   barlow: [
     { family: 'Teadeck Barlow', file: 'barlow-latin-400.woff2', weight: 400 },
     { family: 'Teadeck Barlow', file: 'barlow-latin-400-italic.woff2', weight: 400, style: 'italic' },
@@ -36,4 +37,5 @@ export const stacks = {
   bigShouldersDisplay: "'Teadeck Big Shoulders Display', 'Teadeck Barlow Condensed', system-ui, sans-serif",
   barlowCondensed: "'Teadeck Barlow Condensed', 'Teadeck Barlow', system-ui, sans-serif",
   barlow: "'Teadeck Barlow', system-ui, sans-serif",
+  metalMania: "'Teadeck Metal Mania', 'Teadeck Big Shoulders Display', system-ui, sans-serif",
 };

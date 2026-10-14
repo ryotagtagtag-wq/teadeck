@@ -1,7 +1,8 @@
 /**
  * Turns the designs into CSS: @font-face rules for their fonts and, per half, a
  * block of `--td-*` variables on <html>. Choices such as `mainButton:
- * 'outlined'` become values here. Where a value needs one of the interface's
+ * 'outlined'` become values here; choices of layout (posts, titles, …) are
+ * attributes on <html> instead (designAttributes in index.ts). Where a value needs one of the interface's
  * own colours it names the `--td-*` alias that mastodon.css provides
  * (`--td-brand`, `--td-text-primary`, …), so nothing here knows Mastodon.
  *
@@ -13,15 +14,26 @@ import { rampSteps } from './tokens.ts';
 const radii = {
   rounded: ['8px', '12px', '16px', '20px', '24px', 'calc(1px * infinity)'],
   square: ['0', '0', '0', '0', '0', '0'],
+  chamfered: ['0', '0', '0', '0', '0', '0'],
 } as const;
+
+/** Chamfer sizes by kind of element; the larger the element, the larger the cut. */
+const chamfers = { card: 14, main: 10, field: 8, avatar: 7, secondary: 6, tag: 5 } as const;
+
+/** Top right and bottom left cut off at 45°. */
+const chamfer = (size: number) =>
+  `polygon(0 0, calc(100% - ${size}px) 0, 100% ${size}px, 100% 100%, ${size}px 100%, 0 calc(100% - ${size}px))`;
 
 /** Every variable of one half, in a fixed order. */
 export function halfVariables(half: Half): [string, string][] {
-  const outlined = half.mainButton === 'outlined';
-  const framedButtons = half.secondaryButtons === 'framed';
+  const main = half.mainButton;
+  const outlined = main === 'outlined';
+  const secondary = half.secondaryButtons;
+  const framedButtons = secondary === 'framed';
   const cards = half.posts === 'cards';
   const tags = half.hashtags.look;
   const [r1, r2, r3, r4, r5, full] = radii[half.shape];
+  const clip = (size: number) => (half.shape === 'chamfered' ? chamfer(size) : 'none');
   const { type, fonts, content } = half;
   return [
     ...half.neutral.map((value, index): [string, string] => [`--td-neutral-${rampSteps[index]}`, value]),
@@ -30,8 +42,17 @@ export function halfVariables(half: Half): [string, string][] {
     ['--td-page', half.ground.page],
     ['--td-desktop', half.ground.desktop],
     ['--td-text', half.ground.text],
-    ['--td-logo-tea', half.logoTea],
+    ['--td-logo-tea', half.logo.tea],
+    ['--td-logo-tea-dark', half.logo.teaDark ?? 'color-mix(in oklab, var(--td-logo-tea), black 28%)'],
+    ['--td-logo-tea-light', half.logo.teaLight ?? 'color-mix(in oklab, var(--td-logo-tea), white 18%)'],
+    ['--td-logo-tea-shade', half.logo.teaShade ?? 'color-mix(in oklab, var(--td-logo-tea), black 52%)'],
+    ['--td-logo-line', half.logo.line ?? 'var(--td-ui-text)'],
+    ['--td-logo-steam', half.logo.steam ?? 'var(--td-ui-text-muted)'],
+    ['--td-logo-body', half.logo.body ?? 'var(--td-ui-surface-raised)'],
+    ['--td-logo-body-dark', half.logo.bodyDark ?? 'color-mix(in oklab, var(--td-logo-body), var(--td-logo-line) 22%)'],
+    ['--td-logo-highlight', half.logo.highlight ?? 'color-mix(in oklab, var(--td-logo-body), white 45%)'],
 
+    ['--td-font-brand', fonts.brand],
     ['--td-font-heading', fonts.heading],
     ['--td-font-title', fonts.title],
     ['--td-font-label', fonts.label],
@@ -49,6 +70,7 @@ export function halfVariables(half: Half): [string, string][] {
     ['--td-heading-tracking', type.headingTracking],
     ['--td-title-tracking', type.titleTracking],
     ['--td-label-tracking', type.labelTracking],
+    ['--td-body-leading', type.bodyLeading],
 
     ['--td-radius-1', r1],
     ['--td-radius-2', r2],
@@ -58,17 +80,29 @@ export function halfVariables(half: Half): [string, string][] {
     ['--td-radius-full', full],
 
     ['--td-frame', half.frame],
-    ['--td-main-bg', outlined ? 'transparent' : 'var(--td-brand)'],
-    ['--td-main-fg', outlined ? 'var(--td-brand-text)' : 'var(--td-on-brand)'],
+    // Main buttons: the accent filled or outlined, or colours of the design's own.
+    ['--td-main-bg', typeof main === 'object' ? main.background : outlined ? 'transparent' : 'var(--td-brand)'],
+    ['--td-main-fg', typeof main === 'object' ? main.text : outlined ? 'var(--td-brand-text)' : 'var(--td-on-brand)'],
+    ['--td-main-hover', typeof main === 'object' ? main.hover : 'color-mix(in srgb, var(--td-main-bg) 90%, var(--td-main-fg))'],
     ['--td-main-edge', outlined ? '2px' : '0px'],
-    ['--td-secondary-fill', framedButtons ? '0%' : '4%'],
+    ['--td-main-edge-color', typeof main === 'object' ? main.background : 'var(--td-brand)'],
+    ['--td-secondary-bg', typeof secondary === 'object' ? secondary.background : 'var(--td-text-primary)'],
+    ['--td-secondary-fg', typeof secondary === 'object' ? secondary.text : 'var(--td-text-primary)'],
+    ['--td-secondary-fill', typeof secondary === 'object' ? '100%' : framedButtons ? '0%' : '4%'],
     ['--td-secondary-ring', framedButtons ? 'inset 0 0 0 1px var(--td-frame)' : 'none'],
-    ['--td-post-gap', cards ? '8px 12px' : '0'],
-    ['--td-post-frame', cards ? '1px solid var(--td-frame)' : '0 solid transparent'],
-    ['--td-post-divider', cards ? '1px solid var(--td-frame)' : 'var(--td-divider)'],
+    // Posts: divided by a line, or cards apart on the column's ground.
+    ['--td-post-gap', cards ? '0 0 6px' : '0'],
+    ['--td-post-divider', cards ? '0 solid transparent' : 'var(--td-divider)'],
     // Cards lie on the page's ground; divided posts share the surface with the column.
     ['--td-column-ground', cards ? 'var(--td-page)' : 'var(--td-surface)'],
     ['--td-post-bg', cards ? 'var(--td-surface)' : 'transparent'],
+    ['--td-grain-opacity', half.grain ? '0.09' : '0'],
+    ['--td-clip-card', clip(chamfers.card)],
+    ['--td-clip-main', clip(chamfers.main)],
+    ['--td-clip-field', clip(chamfers.field)],
+    ['--td-clip-avatar', clip(chamfers.avatar)],
+    ['--td-clip-secondary', clip(chamfers.secondary)],
+    ['--td-clip-tag', clip(chamfers.tag)],
     ['--td-avatar-ring', half.avatars === 'framed' ? '0 0 0 1px var(--td-frame)' : 'none'],
     ['--td-hashtag-bg', tags === 'tinted' ? 'rgb(from var(--td-text-primary) r g b / 4%)' : tags.background],
     ['--td-hashtag-fg', tags === 'tinted' ? 'var(--td-text-primary)' : tags.text],

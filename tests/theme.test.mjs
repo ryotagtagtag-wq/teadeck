@@ -86,35 +86,46 @@ test('each tea design replaces colours, fonts and radii; Mastodon\'s design stay
   }
 });
 
-test('Hibiscus is square and speaks in condensed capitals: column titles, names, headings and an outlined main button', { timeout: 90_000 }, async () => {
+test('Hibiscus is chamfered and speaks in condensed capitals: marked column titles, names, a filled main button, icon-only bottom links', { timeout: 90_000 }, async () => {
   const { context, page } = await signedInPage();
   try {
     await choose(page, { theme: 'hibiscus', colorScheme: 'dark' });
     const look = await page.evaluate(() => {
-      const style = (selector) => { const element = document.querySelector(selector); return element && getComputedStyle(element); };
-      const title = style('._comp_column_header__title button');
+      const style = (selector, pseudo) => { const element = document.querySelector(selector); return element && getComputedStyle(element, pseudo); };
+      const title = style('._comp_column_header__title');
+      const marker = style('._comp_column_header__title', '::before');
       const name = style('._comp_status_header__nameLink .display-name');
       const avatar = style('.account__avatar');
       const publish = [...document.querySelectorAll('button')].find((element) => element.textContent.trim() === 'Neuer Beitrag');
       const button = getComputedStyle(publish);
+      const label = style('._navigation_panel_redesign__footerNav ._navigation_panel_redesign_navigation_link__label');
       return {
-        title: [title.fontFamily, title.textTransform],
+        layout: { ...document.documentElement.dataset },
+        title: [title.fontFamily, title.textTransform, title.justifyContent || title.textAlign],
+        marker: [marker.width, marker.backgroundColor],
         name: [name.fontFamily, name.textTransform],
-        avatarRadius: avatar.borderTopLeftRadius,
-        // The split "New post" button carries one frame around both parts.
-        button: [button.backgroundColor, getComputedStyle(publish.closest('.teadeck-new-post')).boxShadow, button.textTransform, button.borderTopLeftRadius],
+        avatar: avatar.clipPath,
+        button: [button.backgroundColor, button.textTransform, getComputedStyle(publish.closest('.teadeck-new-post')).clipPath],
+        footerLabel: label.clipPath,
+        grain: getComputedStyle(document.body, '::after').opacity,
       };
     });
-    assert.match(look.title[0], /Teadeck Barlow Condensed/);
+    assert.equal(look.layout.teadeckShape, 'chamfered');
+    assert.equal(look.layout.teadeckTitles, 'marked');
+    assert.match(look.title[0], /Teadeck Big Shoulders Display/);
     assert.equal(look.title[1], 'uppercase');
+    assert.deepEqual(look.marker, ['4px', 'rgb(208, 49, 44)']);
     assert.match(look.name[0], /Teadeck Barlow Condensed/);
     assert.equal(look.name[1], 'uppercase');
-    assert.equal(look.avatarRadius, '0px');
-    const [background, outline, transform, radius] = look.button;
-    assert.equal(background, 'rgba(0, 0, 0, 0)');
-    assert.match(outline, /inset/);
+    assert.match(look.avatar, /^polygon/);
+    const [background, transform, clip] = look.button;
+    assert.equal(background, 'rgb(184, 34, 31)');
     assert.equal(transform, 'uppercase');
-    assert.equal(radius, '0px');
+    assert.match(clip, /^polygon/);
+    // The bottom links show icons; their names stay for screen readers.
+    assert.equal(look.footerLabel, 'inset(50%)');
+    assert.equal(await page.getByRole('link', { name: 'Benachrichtigungen' }).count() > 0, true);
+    assert.equal(look.grain, '0.09');
 
     // Post headings in the display face.
     await page.evaluate(() => {
@@ -124,12 +135,18 @@ test('Hibiscus is square and speaks in condensed capitals: column titles, names,
     });
     const heading = await page.locator('.status__content__text h1').evaluate((element) => getComputedStyle(element).fontFamily);
     assert.match(heading, /Teadeck Big Shoulders Display/);
+
+    // Mastodon's own design takes none of it.
+    await choose(page, { theme: 'mastodon', colorScheme: 'dark' });
+    const mastodon = await page.evaluate(() => ({ ...document.documentElement.dataset }));
+    assert.equal(mastodon.teadeckShape, undefined);
+    assert.equal(mastodon.teadeckTitles, undefined);
   } finally {
     await context.close();
   }
 });
 
-test('in notifications, a framed post keeps its heading inside the frame', { timeout: 60_000 }, async () => {
+test('in notifications, a post on a card keeps its heading on the card', { timeout: 60_000 }, async () => {
   const other = { ...account, id: '7', username: 'tek', acct: 'tek@freeradical.zone', display_name: 'Tek' };
   const notifications = {
     notification_groups: [{
@@ -138,15 +155,16 @@ test('in notifications, a framed post keeps its heading inside the frame', { tim
     }],
     accounts: [other], statuses: [{ ...status, id: '900', account: other }],
   };
-  const { context, page } = await signedInPage({ deployment: { theme: 'hibiscus' }, routes: { '/api/v2/notifications': notifications } });
+  const { context, page } = await signedInPage({ deployment: { theme: 'hibiscus', colorScheme: 'dark' }, routes: { '/api/v2/notifications': notifications } });
   try {
     await page.evaluate(() => { history.pushState(null, '', '/notifications'); dispatchEvent(new PopStateEvent('popstate')); });
     const entry = page.locator('.notification-ungrouped').first();
     await entry.waitFor();
-    const frames = await entry.evaluate((element) => ({
-      entry: getComputedStyle(element).borderTopWidth,
-      post: getComputedStyle(element.querySelector('._comp_status__variantFeed')).borderTopWidth,
+    // The card is the whole notification; the post inside lies on it without a card of its own.
+    const grounds = await entry.evaluate((element) => ({
+      entry: getComputedStyle(element).backgroundColor,
+      post: getComputedStyle(element.querySelector('._comp_status__variantFeed')).backgroundColor,
     }));
-    assert.deepEqual(frames, { entry: '1px', post: '0px' });
+    assert.deepEqual(grounds, { entry: 'rgb(27, 23, 24)', post: 'rgba(0, 0, 0, 0)' });
   } finally { await context.close(); }
 });

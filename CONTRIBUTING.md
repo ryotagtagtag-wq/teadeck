@@ -53,9 +53,9 @@ git -C .work/upstream diff -- <file> | grep -v '^index ' > patches/<nn>-<name>.p
 
 Designs live in `integration/themes/`:
 
-- `tokens.ts` defines what a design describes, per dark and light half: colour ramps, ground, fonts and their case and weight, shape, main and secondary buttons, posts, avatars, hashtags and the colours of post content.
+- `tokens.ts` defines what a design describes, per dark and light half: colour ramps, ground, fonts and their case and weight, shape (rounded, square or chamfered), main and secondary buttons, posts (divided or cards), columns, column titles, the navigation's bottom links, icon stroke, grain, avatars, hashtags, the teacup's colours and the colours of post content.
 - One file per design (`assam.ts`, `sencha.ts`, `hibiscus.ts`) contains only values in these terms. It never names Mastodon's variables or classes. `index.ts` lists the designs in the order the settings offer them.
-- `css.ts` turns the designs into `--td-*` variables and `@font-face` rules. The build writes them to `designs.css` and writes the list of design names for the container.
+- `css.ts` turns the designs into `--td-*` variables and `@font-face` rules. The build writes them to `designs.css` and writes the list of design names for the container. Choices of layout (shape, posts, columns, titles, bottom links) become attributes on `<html>` instead (`designAttributes` in `index.ts`), so their rules in `mastodon.css` apply only where a design makes them and Mastodon's own layout stays untouched elsewhere; the icon stroke reaches Mastodon's Phosphor icons through `icon_weight.tsx`.
 - `mastodon.css` is the only stylesheet that knows Mastodon: it applies the designs, offers Teadeck's own pages and parts (`shell.css`, `large_composer.css`) a few `--td-ui-*` variables for surfaces, text, lines, radii and fonts, and holds every rule that relies on Mastodon's markup. When Mastodon renames a variable or a class, change it there.
 
 Other stylesheets read only `--td-*` and `--teadeck-*` variables and name only Teadeck's own classes and ids (`teadeck-*`).

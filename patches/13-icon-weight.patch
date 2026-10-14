@@ -1,0 +1,44 @@
+diff --git a/app/javascript/mastodon/components/icon.tsx b/app/javascript/mastodon/components/icon.tsx
+--- a/app/javascript/mastodon/components/icon.tsx
++++ b/app/javascript/mastodon/components/icon.tsx
+@@ -66,12 +66,13 @@ export const Icon: React.FC<Props> = ({
+ 
+ type MaybeWeight = IconWeight | false | null;
+ 
++// Teadeck: without a weight of their own, icons take the design's (teadeck/icon_weight.tsx).
+ export const iconWeight = (
+   Icon: PhosphorIcon,
+   weight?: MaybeWeight,
+ ): React.FC<SVGPropsWithTitle> => {
+   const IconWeight = (props: SVGPropsWithTitle) => (
+-    <Icon {...props} weight={weight || 'regular'} />
++    <Icon {...props} weight={weight || undefined} />
+   );
+   return IconWeight;
+ };
+@@ -82,7 +83,7 @@ export function useIconWeight(
+ ): React.FC<SVGPropsWithTitle> {
+   return useCallback(
+     (props: SVGPropsWithTitle) => (
+-      <Icon {...props} weight={weight || 'regular'} />
++      <Icon {...props} weight={weight || undefined} />
+     ),
+     [Icon, weight],
+   );
+diff --git a/app/javascript/mastodon/containers/mastodon.jsx b/app/javascript/mastodon/containers/mastodon.jsx
+--- a/app/javascript/mastodon/containers/mastodon.jsx
++++ b/app/javascript/mastodon/containers/mastodon.jsx
+@@ -1,3 +1,4 @@
++import { IconWeightProvider } from '@/teadeck/icon_weight';
+ import { PureComponent } from 'react';
+ 
+ import { Helmet } from '@unhead/react/helmet';
+@@ -51,7 +52,7 @@ export default class Mastodon extends PureComponent {
+               <Router>
+                 <ScrollContext>
+                   <FocusTargetProvider>
+-                    <Route path='/' component={UI} />
++                    <IconWeightProvider><Route path='/' component={UI} /></IconWeightProvider>
+                   </FocusTargetProvider>
+                 </ScrollContext>
+                 <BodyScrollLock />

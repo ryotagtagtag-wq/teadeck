@@ -16,7 +16,7 @@ export default defineDesign({
     neutral: darkNeutral,
     accent: darkAccent,
     ground: { surface: darkNeutral[10], page: darkNeutral[10], desktop: mix(darkNeutral[10], 'black', 60), text: darkNeutral[1] },
-    logoTea: darkAccent[6],
+    logo: { tea: darkAccent[6] },
     frame: '#33261f',
     content: {
       heading: '#ece3da', text: '#d6c8bb', muted: '#a1907f', accent: '#c2814f', link: '#dda274', border: '#33261f', raised: '#251c17',
@@ -29,7 +29,7 @@ export default defineDesign({
     neutral: lightNeutral,
     accent: lightAccent,
     ground: { surface: '#fffdf7', page: '#ffffff', desktop: lightNeutral[1], text: lightNeutral[10] },
-    logoTea: '#c9ac4e',
+    logo: { tea: '#c9ac4e' },
     frame: '#ddd8cd',
     content: {
       heading: '#262520', text: '#454138', muted: '#6a655a', accent: '#8a7d52', link: '#5f5636', border: '#ddd8cd', raised: '#eae5da',
