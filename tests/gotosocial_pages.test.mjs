@@ -38,6 +38,11 @@ test('on GoToSocial, About and the terms show the server\'s texts without an err
   // Nothing about Mastodon on a GoToSocial server's About page.
   assert.equal(await page.locator('a[href*="joinmastodon.org"]').count(), 0);
   assert.equal(await page.getByText(/powered by/i).count(), 0);
+  assert.equal(await page.getByText(/Marke der Mastodon|Mastodon erlaubt/).count(), 0);
+  // Its blocked servers are not public: said as Mastodon says it, not shown as an empty list.
+  await page.getByRole('button', { name: 'Eingeschränkte Server' }).click();
+  await page.getByText('Diese Informationen sind auf diesem Server nicht verfügbar.').waitFor();
+  assert.ok(missing.includes('domain_blocks'), missing.join(' '));
 
   await page.evaluate(() => { history.pushState(null, '', '/terms-of-service'); dispatchEvent(new PopStateEvent('popstate')); });
   await page.getByText('Teadeck test terms 7d2a').waitFor();
@@ -52,5 +57,23 @@ test('on GoToSocial, About and the terms show the server\'s texts without an err
   await page.getByRole('link', { name: 'Einstellungen', exact: true }).waitFor();
   assert.equal(await page.getByRole('link', { name: 'Sammlungen' }).count(), 0);
   assert.deepEqual(pageErrors, []);
+  await context.close();
+});
+
+test('on GoToSocial, the list of restricted servers is introduced without naming Mastodon', { timeout: 60_000 }, async () => {
+  const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1400, height: 900 } });
+  await mockMastodon(context, origin, {
+    '/api/v2/instance': gtsInstance,
+    '/api/v1/instance': gtsInstanceV1,
+    '/api/v1/markers': {},
+    '/api/v1/instance/domain_blocks': [{ domain: 'spam.example', digest: '0'.repeat(64), severity: 'suspend', comment: 'Spam' }],
+  });
+  const page = await context.newPage();
+  await signIn(page, origin);
+  await page.evaluate(() => { history.pushState(null, '', '/about'); dispatchEvent(new PopStateEvent('popstate')); });
+  await page.getByRole('button', { name: 'Eingeschränkte Server' }).click();
+  await page.getByText('spam.example').waitFor();
+  await page.getByText(/^Grundsätzlich kannst du alle Inhalte/).waitFor();
+  assert.equal(await page.getByText(/Mastodon erlaubt/).count(), 0);
   await context.close();
 });

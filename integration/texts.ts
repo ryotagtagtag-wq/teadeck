@@ -206,6 +206,12 @@ export const texts = {
   notifyMention: { en: 'Someone mentioned me', de: 'Jemand erwähnte mich' },
   notifyQuote: { en: 'Someone quoted my post', de: 'Jemand zitierte meinen Beitrag' },
 
+  // About this server, where it does not run Mastodon (upstream's text names Mastodon).
+  domainBlocksPreamble: {
+    en: 'You can generally view content from and interact with users from any other server in the fediverse. These are the exceptions that have been made on this particular server.',
+    de: 'Grundsätzlich kannst du alle Inhalte von allen Nutzer*innen auf allen Servern im Fediverse sehen und mit ihnen interagieren. Für diesen Server gibt es aber ein paar Ausnahmen.',
+  },
+
   // Who can reply (GoToSocial).
   replyAudienceDefault: { en: 'Account default (set in GoToSocial)', de: 'Kontostandard (in GoToSocial eingestellt)' },
   replyAudiencePublic: { en: 'Everyone', de: 'Alle' },

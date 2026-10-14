@@ -67,3 +67,8 @@ export const privacyPolicyAvailable = () => current.privacyPolicy;
 export function collectionsAvailable(): boolean {
   return !current.goToSocial && support('collections') !== 'unsupported';
 }
+
+/** Whether the server publishes which servers it restricts; a 404 says it does not (api_fallbacks.ts). */
+export function domainBlocksAvailable(): boolean {
+  return support('instance.domainBlocks') !== 'unsupported';
+}
