@@ -223,13 +223,15 @@ html[data-teadeck-theme] {
 html[data-teadeck-theme] body {
   font-family: var(--font-body);
 }
-html[data-teadeck-theme] body :not(code):not(pre):not(kbd):not(samp):not(.monospace) {
+/* In :where(), so headings and labels below can still name their own family. */
+html[data-teadeck-theme] body :where(:not(code, pre, kbd, samp, .monospace)) {
   font-family: inherit;
 }
 html[data-teadeck-theme] h1,
 html[data-teadeck-theme] h2,
 html[data-teadeck-theme] h3,
 html[data-teadeck-theme] .column-header__title,
+html[data-teadeck-theme] ._comp_column_header__title button,
 html[data-teadeck-theme] .status__content__text strong {
   font-family: var(--font-heading);
 }
