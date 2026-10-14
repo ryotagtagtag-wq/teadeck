@@ -66,6 +66,9 @@ export function halfVariables(half: Half): [string, string][] {
     ['--td-post-gap', cards ? '8px 12px' : '0'],
     ['--td-post-frame', cards ? '1px solid var(--td-frame)' : '0 solid transparent'],
     ['--td-post-divider', cards ? '1px solid var(--td-frame)' : 'var(--td-divider)'],
+    // Cards lie on the page's ground; divided posts share the surface with the column.
+    ['--td-column-ground', cards ? 'var(--td-page)' : 'var(--td-surface)'],
+    ['--td-post-bg', cards ? 'var(--td-surface)' : 'transparent'],
     ['--td-avatar-ring', half.avatars === 'framed' ? '0 0 0 1px var(--td-frame)' : 'none'],
     ['--td-hashtag-bg', tags === 'tinted' ? 'rgb(from var(--td-text-primary) r g b / 4%)' : tags.background],
     ['--td-hashtag-fg', tags === 'tinted' ? 'var(--td-text-primary)' : tags.text],

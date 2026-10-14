@@ -184,16 +184,22 @@ html[data-teadeck-theme] ._comp_status__variantFeed {
   margin: var(--td-post-gap);
   border: var(--td-post-frame);
   border-bottom: var(--td-post-divider);
+  background: var(--td-post-bg);
+}
+html[data-teadeck-theme] ._comp_column__root {
+  background: var(--td-column-ground);
 }
 /* In notifications the whole entry is the post: its heading ("Mention", "… favourited") inside the frame. */
 html[data-teadeck-theme] :is(.notification-ungrouped, .notification-group) {
   margin: var(--td-post-gap);
   border: var(--td-post-frame);
   border-bottom: var(--td-post-divider);
+  background: var(--td-post-bg);
 }
 html[data-teadeck-theme] .notification-ungrouped ._comp_status__variantFeed {
   margin: 0;
   border: 0;
+  background: transparent;
 }
 
 /* The sign-in page. */

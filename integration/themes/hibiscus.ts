@@ -31,7 +31,7 @@ export default defineDesign({
     ...look,
     neutral: darkNeutral,
     accent: ['#fdeceb', '#f9d2cf', '#f2a7a2', '#ea7a73', '#e0544d', '#d63b34', '#c22f29', '#9c2520', '#761d19', '#551715', '#330d0c'],
-    ground: { surface: darkNeutral[10], page: darkNeutral[10], desktop: '#0a0707', text: darkNeutral[1] },
+    ground: { surface: '#161011', page: '#0e0a0b', desktop: '#0a0707', text: darkNeutral[1] },
     logoTea: '#9c2228',
     frame: '#3f1b1a',
     hashtags: { look: { background: '#3a1716', text: '#ef9f98' }, face: 'body', weight: 500 },
