@@ -10,7 +10,9 @@ import {
   notificationParamsForV1,
   extendedDescriptionFromInstance,
   termsOfServiceFromInstance,
+  withSearchIdPages,
 } from '../integration/api_compat.ts';
+import { detectServerFeatures } from '../integration/server_features.ts';
 
 const alice = { id: 'alice' };
 const me = { id: 'me' };
@@ -137,4 +139,69 @@ test('the about and terms pages of servers without these APIs come from their v1
   assert.deepEqual(extendedDescriptionFromInstance(gts), { updated_at: '', content: '<p>Ein Server für Tee</p>' });
   assert.deepEqual(termsOfServiceFromInstance(gts), { effective_date: '', effective: true, succeeded_by: null, content: '<p>Sei nett.</p>' });
   assert.equal(termsOfServiceFromInstance({}).content, '');
+});
+
+test('only GoToSocial 0.23 and later find posts by hashtag and page searches by max_id', () => {
+  // GoToSocial reports its Mastodon version before the "+", its own after it.
+  const gts = (version) => ({ version: `3.5.3+${version}`, source_url: 'https://codeberg.org/superseriousbusiness/gotosocial' });
+  const fullTextSearch = (instance) => detectServerFeatures(instance, {}).fullTextSearch;
+  assert.equal(fullTextSearch(gts('0.22.1')), false);
+  assert.equal(fullTextSearch(gts('0.22.99')), false);
+  assert.equal(fullTextSearch(gts('0.23.0')), true);
+  assert.equal(fullTextSearch(gts('0.23.2')), true);
+  assert.equal(fullTextSearch(gts('1.0.0')), true);
+  // Other servers, and GoToSocial without its own version, keep the 0.22 behaviour.
+  assert.equal(fullTextSearch({ version: '4.6.0-nightly', source_url: 'https://github.com/mastodon/mastodon' }), false);
+  assert.equal(fullTextSearch({ version: '3.5.3+0.23.0', source_url: 'https://example.org/' }), false);
+  assert.equal(fullTextSearch({ version: '3.5.3', source_url: 'https://codeberg.org/superseriousbusiness/gotosocial' }), false);
+});
+
+test('a search after its first page continues after the last account or post, not by offset', async () => {
+  const requests = [];
+  const pages = [
+    { accounts: [], statuses: [{ id: '30' }, { id: '29' }], hashtags: [] },
+    { accounts: [], statuses: [{ id: '28' }], hashtags: [] },
+    { accounts: [], statuses: [], hashtags: [] },
+    { accounts: [], statuses: [{ id: '50' }], hashtags: [] },
+  ];
+  const search = withSearchIdPages(async (params) => {
+    requests.push(params);
+    return pages[requests.length - 1];
+  });
+
+  const first = await search({ q: '#neuhier', type: 'statuses', limit: 10 });
+  assert.deepEqual(first.statuses.map((status) => status.id), ['30', '29']);
+  assert.deepEqual(requests[0], { q: '#neuhier', type: 'statuses', limit: 10 });
+
+  await search({ q: '#neuhier', type: 'statuses', limit: 10, offset: 2 });
+  assert.deepEqual(requests[1], { q: '#neuhier', type: 'statuses', limit: 10, max_id: '29' });
+
+  // A page without posts ends the search: nothing more is asked of the server.
+  await search({ q: '#neuhier', type: 'statuses', limit: 10, offset: 3 });
+  assert.equal(requests.length, 3);
+  assert.deepEqual(requests[2].max_id, '28');
+  const end = await search({ q: '#neuhier', type: 'statuses', limit: 10, offset: 4 });
+  assert.equal(requests.length, 3);
+  assert.deepEqual(end.statuses, []);
+
+  // A new first page for the same query starts from the top again.
+  const fresh = await search({ q: '#neuhier', type: 'statuses' });
+  assert.equal(requests.at(-1).max_id, undefined);
+  assert.deepEqual(fresh.statuses.map((status) => status.id), ['50']);
+});
+
+test('searches are at most 20 long, and hashtags have no further pages', async () => {
+  const requests = [];
+  const search = withSearchIdPages(async (params) => {
+    requests.push(params);
+    return { accounts: [{ id: '7' }], statuses: [], hashtags: [{ name: 'neuhier' }] };
+  });
+  await search({ q: 'alice', type: 'accounts', limit: 40 });
+  assert.equal(requests[0].limit, 20);
+  await search({ q: 'alice' });
+  assert.equal(requests[1].limit, 20);
+
+  const tags = await search({ q: 'neuhier', type: 'hashtags', offset: 10 });
+  assert.equal(requests.length, 2);
+  assert.deepEqual(tags.hashtags, []);
 });

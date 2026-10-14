@@ -1,3 +1,5 @@
+import type { ApiSearchType } from '@/mastodon/api_types/search';
+
 /**
  * Fallbacks for servers that implement less of the Mastodon API than the web
  * client expects, such as GoToSocial: missing fields, older API versions and
@@ -206,6 +208,58 @@ export function createHashtagSearchPages() {
       const search = searches.get(query);
       if (search) record(query, search.tag, statuses, limit);
     },
+  };
+}
+
+/**
+ * Where a search continues on GoToSocial 0.23 and later, which pages by `max_id`
+ * instead of `offset`: after the last account or post the previous page showed.
+ */
+function createSearchIdPages() {
+  const lastIds = new Map<string, string>();
+  const key = (query: string, type?: string) => `${type ?? ''}\n${query}`;
+  return {
+    /** `undefined` before a page showed anything: there is no further page. */
+    next(query: string, type?: string) { return lastIds.get(key(query, type)); },
+    /** Records the page just shown; a page without accounts or posts ends the search. */
+    record(query: string, type: string | undefined, shown: IdLike[]) {
+      const last = shown.at(-1)?.id;
+      if (last) lastIds.set(key(query, type), last);
+      else lastIds.delete(key(query, type));
+    },
+  };
+}
+
+interface SearchPageParams {
+  q: string;
+  resolve?: boolean;
+  type?: ApiSearchType;
+  limit?: number;
+  offset?: number;
+  max_id?: string;
+}
+interface SearchPageResults extends SearchResultsLike { accounts: IdLike[]; statuses: IdLike[] }
+type SearchOptions = { signal?: AbortSignal };
+
+/**
+ * Wraps a search for GoToSocial 0.23 and later: a page after `offset` continues
+ * after the last account or post shown (`max_id`). Hashtags carry no id to
+ * continue from, so their search has no further pages. Pages are at most 20 long.
+ */
+export function withSearchIdPages<R extends SearchPageResults>(upstream: (params: SearchPageParams, options?: SearchOptions) => Promise<R>) {
+  const idPages = createSearchIdPages();
+
+  return async (params: SearchPageParams, options: SearchOptions = {}): Promise<R> => {
+    const query = params.q;
+    const { offset, ...request } = params;
+    const maxId = offset ? idPages.next(query, params.type) : undefined;
+    if (offset && !maxId) return applySearchDefaults({} as SearchResultsLike) as R;
+
+    const limit = Math.min(params.limit ?? 20, 20);
+    const results = applySearchDefaults(await upstream({ ...request, limit, ...(maxId ? { max_id: maxId } : {}) }, options));
+    const shown = params.type === 'accounts' ? results.accounts : params.type === 'statuses' ? results.statuses : [];
+    idPages.record(query, params.type, shown);
+    return results;
   };
 }
 

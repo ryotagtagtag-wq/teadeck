@@ -1,15 +1,17 @@
 /**
  * Search, made to work on servers whose search finds no posts by hashtag
- * (GoToSocial): a "#tag" search without posts shows the hashtag timeline
- * instead, and its further pages continue there. Wraps Mastodon's own
- * apiGetSearch (patch 07).
+ * (GoToSocial before 0.23): a "#tag" search without posts shows the hashtag
+ * timeline instead, and its further pages continue there. From GoToSocial 0.23
+ * the search finds those posts itself and pages by `max_id`, so the timeline is
+ * not used. Wraps Mastodon's own apiGetSearch (patch 07).
  */
 
 import { apiRequestGet } from '@/mastodon/api';
 import type { ApiSearchResultsJSON, ApiSearchType } from '@/mastodon/api_types/search';
 import type { ApiStatusJSON } from '@/mastodon/api_types/statuses';
 
-import { applySearchDefaults, createHashtagSearchPages, hashtagFromQuery } from './api_compat.ts';
+import { applySearchDefaults, createHashtagSearchPages, hashtagFromQuery, withSearchIdPages } from './api_compat.ts';
+import { fullTextSearchAvailable } from './server_features.ts';
 
 interface SearchParams {
   q: string;
@@ -25,8 +27,11 @@ const tagTimeline = (tag: string, params: { limit: number; max_id?: string }, op
 
 export function withHashtagTimeline(upstream: (params: SearchParams, options?: SearchOptions) => Promise<ApiSearchResultsJSON>) {
   const hashtagSearches = createHashtagSearchPages();
+  const idPaged = withSearchIdPages(upstream);
 
   return async (params: SearchParams, options: SearchOptions = {}): Promise<ApiSearchResultsJSON> => {
+    if (fullTextSearchAvailable()) return idPaged(params, options);
+
     // Pasting a link into the compose form passes a URL object, not a string.
     const query = String(params.q);
     const limit = params.limit ?? 20;

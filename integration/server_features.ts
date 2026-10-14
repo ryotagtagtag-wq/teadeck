@@ -23,6 +23,8 @@ export interface ServerFeatures {
   accountContentType: string;
   /** The server has a privacy policy to link to. */
   privacyPolicy: boolean;
+  /** Searches find posts by their hashtags and page by `max_id` (GoToSocial 0.23 and later). */
+  fullTextSearch: boolean;
 }
 
 /**
@@ -34,6 +36,22 @@ export interface ServerFeatures {
 function detectGoToSocial(instance: InstanceLike): boolean {
   const haystack = `${instance.source_url ?? ''} ${instance.version ?? ''}`.toLowerCase();
   return haystack.includes('gotosocial');
+}
+
+/**
+ * GoToSocial's own version, from the part after `+` in its instance version:
+ * `3.5.3+0.22.1` reports Mastodon 3.5.3 and runs GoToSocial 0.22.1.
+ */
+function goToSocialVersion(instance: InstanceLike): [number, number, number] | undefined {
+  if (!detectGoToSocial(instance)) return undefined;
+  const match = /\+(\d+)\.(\d+)\.(\d+)/.exec(instance.version ?? '');
+  return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : undefined;
+}
+
+/** GoToSocial 0.23 brought full-text search: posts are found by hashtag, and searches page by `max_id`. */
+function searchIsFullText(instance: InstanceLike): boolean {
+  const version = goToSocialVersion(instance);
+  return version !== undefined && (version[0] > 0 || version[1] >= 23);
 }
 
 /** The format switch needs both formats advertised. */
@@ -48,10 +66,11 @@ export function detectServerFeatures(instance: InstanceLike, account: { source?:
     statusFormat: supportsStatusFormat(instance),
     accountContentType: typeof contentType === 'string' ? contentType : '',
     privacyPolicy: Boolean(instance.configuration?.urls?.privacy_policy),
+    fullTextSearch: searchIsFullText(instance),
   };
 }
 
-let current: ServerFeatures = { statusFormat: false, accountContentType: '', privacyPolicy: false };
+let current: ServerFeatures = { statusFormat: false, accountContentType: '', privacyPolicy: false, fullTextSearch: false };
 let branded = false;
 
 export function setServerFeatures(features: ServerFeatures) {
@@ -69,6 +88,7 @@ export const isGoToSocial = () => branded;
 export const statusFormatAvailable = () => current.statusFormat;
 export const accountStatusContentType = () => current.accountContentType;
 export const privacyPolicyAvailable = () => current.privacyPolicy;
+export const fullTextSearchAvailable = () => current.fullTextSearch;
 
 /** Collections of accounts (Mastodon 4.6): app_start.ts probes them; a 404 means the server has none. */
 export function collectionsAvailable(): boolean {
