@@ -41,15 +41,18 @@ diff --git a/app/javascript/mastodon/features/compose/redesign/index.tsx b/app/j
 diff --git a/app/javascript/mastodon/features/compose/redesign/trigger.tsx b/app/javascript/mastodon/features/compose/redesign/trigger.tsx
 --- a/app/javascript/mastodon/features/compose/redesign/trigger.tsx
 +++ b/app/javascript/mastodon/features/compose/redesign/trigger.tsx
-@@ -23,6 +23,7 @@ import { ComposeFormHeader } from './header';
+@@ -23,6 +23,10 @@ import { ComposeFormHeader } from './header';
  import { RedesignComposeForm } from './index';
  import composerClasses from './styles.module.scss';
  import classes from './trigger.module.scss';
-+import { useComposerLarge } from '@/teadeck/large_composer';
++import {
++  LargeComposerBackdrop,
++  useComposerLarge,
++} from '@/teadeck/large_composer';
  
  export const ComposeRedesignButton: React.FC<{
    /**
-@@ -62,6 +63,8 @@ export const ComposeRedesignButton: React.FC<{
+@@ -62,6 +66,8 @@ export const ComposeRedesignButton: React.FC<{
    }, [dispatch]);
  
    const { signedIn } = useIdentity();
@@ -58,7 +61,7 @@ diff --git a/app/javascript/mastodon/features/compose/redesign/trigger.tsx b/app
  
    if (!isRedesignEnabled() || !signedIn) {
      return null;
-@@ -104,8 +107,21 @@ export const ComposeRedesignButton: React.FC<{
+@@ -104,8 +110,21 @@ export const ComposeRedesignButton: React.FC<{
  
    if (displayState === 'showing') {
      return (
@@ -71,7 +74,7 @@ diff --git a/app/javascript/mastodon/features/compose/redesign/trigger.tsx b/app
 +        )}
 +        style={style}
 +      >
-+        {isLarge && <div className='teadeck-large-composer__backdrop' />}
++        {isLarge && <LargeComposerBackdrop />}
 +        <RedesignComposeForm
 +          autoFocus
 +          className={classNames(

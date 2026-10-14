@@ -122,7 +122,8 @@ test('Hibiscus is square and speaks in condensed capitals: column titles, names,
         title: [title.fontFamily, title.textTransform],
         name: [name.fontFamily, name.textTransform],
         avatarRadius: avatar.borderTopLeftRadius,
-        button: [button.backgroundColor, button.boxShadow, button.textTransform, button.borderTopLeftRadius],
+        // The split "New post" button carries one frame around both parts.
+        button: [button.backgroundColor, getComputedStyle(publish.closest('.teadeck-new-post')).boxShadow, button.textTransform, button.borderTopLeftRadius],
       };
     });
     assert.match(look.title[0], /Teadeck Barlow Condensed/);

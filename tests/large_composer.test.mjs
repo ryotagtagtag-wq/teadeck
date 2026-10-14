@@ -119,6 +119,33 @@ test('the left part of "New post" opens the regular composer, and without Markdo
   }
 });
 
+test('in the multi-column layout the large composer lies above the columns, and a click beside it makes it the regular one', { timeout: 60_000 }, async () => {
+  const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1400, height: 900 } });
+  await context.addInitScript(() => localStorage.setItem('teadeck.v1:https://mastodon.test:42:advancedLayout', 'true'));
+  await mockMastodon(context, origin, { '/api/v2/instance': gtsInstance, '/api/v1/accounts/verify_credentials': markdownAccount, '/api/v1/markers': {} });
+  const page = await context.newPage();
+  const pageErrors = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  await signIn(page, origin);
+
+  await page.getByRole('button', { name: 'Neuer Beitrag im großen Eingabefeld' }).click();
+  await textarea(page).fill(text);
+  // Nothing of the columns shows through: every corner of the window is the window.
+  const box = await form(page).boundingBox();
+  const points = [[box.x + 24, box.y + 24], [box.x + box.width - 24, box.y + 24], [box.x + 24, box.y + box.height - 24], [box.x + box.width - 24, box.y + box.height - 24], [box.x + box.width / 2, box.y + 80]];
+  for (const [x, y] of points) {
+    assert.ok(await page.evaluate(([x, y]) => !!document.elementFromPoint(x, y)?.closest('form[role="dialog"]'), [x, y]), `covered at ${Math.round(x)},${Math.round(y)}`);
+  }
+
+  // A click beside it: the regular composer, with the post as it was.
+  await page.mouse.click(box.x / 2, box.y + box.height / 2);
+  await waitUntil(async () => (await form(page).boundingBox()).height < 800, { message: 'the composer stayed large' });
+  assert.equal(await textarea(page).inputValue(), text);
+  assert.equal(await page.locator('.teadeck-large-composer__backdrop').count(), 0);
+  assert.deepEqual(pageErrors, []);
+  await context.close();
+});
+
 test('in the multi-column layout, /deck/publish shows the redesigned composer, not the legacy form', { timeout: 60_000 }, async () => {
   const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1400, height: 900 } });
   await context.addInitScript(() => localStorage.setItem('teadeck.v1:https://mastodon.test:42:advancedLayout', 'true'));

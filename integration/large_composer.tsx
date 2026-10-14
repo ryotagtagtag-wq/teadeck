@@ -69,6 +69,12 @@ export const ComposerSizeToggle: React.FC = () => {
   );
 };
 
+/** Behind the large composer: a click beside it turns it into the regular one, keeping the post. */
+export const LargeComposerBackdrop: React.FC = () => {
+  const shrink = useCallback(() => { setComposerLarge(false); }, []);
+  return <div className='teadeck-large-composer__backdrop' onClick={shrink} aria-hidden='true' />;
+};
+
 // Code blocks as in posts: language, line numbers, highlighting, copy button.
 const onElement: OnElementHandler = (element, { key }) => (
   element instanceof HTMLPreElement ? createElement(CodeBlock, { element, key: key as React.Key }) : undefined
