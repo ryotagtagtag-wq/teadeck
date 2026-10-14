@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { designs } from '../integration/themes/index.ts';
-import { timelineText } from './fixtures.mjs';
+import { account, status, timelineText } from './fixtures.mjs';
 import { openPreferences } from './mastodon_mock.mjs';
 import { origin, signedInPage, useApp } from './harness.mjs';
 
@@ -127,4 +127,26 @@ test('Hibiscus is square and speaks in condensed capitals: column titles, names,
   } finally {
     await context.close();
   }
+});
+
+test('in notifications, a framed post keeps its heading inside the frame', { timeout: 60_000 }, async () => {
+  const other = { ...account, id: '7', username: 'tek', acct: 'tek@freeradical.zone', display_name: 'Tek' };
+  const notifications = {
+    notification_groups: [{
+      group_key: 'ungrouped-1', notifications_count: 1, type: 'mention', most_recent_notification_id: '11',
+      page_min_id: '11', page_max_id: '11', latest_page_notification_at: '2026-10-14T10:00:00Z', sample_account_ids: ['7'], status_id: '900',
+    }],
+    accounts: [other], statuses: [{ ...status, id: '900', account: other }],
+  };
+  const { context, page } = await signedInPage({ deployment: { theme: 'hibiscus' }, routes: { '/api/v2/notifications': notifications } });
+  try {
+    await page.evaluate(() => { history.pushState(null, '', '/notifications'); dispatchEvent(new PopStateEvent('popstate')); });
+    const entry = page.locator('.notification-ungrouped').first();
+    await entry.waitFor();
+    const frames = await entry.evaluate((element) => ({
+      entry: getComputedStyle(element).borderTopWidth,
+      post: getComputedStyle(element.querySelector('._comp_status__variantFeed')).borderTopWidth,
+    }));
+    assert.deepEqual(frames, { entry: '1px', post: '0px' });
+  } finally { await context.close(); }
 });

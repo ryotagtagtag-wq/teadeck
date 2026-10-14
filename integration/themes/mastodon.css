@@ -185,6 +185,16 @@ html[data-teadeck-theme] ._comp_status__variantFeed {
   border: var(--td-post-frame);
   border-bottom: var(--td-post-divider);
 }
+/* In notifications the whole entry is the post: its heading ("Mention", "… favourited") inside the frame. */
+html[data-teadeck-theme] :is(.notification-ungrouped, .notification-group) {
+  margin: var(--td-post-gap);
+  border: var(--td-post-frame);
+  border-bottom: var(--td-post-divider);
+}
+html[data-teadeck-theme] .notification-ungrouped ._comp_status__variantFeed {
+  margin: 0;
+  border: 0;
+}
 
 /* The sign-in page. */
 html[data-teadeck-theme] #teadeck-shell h1 {
