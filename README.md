@@ -29,9 +29,9 @@ The Teadeck host supplies the JavaScript running in your browser, and that code 
 
 ### Layouts and designs
 
-Mastodon's single- and multi-column layouts, with four designs of Teadeck's own and Mastodon's design to choose from. Layout, design and language are set per account under **Settings** in the account menu.
+Mastodon's single- and multi-column layouts, with six designs of Teadeck's own and Mastodon's design to choose from. Hibiscus goes further than the others: square shapes, condensed capitals and outlined buttons. Layout, design and language are set per account under **Settings** in the account menu.
 
-![The four designs: Assam dark and light, Sencha dark and light](docs/images/themes.png)
+![The six designs: Assam, Sencha and Hibiscus, each dark and light](docs/images/themes.png)
 
 ### Post overlay
 

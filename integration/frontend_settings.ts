@@ -10,10 +10,11 @@ export type EmojiStyle = 'auto' | 'native' | 'twemoji';
 /**
  * Teadeck's own designs, each with a dark and a light half (themes.css), named
  * after the tea whose brewed colour they carry: `assam` is Assam (dark) and
- * Silver Needle (light), `sencha` is Sencha (dark) and Jasmine (light). Which
+ * Silver Needle (light), `sencha` is Sencha (dark) and Jasmine (light),
+ * `hibiscus` is Hibiskus (dark) and Rooibos (light; theme_hibiscus.css). Which
  * half appears follows the colour scheme.
  */
-export type Theme = 'mastodon' | 'assam' | 'sencha';
+export type Theme = 'mastodon' | 'assam' | 'sencha' | 'hibiscus';
 
 export interface FrontendSettings {
   autoPlayGif: boolean;
@@ -43,7 +44,7 @@ const displayMediaValues: DisplayMedia[] = ['default', 'show_all', 'hide_all'];
 const colorSchemeValues: ColorScheme[] = ['auto', 'light', 'dark'];
 const contrastValues: Contrast[] = ['auto', 'high'];
 const emojiStyleValues: EmojiStyle[] = ['auto', 'native', 'twemoji'];
-const themeValues: Theme[] = ['mastodon', 'assam', 'sencha'];
+const themeValues: Theme[] = ['mastodon', 'assam', 'sencha', 'hibiscus'];
 /** What this deployment starts with (TEADECK_THEME, TEADECK_COLOR_SCHEME; served as /teadeck.json). */
 export interface DeploymentDefaults {
   theme?: Theme;

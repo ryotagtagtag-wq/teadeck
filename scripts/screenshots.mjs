@@ -132,15 +132,17 @@ const shots = {
     await save(page, 'post-overlay');
     await context.close();
   },
-  /** The four designs in a 2×2 grid, laid out by the browser itself. */
+  /** Every design: one tea per row, dark and light side by side, laid out by the browser itself. */
   async themes() {
     const images = [];
-    for (const [theme, scheme] of [['assam', 'dark'], ['assam', 'light'], ['sencha', 'dark'], ['sencha', 'light']]) {
-      const { context, page } = await open({ theme, scheme, width: 1100, height: 700 });
-      images.push((await page.screenshot()).toString('base64'));
-      await context.close();
+    for (const theme of ['assam', 'sencha', 'hibiscus']) {
+      for (const scheme of ['dark', 'light']) {
+        const { context, page } = await open({ theme, scheme, width: 1100, height: 700 });
+        images.push((await page.screenshot()).toString('base64'));
+        await context.close();
+      }
     }
-    const context = await browser.newContext({ viewport: { width: 1448, height: 924 } });
+    const context = await browser.newContext({ viewport: { width: 1448, height: 3 * 458 + 2 * 8 } });
     const page = await context.newPage();
     await page.setContent(`<body style="margin:0;background:#fff;display:grid;grid-template-columns:720px 720px;gap:8px">${images.map((image) => `<img src="data:image/png;base64,${image}" style="width:720px;height:458px">`).join('')}</body>`);
     await save(page, 'themes');

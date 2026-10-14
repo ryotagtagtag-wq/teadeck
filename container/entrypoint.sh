@@ -69,8 +69,8 @@ write_config() {
   theme=${TEADECK_THEME:-}
   scheme=${TEADECK_COLOR_SCHEME:-}
   case "$theme" in
-    '' | mastodon | assam | sencha) ;;
-    *) note "TEADECK_THEME=$theme is not mastodon, assam or sencha; using the default design."; theme='' ;;
+    '' | mastodon | assam | sencha | hibiscus) ;;
+    *) note "TEADECK_THEME=$theme is not mastodon, assam, sencha or hibiscus; using the default design."; theme='' ;;
   esac
   case "$scheme" in
     '' | auto | light | dark) ;;

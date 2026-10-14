@@ -133,7 +133,7 @@ test('an unknown design is reported and left out, and never stops the container'
   assert.equal(result.status, 0);
   assert.equal(result.started !== null, true);
   assert.equal(result.config, null);
-  assert.match(result.stderr, /TEADECK_THEME=earlgrey is not mastodon, assam or sencha/);
+  assert.match(result.stderr, /TEADECK_THEME=earlgrey is not mastodon, assam, sencha or hibiscus/);
   assert.match(result.stderr, /TEADECK_COLOR_SCHEME=dunkel is not auto, light or dark/);
 });
 

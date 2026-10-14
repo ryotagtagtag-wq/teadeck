@@ -82,6 +82,7 @@ export const settingsStrings = {
   // names stay the same in every language, like the teas themselves.
   themeAssam: { de: 'Assam & Silver Needle', en: 'Assam & Silver Needle' },
   themeSencha: { de: 'Sencha & Jasmine', en: 'Sencha & Jasmine' },
+  themeHibiscus: { de: 'Hibiskus & Rooibos', en: 'Hibiscus & Rooibos' },
   colorScheme: { de: 'Farbschema', en: 'Color scheme' },
   colorSchemeAuto: { de: 'Automatisch', en: 'Automatic' },
   colorSchemeLight: { de: 'Hell', en: 'Light' },

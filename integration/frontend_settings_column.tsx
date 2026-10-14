@@ -227,6 +227,7 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
             <option value='mastodon'>{t('themeMastodon', locale)}</option>
             <option value='assam'>{t('themeAssam', locale)}</option>
             <option value='sencha'>{t('themeSencha', locale)}</option>
+            <option value='hibiscus'>{t('themeHibiscus', locale)}</option>
           </SelectField>
 
           <SelectField id='teadeck-settings-color-scheme' label={t('colorScheme', locale)} value={settings.colorScheme} onChange={handleColorScheme}>

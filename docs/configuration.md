@@ -6,7 +6,7 @@ Copy [.env.example](../.env.example) to `.env` next to your `compose.yml`. All s
 |---|---|---|
 | `TEADECK_TAG` | `latest` | Tag of the published image |
 | `TEADECK_PUBLISH` | `8080` | Host port, published on all interfaces by default; use `8099` for port 8099 |
-| `TEADECK_THEME` | `assam` | `assam`, `sencha` or `mastodon` |
+| `TEADECK_THEME` | `assam` | `assam`, `sencha`, `hibiscus` or `mastodon` |
 | `TEADECK_COLOR_SCHEME` | `auto` | `auto`, `light` or `dark` |
 | `TEADECK_LOGO` | unset | `flat`, `glass`, `ceramic` or `mastodon` |
 | `TEADECK_LOGO_FILE` | unset | Filename of a custom SVG in `logo/`; takes precedence over `TEADECK_LOGO` |
@@ -25,6 +25,7 @@ TEADECK_COLOR_SCHEME=auto
 |---|---|---|
 | `assam` | Assam | Silver Needle |
 | `sencha` | Sencha | Jasmine |
+| `hibiscus` | Hibiskus | Rooibos |
 | `mastodon` | Mastodon dark | Mastodon light |
 
 With `auto`, the colour scheme follows the operating system. The favicon follows the selected theme.
