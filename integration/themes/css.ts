@@ -15,6 +15,7 @@ const radii = {
   rounded: ['8px', '12px', '16px', '20px', '24px', 'calc(1px * infinity)'],
   square: ['0', '0', '0', '0', '0', '0'],
   chamfered: ['0', '0', '0', '0', '0', '0'],
+  gothic: ['0', '0', '0', '0', '0', '0'],
 } as const;
 
 /** Chamfer sizes by kind of element; the larger the element, the larger the cut. */
@@ -42,6 +43,7 @@ export function halfVariables(half: Half): [string, string][] {
     ['--td-page', half.ground.page],
     ['--td-desktop', half.ground.desktop],
     ['--td-text', half.ground.text],
+    ['--td-glow', half.ground.glow ?? 'none'],
     ['--td-logo-tea', half.logo.tea],
     ['--td-logo-tea-dark', half.logo.teaDark ?? 'color-mix(in oklab, var(--td-logo-tea), black 28%)'],
     ['--td-logo-tea-light', half.logo.teaLight ?? 'color-mix(in oklab, var(--td-logo-tea), white 18%)'],
@@ -51,6 +53,8 @@ export function halfVariables(half: Half): [string, string][] {
     ['--td-logo-body', half.logo.body ?? 'var(--td-ui-surface-raised)'],
     ['--td-logo-body-dark', half.logo.bodyDark ?? 'color-mix(in oklab, var(--td-logo-body), var(--td-logo-line) 22%)'],
     ['--td-logo-highlight', half.logo.highlight ?? 'color-mix(in oklab, var(--td-logo-body), white 45%)'],
+    // The glass cup's tea shows through its wall unless the design makes it opaque.
+    ['--td-logo-tea-opacity', half.logo.opaqueTea ? '1' : '0.94'],
 
     ['--td-font-brand', fonts.brand],
     ['--td-font-heading', fonts.heading],
@@ -60,6 +64,7 @@ export function halfVariables(half: Half): [string, string][] {
     ['--td-font-bold', fonts.bold],
     ['--td-font-code', fonts.code],
     ['--td-caps', type.caps ? 'uppercase' : 'none'],
+    ['--td-title-caps', type.titleCaps === undefined ? 'var(--td-caps)' : type.titleCaps ? 'uppercase' : 'none'],
     ['--td-heading-weight', String(type.headingWeight)],
     ['--td-title-weight', String(type.titleWeight)],
     ['--td-label-weight', String(type.labelWeight)],
@@ -86,6 +91,7 @@ export function halfVariables(half: Half): [string, string][] {
     ['--td-main-hover', typeof main === 'object' ? main.hover : 'color-mix(in srgb, var(--td-main-bg) 90%, var(--td-main-fg))'],
     ['--td-main-edge', outlined ? '2px' : '0px'],
     ['--td-main-edge-color', typeof main === 'object' ? main.background : 'var(--td-brand)'],
+    ['--td-main-line', typeof main === 'object' ? main.line ?? 'transparent' : 'transparent'],
     ['--td-secondary-bg', typeof secondary === 'object' ? secondary.background : 'var(--td-text-primary)'],
     ['--td-secondary-fg', typeof secondary === 'object' ? secondary.text : 'var(--td-text-primary)'],
     ['--td-secondary-fill', typeof secondary === 'object' ? '100%' : framedButtons ? '0%' : '4%'],
@@ -97,6 +103,9 @@ export function halfVariables(half: Half): [string, string][] {
     ['--td-column-ground', cards ? 'var(--td-page)' : 'var(--td-surface)'],
     ['--td-post-bg', cards ? 'var(--td-surface)' : 'transparent'],
     ['--td-grain-opacity', half.grain ? '0.09' : '0'],
+    // Fangs and their blood, for the design that has them (attribute teadeckBrandFangs).
+    ['--td-fang', half.fangs?.fang ?? 'transparent'],
+    ['--td-fang-blood', half.fangs?.blood ?? 'transparent'],
     // Sizes for the brand name and captions where a design sets them (attributes in index.ts switch them on).
     ['--td-brand-size', half.brandName === 'plain' ? 'inherit' : half.brandName.size],
     ['--td-brand-tracking', half.brandName === 'plain' ? 'normal' : half.brandName.tracking],
@@ -107,6 +116,8 @@ export function halfVariables(half: Half): [string, string][] {
       [`--td-clip-${role}`, clip(size)],
     ]),
     ['--td-avatar-ring', half.avatars === 'framed' ? '0 0 0 1px var(--td-frame)' : 'none'],
+    // Gothic ornaments in the corners of cards (attribute teadeckOrnaments).
+    ['--td-ornament', half.ornaments ?? 'transparent'],
     ['--td-hashtag-bg', tags === 'tinted' ? 'rgb(from var(--td-text-primary) r g b / 4%)' : tags.background],
     ['--td-hashtag-fg', tags === 'tinted' ? 'var(--td-text-primary)' : tags.text],
     ['--td-hashtag-font', half.hashtags.face === 'label' ? 'var(--td-font-label)' : 'var(--td-font-body)'],

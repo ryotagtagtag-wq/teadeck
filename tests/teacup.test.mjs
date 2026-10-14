@@ -31,8 +31,8 @@ test('the drawing decides the material, the page decides the colours', async () 
 
 test('only the glass cup shows the tea through its wall', () => {
   // Same geometry, one structural difference: where the liquid is drawn.
-  assert.match(teacup('glass'), /clip-path="url\(#bowl-glass\)" opacity="0\.94"/);
-  assert.doesNotMatch(teacup('ceramic'), /opacity="0\.94"/);
+  assert.match(teacup('glass'), /clip-path="url\(#bowl-glass\)" style="opacity: var\(--teadeck-logo-tea-opacity, 0\.94\)"/);
+  assert.doesNotMatch(teacup('ceramic'), /tea-opacity/);
   assert.match(teacup('ceramic'), /clip-path="url\(#surface-ceramic\)"/);
 });
 

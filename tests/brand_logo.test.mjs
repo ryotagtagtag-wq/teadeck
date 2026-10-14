@@ -206,7 +206,7 @@ test('the placeholder joins the message and cup softly, with steam chosen by the
     // Mastodon's zig-zag band at the bottom of the column is gone, in every design.
     assert.equal(await page.locator('.with-zig-zag-decoration').count(), 0);
 
-    for (const [theme, colorScheme] of [['assam', 'dark'], ['sencha', 'dark'], ['sencha', 'light'], ['hibiscus', 'dark'], ['mastodon', 'dark']]) {
+    for (const [theme, colorScheme] of [['assam', 'dark'], ['sencha', 'dark'], ['sencha', 'light'], ['hibiscus', 'dark'], ['lapsang', 'dark'], ['lapsang', 'light'], ['mastodon', 'dark']]) {
       await choose(page, origin, { theme, colorScheme });
       const drawing = await cup.boundingBox();
       const column = await page.locator('[data-column-root]').filter({ has: cup }).boundingBox();

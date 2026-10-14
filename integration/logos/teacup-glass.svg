@@ -78,7 +78,7 @@
 
   <path d="M92 190 A108 19 0 0 1 308 190" fill="none" stroke="var(--teadeck-logo-line, #a6abc4)" stroke-opacity="0.35" stroke-width="3.75"/>
 
-  <g clip-path="url(#bowl-glass)" opacity="0.94">
+  <g clip-path="url(#bowl-glass)" style="opacity: var(--teadeck-logo-tea-opacity, 0.94)">
     <rect x="80" y="224" width="240" height="110" fill="url(#tea-glass)"/>
     <rect x="80" y="224" width="240" height="110" fill="url(#teaSides-glass)"/>
     <ellipse cx="200" cy="224" rx="106" ry="16" fill="url(#teaTop-glass)"/>

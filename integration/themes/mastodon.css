@@ -49,6 +49,35 @@ html[data-teadeck-theme] {
 html[data-teadeck-logo-steam='angular'] .teadeck-logo-steam--soft { display: none; }
 html[data-teadeck-logo-steam='angular'] .teadeck-logo-steam--angular { display: inline; }
 
+/* Vampire fangs hanging below the logo: white fangs, then their blood red tips and drops
+   (masks, so the colours come from the design). Only a design with fangs sets the attribute. */
+html[data-teadeck-brand-fangs='fangs'] .teadeck-logo { position: relative; }
+html[data-teadeck-brand-fangs='fangs'] .teadeck-logo::before,
+html[data-teadeck-brand-fangs='fangs'] .teadeck-logo::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 40%;
+  aspect-ratio: 100 / 44;
+  transform: translateX(-50%);
+  pointer-events: none;
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}
+html[data-teadeck-brand-fangs='fangs'] .teadeck-logo::before {
+  background: var(--td-fang);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 44'%3E%3Cpath d='M6 0H32Q28 16 20 33Q19 35 18 33Q10 16 6 0Z M94 0H68Q72 16 80 33Q81 35 82 33Q90 16 94 0Z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 44'%3E%3Cpath d='M6 0H32Q28 16 20 33Q19 35 18 33Q10 16 6 0Z M94 0H68Q72 16 80 33Q81 35 82 33Q90 16 94 0Z'/%3E%3C/svg%3E");
+}
+html[data-teadeck-brand-fangs='fangs'] .teadeck-logo::after {
+  background: var(--td-fang-blood);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 44'%3E%3Cpath d='M12.9 19Q19 22 25.1 19Q22.6 26 19 33Q15.4 26 12.9 19Z M87.1 19Q81 22 74.9 19Q77.4 26 81 33Q84.6 26 87.1 19Z M19 35Q21.6 39 21.6 41A2.6 2.6 0 0 1 16.4 41Q16.4 39 19 35Z M81 35Q83.6 39 83.6 41A2.6 2.6 0 0 1 78.4 41Q78.4 39 81 35Z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 44'%3E%3Cpath d='M12.9 19Q19 22 25.1 19Q22.6 26 19 33Q15.4 26 12.9 19Z M87.1 19Q81 22 74.9 19Q77.4 26 81 33Q84.6 26 87.1 19Z M19 35Q21.6 39 21.6 41A2.6 2.6 0 0 1 16.4 41Q16.4 39 19 35Z M81 35Q83.6 39 83.6 41A2.6 2.6 0 0 1 78.4 41Q78.4 39 81 35Z'/%3E%3C/svg%3E");
+}
+
 /* Teadeck's variables in Mastodon's: colour ramps, ground, typefaces and radii.
    Mastodon's redesign takes surfaces and text from the accent ramp, which would
    tint each design's ground; the ground is set on its own instead. */
@@ -85,6 +114,7 @@ html[data-teadeck-theme][data-color-scheme] {
   --teadeck-logo-tea-dark: var(--td-logo-tea-dark);
   --teadeck-logo-tea-light: var(--td-logo-tea-light);
   --teadeck-logo-tea-shade: var(--td-logo-tea-shade);
+  --teadeck-logo-tea-opacity: var(--td-logo-tea-opacity);
   --teadeck-logo-line: var(--td-logo-line);
   --teadeck-logo-steam: var(--td-logo-steam);
   --teadeck-logo-body: var(--td-logo-body);
@@ -114,6 +144,9 @@ html[data-teadeck-theme][data-color-scheme] {
    name their own family. */
 html[data-teadeck-theme] body {
   font-family: var(--td-font-body);
+  background-image: var(--td-glow);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 html[data-teadeck-theme] body :where(:not(code, pre, kbd, samp, .monospace)) {
   font-family: inherit;
@@ -126,7 +159,7 @@ html[data-teadeck-theme] :is(h1, h2, h3) {
 html[data-teadeck-theme] :is(.column-header__title, ._comp_column_header__title, ._comp_column_header__title button, ._compose_redesign__header h2) {
   font-family: var(--td-font-title);
   font-weight: var(--td-title-weight);
-  text-transform: var(--td-caps);
+  text-transform: var(--td-title-caps);
   letter-spacing: var(--td-title-tracking);
 }
 html[data-teadeck-theme] :is(._comp_status_header__nameLink .display-name, .display-name__name, .account__display-name strong, ._comp_button_redesign__base, .button, .btn) {
@@ -145,6 +178,16 @@ html[data-teadeck-theme] ._navigation_panel_redesign_account_card_and_menu__acco
 /* Shapes: Mastodon's radii are set per design above; avatars get a ring. */
 html[data-teadeck-theme] .account__avatar {
   box-shadow: var(--td-avatar-ring);
+}
+
+/* Pointed arch avatars, as in a church window: straight sides and a point at the top. */
+html[data-teadeck-avatars='arch'] .account__avatar {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 100V42Q0 12 50 0Q100 12 100 42V100Z'/%3E%3C/svg%3E");
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 100V42Q0 12 50 0Q100 12 100 42V100Z'/%3E%3C/svg%3E");
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
 }
 
 /* Main buttons: filled or outlined, by the design's values. */
@@ -171,7 +214,7 @@ html[data-teadeck-theme] #teadeck-shell .btn:not(.button-secondary):is(:hover, :
    divider stands between them. */
 html[data-teadeck-theme] .teadeck-new-post {
   border-radius: var(--radius-round);
-  box-shadow: inset 0 0 0 var(--td-main-edge) var(--td-main-edge-color);
+  box-shadow: inset 0 0 0 var(--td-main-edge) var(--td-main-edge-color), inset 0 0 0 1px var(--td-main-line);
 }
 html[data-teadeck-theme] .teadeck-new-post > ._comp_button_redesign__solid._comp_button_redesign__accent {
   box-shadow: none;
@@ -233,6 +276,58 @@ html[data-teadeck-posts='cards'] .notification-ungrouped ._comp_status__variantF
   padding-top: 0;
 }
 
+/* Gothic corners: an ornament in the design's colour in the four corners of each
+   card, with a straight frame inside it. The corner is one SVG, mirrored for the
+   other three; the frame is four 1px lines. All are layers of one mask, so the
+   colour comes from the design and every browser with CSS masks draws it.
+   The cards are posts, notifications and the account card; a post inside a
+   notification has none of its own, the notification is the card. */
+html[data-teadeck-ornaments='gothic'] :is(._comp_status__variantFeed:not(.notification-ungrouped *), .notification-ungrouped, .notification-group, ._navigation_panel_redesign_account_card_and_menu__root) {
+  position: relative;
+}
+html[data-teadeck-ornaments='gothic'] :is(._comp_status__variantFeed:not(.notification-ungrouped *), .notification-ungrouped, .notification-group, ._navigation_panel_redesign_account_card_and_menu__root)::before {
+  --td-ornament-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cg fill='none' stroke='black'%3E%3Cpath d='M4.5 20V19Q4.5 4.5 19 4.5H20' stroke-width='1.2'/%3E%3Cpath d='M9.5 12a2.5 2.5 0 1 0 2.5 2.5a1.2 1.2 0 1 0-1.2-1.2'/%3E%3Cpath d='M12 2.8L13.7 4.5L12 6.2L10.3 4.5ZM2.8 12L4.5 13.7L6.2 12L4.5 10.3Z' fill='black' stroke='none'/%3E%3Ccircle cx='16.5' cy='4.5' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='4.5' cy='16.5' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='14.5' cy='14.5' r='0.9' fill='black' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
+  --td-ornament-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cg fill='none' stroke='black' transform='matrix(-1 0 0 1 20 0)'%3E%3Cpath d='M4.5 20V19Q4.5 4.5 19 4.5H20' stroke-width='1.2'/%3E%3Cpath d='M9.5 12a2.5 2.5 0 1 0 2.5 2.5a1.2 1.2 0 1 0-1.2-1.2'/%3E%3Cpath d='M12 2.8L13.7 4.5L12 6.2L10.3 4.5ZM2.8 12L4.5 13.7L6.2 12L4.5 10.3Z' fill='black' stroke='none'/%3E%3Ccircle cx='16.5' cy='4.5' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='4.5' cy='16.5' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='14.5' cy='14.5' r='0.9' fill='black' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
+  --td-ornament-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cg fill='none' stroke='black' transform='matrix(1 0 0 -1 0 20)'%3E%3Cpath d='M4.5 20V19Q4.5 4.5 19 4.5H20' stroke-width='1.2'/%3E%3Cpath d='M9.5 12a2.5 2.5 0 1 0 2.5 2.5a1.2 1.2 0 1 0-1.2-1.2'/%3E%3Cpath d='M12 2.8L13.7 4.5L12 6.2L10.3 4.5ZM2.8 12L4.5 13.7L6.2 12L4.5 10.3Z' fill='black' stroke='none'/%3E%3Ccircle cx='16.5' cy='4.5' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='4.5' cy='16.5' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='14.5' cy='14.5' r='0.9' fill='black' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
+  --td-ornament-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cg fill='none' stroke='black' transform='matrix(-1 0 0 -1 20 20)'%3E%3Cpath d='M4.5 20V19Q4.5 4.5 19 4.5H20' stroke-width='1.2'/%3E%3Cpath d='M9.5 12a2.5 2.5 0 1 0 2.5 2.5a1.2 1.2 0 1 0-1.2-1.2'/%3E%3Cpath d='M12 2.8L13.7 4.5L12 6.2L10.3 4.5ZM2.8 12L4.5 13.7L6.2 12L4.5 10.3Z' fill='black' stroke='none'/%3E%3Ccircle cx='16.5' cy='4.5' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='4.5' cy='16.5' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='14.5' cy='14.5' r='0.9' fill='black' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--td-ornament);
+  mask-image:
+    var(--td-ornament-tl),
+    var(--td-ornament-tr),
+    var(--td-ornament-bl),
+    var(--td-ornament-br),
+    linear-gradient(#000 0 0),
+    linear-gradient(#000 0 0),
+    linear-gradient(#000 0 0),
+    linear-gradient(#000 0 0);
+  mask-position: left top, right top, left bottom, right bottom, 0 4px, 0 calc(100% - 5px), 4px 0, calc(100% - 5px) 0;
+  mask-size: 20px 20px, 20px 20px, 20px 20px, 20px 20px, 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-image:
+    var(--td-ornament-tl),
+    var(--td-ornament-tr),
+    var(--td-ornament-bl),
+    var(--td-ornament-br),
+    linear-gradient(#000 0 0),
+    linear-gradient(#000 0 0),
+    linear-gradient(#000 0 0),
+    linear-gradient(#000 0 0);
+  -webkit-mask-position: left top, right top, left bottom, right bottom, 0 4px, 0 calc(100% - 5px), 4px 0, calc(100% - 5px) 0;
+  -webkit-mask-size: 20px 20px, 20px 20px, 20px 20px, 20px 20px, 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  -webkit-mask-repeat: no-repeat;
+}
+/* Room for the ornaments: content and the menu keep their distance from the corners. */
+html[data-teadeck-ornaments='gothic'] :is(._comp_status__variantFeed:not(.notification-ungrouped *), .notification-ungrouped, .notification-group, ._navigation_panel_redesign_account_card_and_menu__root) {
+  padding: 20px 22px 16px;
+}
+html[data-teadeck-ornaments='gothic'] .notification-ungrouped ._comp_status__variantFeed {
+  padding: 0;
+}
+
 /* Columns apart, with the desktop's ground between them. Keep the shared
    gutter so the navigation occupies the same horizontal measure in every design. */
 html[data-teadeck-columns='spaced'] ._comp_columns_area_styles_multi_column__root {
@@ -240,54 +335,68 @@ html[data-teadeck-columns='spaced'] ._comp_columns_area_styles_multi_column__roo
 }
 
 /* Column titles at the start, behind a marker in the accent; the header lies
-   on the column's own ground, without the fade below it. */
-html[data-teadeck-titles='marked'] :is(._comp_column_header__root, .column-header) {
+   on the column's own ground, without the fade below it. The marker is a bar,
+   or a Latin cross (below). */
+html:is([data-teadeck-titles='marked'], [data-teadeck-titles='cross']) :is(._comp_column_header__root, .column-header) {
   border: 0;
   background: var(--td-column-ground);
 }
-html[data-teadeck-titles='marked'] ._comp_column_header__root::after {
+html:is([data-teadeck-titles='marked'], [data-teadeck-titles='cross']) ._comp_column_header__root::after {
   display: none;
 }
-html[data-teadeck-titles='marked'] ._comp_column_header__extraStickyContent {
+html:is([data-teadeck-titles='marked'], [data-teadeck-titles='cross']) ._comp_column_header__extraStickyContent {
   background: var(--td-column-ground);
 }
-html[data-teadeck-titles='marked'] ._comp_column_header__layout {
+html:is([data-teadeck-titles='marked'], [data-teadeck-titles='cross']) ._comp_column_header__layout {
   grid-template-columns: auto minmax(0, 1fr) auto;
   text-align: start;
 }
-html[data-teadeck-titles='marked'] :is(._comp_column_header__title, .column-header__title) {
+html:is([data-teadeck-titles='marked'], [data-teadeck-titles='cross']) :is(._comp_column_header__title, .column-header__title) {
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 26px;
   line-height: 1.1;
 }
-html[data-teadeck-titles='marked'] :is(._comp_column_header__title, .column-header__title)::before {
+html:is([data-teadeck-titles='marked'], [data-teadeck-titles='cross']) :is(._comp_column_header__title, .column-header__title)::before {
   content: '';
   flex: none;
   width: 4px;
   height: 24px;
   background: var(--td-content-accent);
 }
-html[data-teadeck-titles='marked'] ._comp_column_header__title button {
+html:is([data-teadeck-titles='marked'], [data-teadeck-titles='cross']) ._comp_column_header__title button {
   text-align: start;
 }
 /* Settings sections, titled the same way. */
-html[data-teadeck-titles='marked'] .teadeck-settings__section {
+html:is([data-teadeck-titles='marked'], [data-teadeck-titles='cross']) .teadeck-settings__section {
   display: flex;
   align-items: center;
   gap: 10px;
   font-family: var(--td-font-title);
   font-weight: var(--td-title-weight);
   font-size: 22px;
-  text-transform: var(--td-caps);
+  text-transform: var(--td-title-caps);
 }
-html[data-teadeck-titles='marked'] .teadeck-settings__section::before {
+html:is([data-teadeck-titles='marked'], [data-teadeck-titles='cross']) .teadeck-settings__section::before {
   content: '';
   flex: none;
   width: 4px;
   height: 20px;
   background: var(--td-content-accent);
+}
+/* A Latin cross in the accent, drawn as a mask (its arms are a third of the height from the top). */
+html[data-teadeck-titles='cross'] :is(._comp_column_header__title, .column-header__title)::before,
+html[data-teadeck-titles='cross'] .teadeck-settings__section::before {
+  width: 15px;
+  height: 22px;
+  background: var(--td-content-accent);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15 22'%3E%3Cpath d='M5.5 0H9.5V5H14V9H9.5V22H5.5V9H1V5H5.5Z'/%3E%3C/svg%3E");
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15 22'%3E%3Cpath d='M5.5 0H9.5V5H14V9H9.5V22H5.5V9H1V5H5.5Z'/%3E%3C/svg%3E");
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
 }
 
 /* The navigation's footer as tiles: the bottom links as icons of equal width,
@@ -494,6 +603,17 @@ html[data-teadeck-badges='dot'] ._comp_badge_redesign__badge {
   height: 7px;
   padding: 0;
   border-radius: 0;
+  background: var(--td-brand-text);
+  font-size: 0;
+}
+/* Unread counts as a drop of blood: a square with its top corner sharp, turned to point up. */
+html[data-teadeck-badges='drop'] ._comp_badge_redesign__badge {
+  min-width: 0;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border-radius: 50% 0 50% 50%;
+  transform: rotate(45deg);
   background: var(--td-brand-text);
   font-size: 0;
 }

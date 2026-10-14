@@ -34,6 +34,8 @@ export interface Half {
     desktop: string;
     /** Text on the ground. */
     text: string;
+    /** A faint light spread over the top left of the ground, e.g. behind the logo; a CSS background-image. */
+    glow?: string;
   };
   /**
    * The teacup logo's colours and steam shape. The tea is the design's own; the cup's roles
@@ -52,6 +54,8 @@ export interface Half {
     body?: string;
     bodyDark?: string;
     highlight?: string;
+    /** The tea is opaque: it covers the wall of a glass cup instead of showing through it. */
+    opaqueTea?: boolean;
   };
   fonts: {
     /** The server's name at the top of the navigation. */
@@ -70,6 +74,8 @@ export interface Half {
   type: {
     /** Titles, names, buttons and headings in capitals. */
     caps: boolean;
+    /** Column and settings titles in capitals, where they differ from the rest (blackletter cannot be set in capitals). */
+    titleCaps?: boolean;
     headingWeight: number;
     titleWeight: number;
     labelWeight: number;
@@ -82,20 +88,23 @@ export interface Half {
     /** Line height of post text. */
     bodyLeading: string;
   };
-  /** Corners: round, square, or square with two cut off at 45° (top right, bottom left). */
-  shape: 'rounded' | 'square' | 'chamfered';
+  /**
+   * Corners: round, square, square with two cut off at 45° (top right, bottom left), or
+   * gothic: straight like square, with the ornaments that `ornaments` sets.
+   */
+  shape: 'rounded' | 'square' | 'chamfered' | 'gothic';
   /** The line around framed things (framed buttons, avatars, fields). */
   frame: string;
   /** "New post" and other main buttons: in the accent, an outline, or colours of their own. */
-  mainButton: 'filled' | 'outlined' | { background: string; text: string; hover: string };
+  mainButton: 'filled' | 'outlined' | { background: string; text: string; hover: string; line?: string };
   /** Secondary buttons ("Unfollow"): a faint tint, a frame, or colours of their own. */
   secondaryButtons: 'tinted' | 'framed' | { background: string; text: string };
   /** Posts divided by a line, or each on a card of its own on the column's ground. */
   posts: 'divided' | 'cards';
   /** Columns side by side, or apart with the desktop's ground between them. */
   columns: 'joined' | 'spaced';
-  /** Column titles centred, or at the start behind an accent marker. */
-  titles: 'centered' | 'marked';
+  /** Column titles centred, or at the start behind an accent marker: a bar, or a Latin cross. */
+  titles: 'centered' | 'marked' | 'cross';
   /**
    * The navigation's footer: Mastodon's labelled links and framed account
    * card, or icon tiles (names for screen readers) and the account on a tile.
@@ -105,19 +114,24 @@ export interface Half {
   brandName: 'plain' | { size: string; tracking: string };
   /** The selected tab and navigation item: Mastodon's tint, or underlined and on a card in the accent. */
   selection: 'tinted' | 'marked';
-  /** Unread counts: a number, or a small square. */
-  badges: 'count' | 'dot';
+  /** Unread counts: a number, a small square, or a drop of blood. */
+  badges: 'count' | 'dot' | 'drop';
   /** A notification's kind ("Mention"): as Mastodon sets it, or a small caption in the label face. */
   captions: 'plain' | { size: string; tracking: string };
   /** Settings fields: Mastodon's look, or labels in the label face and switches as a framed track. */
   controls: 'standard' | 'framed';
   /** Links in posts: underlined, or bare in the link colour until hovered. */
   links: 'underlined' | 'bare';
+  /** Vampire fangs hanging below the logo, with their blood; the colours of the fangs and of the blood. */
+  fangs?: { fang: string; blood: string };
   /** Stroke of the line icons. */
   icons: 'regular' | 'bold';
   /** A fine grain over the whole interface. */
   grain: boolean;
-  avatars: 'plain' | 'framed';
+  /** Avatars: square, framed, or in a pointed arch as in a church window. */
+  avatars: 'plain' | 'framed' | 'arch';
+  /** Gothic ornaments in the four corners of posts, notifications and the account card: their colour. */
+  ornaments?: string;
   hashtags: {
     look: 'tinted' | { background: string; text: string };
     face: 'label' | 'body';

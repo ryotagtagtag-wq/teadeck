@@ -1,10 +1,11 @@
 /** Teadeck's designs, in the order the settings offer them. */
 import assam from './assam.ts';
 import hibiscus from './hibiscus.ts';
+import lapsang from './lapsang.ts';
 import sencha from './sencha.ts';
 import type { Half } from './tokens.ts';
 
-export const designs = [assam, sencha, hibiscus] as const;
+export const designs = [assam, sencha, hibiscus, lapsang] as const;
 export type DesignId = (typeof designs)[number]['id'];
 export const designIds = designs.map((design) => design.id) as DesignId[];
 
@@ -19,7 +20,7 @@ const half = (id: string, scheme: Scheme) => designs.find((design) => design.id 
 export const designAttributeNames = [
   'teadeckShape', 'teadeckPosts', 'teadeckColumns', 'teadeckTitles', 'teadeckNavFooter', 'teadeckBrandName',
   'teadeckSelection', 'teadeckBadges', 'teadeckCaptions', 'teadeckControls', 'teadeckLinks',
-  'teadeckLogoSteam',
+  'teadeckLogoSteam', 'teadeckBrandFangs', 'teadeckAvatars', 'teadeckOrnaments',
 ] as const;
 
 /** The attributes one half sets. */
@@ -29,6 +30,8 @@ export function halfAttributes(half: Half): Partial<Record<(typeof designAttribu
     teadeckNavFooter: half.navFooter, teadeckBrandName: half.brandName === 'plain' ? 'plain' : 'display',
     teadeckSelection: half.selection, teadeckBadges: half.badges, teadeckCaptions: half.captions === 'plain' ? 'plain' : 'small',
     teadeckControls: half.controls, teadeckLinks: half.links, teadeckLogoSteam: half.logo.steamShape ?? 'soft',
+    teadeckBrandFangs: half.fangs ? 'fangs' : 'none', teadeckAvatars: half.avatars,
+    teadeckOrnaments: half.ornaments ? 'gothic' : 'none',
   };
 }
 

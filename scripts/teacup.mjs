@@ -43,7 +43,8 @@ const materials = {
 /** The liquid: through the whole wall in glass, only its surface otherwise. */
 function tea(material, id) {
   if (!material.opaque) {
-    return `  <g clip-path="${id('bowl')}" opacity="0.94">
+    // The design's tea opacity (--teadeck-logo-tea-opacity): 1 where the tea is opaque, 0.94 by default.
+    return `  <g clip-path="${id('bowl')}" style="opacity: var(--teadeck-logo-tea-opacity, 0.94)">
     <rect x="80" y="224" width="240" height="110" fill="${id('tea')}"/>
     <rect x="80" y="224" width="240" height="110" fill="${id('teaSides')}"/>
     <ellipse cx="200" cy="224" rx="106" ry="16" fill="${id('teaTop')}"/>

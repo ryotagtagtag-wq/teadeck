@@ -133,6 +133,68 @@ test('every Teadeck variable mastodon.css reads is set by each design or by mast
   }
 });
 
+test('only Lapsang Souchong and Earl Grey have fangs, and only their cup has an opaque tea', () => {
+  for (const design of designs) for (const scheme of ['dark', 'light']) {
+    const half = design[scheme];
+    assert.equal(halfAttributes(half).teadeckBrandFangs, design.id === 'lapsang' ? 'fangs' : 'none', `${design.id}/${scheme}`);
+    const variables = Object.fromEntries(halfVariables(half));
+    assert.equal(variables['--td-logo-tea-opacity'], design.id === 'lapsang' ? '1' : '0.94', `${design.id}/${scheme}: tea`);
+  }
+  const lapsang = designs.find((design) => design.id === 'lapsang');
+  assert.ok(lapsang.fonts.some((font) => font.family === 'Teadeck UnifrakturMaguntia'));
+  assert.equal(designLabel(lapsang, 'en'), 'Lapsang Souchong & Earl Grey');
+});
+
+test('only Lapsang Souchong and Earl Grey have gothic corners, ornaments, arch avatars, cross titles and drops', () => {
+  for (const design of designs) for (const scheme of ['dark', 'light']) {
+    const half = design[scheme];
+    const gothic = design.id === 'lapsang';
+    const attributes = halfAttributes(half);
+    const name = `${design.id}/${scheme}`;
+    assert.equal(half.shape === 'gothic', gothic, `${name}: shape`);
+    assert.equal(attributes.teadeckOrnaments, gothic ? 'gothic' : 'none', `${name}: ornaments`);
+    assert.equal(attributes.teadeckAvatars === 'arch', gothic, `${name}: avatars`);
+    assert.equal(attributes.teadeckTitles === 'cross', gothic, `${name}: titles`);
+    assert.equal(attributes.teadeckBadges === 'drop', gothic, `${name}: badges`);
+  }
+});
+
+test('gothic corners are straight: no clips, no radii and a frame of its own colour', () => {
+  const lapsang = designs.find((design) => design.id === 'lapsang');
+  for (const scheme of ['dark', 'light']) {
+    const variables = Object.fromEntries(halfVariables(lapsang[scheme]));
+    assert.ok(Object.entries(variables).filter(([name]) => name.startsWith('--td-clip-')).every(([, value]) => value === 'none'), scheme);
+    assert.ok(Object.entries(variables).filter(([name]) => name.startsWith('--td-radius-')).every(([, value]) => value === '0'), scheme);
+    assert.match(variables['--td-ornament'], /^#[0-9a-f]{6}$/, scheme);
+    assert.match(variables['--td-main-line'], /^rgb\(/, scheme);
+  }
+});
+
+test('each of the new choices changes only its own attribute', () => {
+  const base = halfAttributes(assam);
+  for (const [choice, value, attribute] of [['avatars', 'arch', 'teadeckAvatars'], ['ornaments', '#7e1a22', 'teadeckOrnaments']]) {
+    const changed = halfAttributes({ ...assam, [choice]: value });
+    const differing = Object.keys(base).filter((name) => base[name] !== changed[name]);
+    assert.deepEqual(differing, [attribute], choice);
+  }
+});
+
+test('mastodon.css gives the new values their rules, and no other design\'s', async () => {
+  const css = withoutComments(await read('integration/themes/mastodon.css'));
+  for (const selector of ["data-teadeck-titles='cross'", "data-teadeck-avatars='arch'", "data-teadeck-badges='drop'", "data-teadeck-ornaments='gothic'"]) {
+    assert.ok(css.includes(selector), selector);
+  }
+  // Layered masks, not mask-border: Firefox has no mask-border.
+  assert.match(css, /--td-ornament-tl:\s*url\(/);
+  assert.doesNotMatch(css, /mask-border/);
+});
+
+test('the blackletter is bundled with its licence and is a real woff2', async () => {
+  const font = await readFile(path.join(root, 'integration/fonts/unifraktur-maguntia-latin.woff2'));
+  assert.equal(font.subarray(0, 4).toString('latin1'), 'wOF2');
+  assert.match(await read('integration/fonts/OFL-unifrakturmaguntia.txt'), /SIL Open Font License/);
+});
+
 test('the configuration docs and .env.example list every design with its names', async () => {
   const docs = await read('docs/configuration.md');
   const env = await read('.env.example');
