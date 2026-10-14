@@ -334,3 +334,10 @@ test('the shape framework reaches the visible composer and its component roles',
   assert.match(await read('integration/large_composer.css'), /clip-path:\s*var\(--td-clip-overlay/);
   assert.match(await read('integration/shell.css'), /clip-path:\s*var\(--td-clip-overlay/);
 });
+
+test('the copy button of a code block keeps its muted colour inside posts', async () => {
+  const css = withoutComments(await read('integration/themes/mastodon.css'));
+  const rule = allRules(css).find(([selector]) => selector.trim() === '.status__content__text .teadeck-code__copy');
+  assert.ok(rule, 'the copy button has no rule inside the post');
+  assert.match(rule[1], /color:\s*var\(--td-content-muted/);
+});

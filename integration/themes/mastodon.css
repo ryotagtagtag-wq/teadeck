@@ -981,7 +981,9 @@ html[data-teadeck-shape='chamfered'] .status__content__text .teadeck-code {
   color: var(--td-content-muted, var(--color-text-secondary));
 }
 
-.teadeck-code__copy {
+/* Inside the post, so Mastodon's rules for links and buttons in posts (the
+   brand colour, which is dark in a light half) do not reach it. */
+.status__content__text .teadeck-code__copy {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -994,8 +996,8 @@ html[data-teadeck-shape='chamfered'] .status__content__text .teadeck-code {
   color: var(--td-content-muted, var(--color-text-secondary));
   cursor: pointer;
 }
-.teadeck-code__copy:hover,
-.teadeck-code__copy:focus-visible {
+.status__content__text .teadeck-code__copy:hover,
+.status__content__text .teadeck-code__copy:focus-visible {
   color: var(--td-content-link, var(--color-text-brand));
 }
 .teadeck-code__copy .icon {
