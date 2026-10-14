@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { initCapabilities, setSupport, support, withCapability } from '../integration/api_capabilities.ts';
+import { initCapabilities, setSupport, subscribeSupport, support, withCapability } from '../integration/api_capabilities.ts';
 
 function memoryStorage() {
   const data = new Map();
@@ -83,4 +83,19 @@ test('a 404 switches a capability off for a day, then it is probed again', async
   assert.equal(support('accounts.familiarFollowers'), 'unknown');
   assert.equal(await withCapability('accounts.familiarFollowers', async () => ['someone'], () => []).then((r) => r.length), 1);
   assert.equal(support('accounts.familiarFollowers'), 'supported');
+});
+
+test('subscribers are told when a probe answers, including a 404 from the request helper (ShellError status)', async () => {
+  initCapabilities('https://gts.test', { version: '0.22.1' }, memoryStorage());
+  let calls = 0;
+  const unsubscribe = subscribeSupport(() => { calls++; });
+  setSupport('collections', 'supported');
+  assert.equal(calls, 1);
+  // request() throws an error with `status` rather than an API client's `response.status`.
+  await withCapability('interactionPolicies.defaults', async () => { throw Object.assign(new Error('HTTP 404'), { status: 404 }); }, () => null);
+  assert.equal(support('interactionPolicies.defaults'), 'unsupported');
+  assert.equal(calls, 2);
+  unsubscribe();
+  setSupport('collections', 'unsupported');
+  assert.equal(calls, 2);
 });

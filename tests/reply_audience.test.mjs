@@ -16,11 +16,11 @@ const interactionDefaults = {
   },
 };
 
-function mockMastodonRest(context, { instanceFixture, onStatusPosted, failDefaults = false }) {
+function mockMastodonRest(context, { instanceFixture, onStatusPosted, defaults = interactionDefaults }) {
   return mockMastodon(context, origin, {
     '/api/v2/instance': instanceFixture,
     '/api/v1/markers': {},
-    '/api/v1/interaction_policies/defaults': failDefaults ? respond(500, { error: 'unavailable' }) : interactionDefaults,
+    '/api/v1/interaction_policies/defaults': defaults,
     'POST /api/v1/statuses': ({ body }) => { onStatusPosted(body); return postedStatus(body); },
   });
 }
@@ -39,12 +39,12 @@ async function withReplyAudience(page, inMenu) {
   return result;
 }
 
-test('the GoToSocial reply-audience picker stays hidden on a plain Mastodon instance', { timeout: 60_000 }, async () => {
+test('the reply-audience picker stays hidden on a Mastodon instance without interaction policies (404)', { timeout: 60_000 }, async () => {
   const context = await browser.newContext({ locale: 'de-DE' });
   const page = await context.newPage();
   let posted;
 
-  await mockMastodonRest(context, { instanceFixture: instance, onStatusPosted: (status) => { posted = status; } });
+  await mockMastodonRest(context, { instanceFixture: instance, defaults: respond(404, { error: 'Not Found' }), onStatusPosted: (status) => { posted = status; } });
 
   await submitSignIn(page, origin);
   await page.getByText(timelineText).waitFor();
@@ -56,6 +56,32 @@ test('the GoToSocial reply-audience picker stays hidden on a plain Mastodon inst
   await submit(page);
   await waitUntil(() => posted, { message: 'the status was never posted' });
   assert.equal('interaction_policy' in posted, false);
+
+  await context.close();
+});
+
+test('a Mastodon instance that answers the interaction defaults gets the picker, without a GoToSocial name', { timeout: 60_000 }, async () => {
+  const context = await browser.newContext({ locale: 'de-DE' });
+  const page = await context.newPage();
+  let posted;
+
+  await mockMastodonRest(context, { instanceFixture: instance, onStatusPosted: (status) => { posted = status; } });
+
+  await submitSignIn(page, origin);
+  await page.getByText(timelineText).waitFor();
+  await openComposer(page);
+  // The probe answers after the first render: the picker appears once it has.
+  await settingsButton(page).click();
+  const group = page.locator('.teadeck-reply-audience-picker');
+  await group.waitFor();
+  await group.getByRole('menuitemradio', { name: 'Nur Follower und Erwähnte' }).click();
+  assert.equal(await group.getAttribute('data-value'), 'followers');
+  await settingsButton(page).click();
+
+  await composerText(page).fill('Teadeck plain-mastodon restricted post 2a7c');
+  await submit(page);
+  await waitUntil(() => posted, { message: 'the status was never posted' });
+  assert.deepEqual(posted.interaction_policy.can_reply, { automatic_approval: ['followers'], manual_approval: [] });
 
   await context.close();
 });
@@ -109,10 +135,18 @@ test('without the account defaults a reply-restricted post is held back with a m
   const page = await context.newPage();
   const gotosocialInstance = { ...instance, version: '0.17.0 abcdef1', source_url: 'https://codeberg.org/superseriousbusiness/gotosocial' };
   let posted;
-
-  await mockMastodonRest(context, { instanceFixture: gotosocialInstance, failDefaults: true, onStatusPosted: (status) => { posted = status; } });
+  // The server answered the defaults before (so the picker is known to be there), then fails.
+  let failing = false;
+  await mockMastodonRest(context, {
+    instanceFixture: gotosocialInstance,
+    defaults: () => (failing ? respond(500, { error: 'unavailable' }) : interactionDefaults),
+    onStatusPosted: (status) => { posted = status; },
+  });
 
   await submitSignIn(page, origin);
+  await page.getByText(timelineText).waitFor();
+  failing = true;
+  await page.reload();
   await page.getByText(timelineText).waitFor();
 
   await openComposer(page);

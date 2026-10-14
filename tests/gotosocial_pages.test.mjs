@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { instance } from './fixtures.mjs';
-import { mockMastodon, openAccountMenu, signIn } from './mastodon_mock.mjs';
+import { mockMastodon, openAccountMenu, signIn, waitUntil } from './mastodon_mock.mjs';
 import { browser, collectPageErrors, origin, useApp } from './harness.mjs';
 
 // GoToSocial: terms linked from its instance, no pages API, no collections.
@@ -20,8 +20,9 @@ useApp();
 test('on GoToSocial, About and the terms show the server\'s texts without an error, and collections are not offered', { timeout: 90_000 }, async () => {
   const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1400, height: 900 } });
   const missing = [];
-  await mockMastodon(context, origin, {
+  const server = await mockMastodon(context, origin, {
     '/api/v2/instance': gtsInstance,
+    '/api/v1/interaction_policies/defaults': {},
     '/api/v1/instance': gtsInstanceV1,
     '/api/v1/markers': {},
     '/api/v1/instance/extended_description': (args) => { missing.push('extended_description'); return notFound(args); },
@@ -52,7 +53,8 @@ test('on GoToSocial, About and the terms show the server\'s texts without an err
   await page.waitForTimeout(500);
   assert.equal(await page.locator('.notification-bar, [role="alert"]').filter({ hasText: /404|Fehler|error/i }).count(), 0);
 
-  // Collections are Mastodon's: not in the account menu.
+  // Collections are Mastodon's: not in the account menu. The start-up probe answers 404 for them.
+  await waitUntil(() => server.requests.some((request) => request.path === '/api/v1/accounts/42/collections'), { message: 'collections were never probed' });
   await openAccountMenu(page);
   await page.getByRole('link', { name: 'Einstellungen', exact: true }).waitFor();
   assert.equal(await page.getByRole('link', { name: 'Sammlungen' }).count(), 0);
@@ -64,6 +66,7 @@ test('on GoToSocial, the list of restricted servers is introduced without naming
   const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1400, height: 900 } });
   await mockMastodon(context, origin, {
     '/api/v2/instance': gtsInstance,
+    '/api/v1/interaction_policies/defaults': {},
     '/api/v1/instance': gtsInstanceV1,
     '/api/v1/markers': {},
     '/api/v1/instance/domain_blocks': [{ domain: 'spam.example', digest: '0'.repeat(64), severity: 'suspend', comment: 'Spam' }],

@@ -64,7 +64,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
 @@ -1,3 +1,6 @@
 +import { serverUrl } from '@/teadeck/navigation';
 +import { t } from '@/teadeck/i18n';
-+import { collectionsAvailable } from '@/teadeck/server_features';
++import { useCollectionsAvailable } from '@/teadeck/use_support';
  import { useCallback } from 'react';
  
  import { FormattedMessage } from 'react-intl';
@@ -93,7 +93,12 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
  import {
    canManageReports,
    canViewAdminDashboard,
-@@ -120,22 +123,33 @@ export const AccountMenuItems: React.FC<{
+@@ -99,3 +102,4 @@ export const AccountMenuItems: React.FC<{
++  const showCollections = useCollectionsAvailable();
+   const confirmLogout = useCallback(() => {
+     dispatch(openModal({ modalType: 'CONFIRM_LOG_OUT', modalProps: {} }));
+   }, [dispatch]);
+@@ -120,22 +125,33 @@ export const AccountMenuItems: React.FC<{
          />
        </MenuItemLink>
  
@@ -121,7 +126,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
  
 +      <MenuItemDivider />
 +
-+      {collectionsAvailable() && (
++      {showCollections && (
 +        <MenuItemLink
 +          to={`${accountBasePath}/collections`}
 +          icon={CirclesFourIcon}
@@ -136,7 +141,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
        <MenuItemLink to='/favourites' icon={HeartIcon}>
          <FormattedMessage
            id='navigation_bar.liked_posts'
-@@ -193,7 +207,7 @@ export const AccountMenuItems: React.FC<{
+@@ -193,7 +208,7 @@ export const AccountMenuItems: React.FC<{
            <MenuItemDivider />
  
            {isAdmin && (
@@ -145,7 +150,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
                <FormattedMessage
                  id='navigation_bar.administration'
                  defaultMessage='Administration'
-@@ -202,7 +216,7 @@ export const AccountMenuItems: React.FC<{
+@@ -202,7 +217,7 @@ export const AccountMenuItems: React.FC<{
            )}
  
            {isManager && (
@@ -154,7 +159,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
                <FormattedMessage
                  id='navigation_bar.moderation'
                  defaultMessage='Moderation'
-@@ -214,24 +228,14 @@ export const AccountMenuItems: React.FC<{
+@@ -214,24 +229,14 @@ export const AccountMenuItems: React.FC<{
  
        <MenuItemDivider />
  

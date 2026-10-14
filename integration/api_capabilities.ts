@@ -40,6 +40,7 @@ const unsupportedTtlMs = 24 * 60 * 60 * 1000;
 interface Known { value: Exclude<Support, 'unknown'>; checkedAt: number }
 
 let known = new Map<Capability, Known>();
+const listeners = new Set<() => void>();
 let now: () => number = Date.now;
 let storageKey: string | undefined;
 let storage: StorageLike | undefined;
@@ -78,6 +79,17 @@ export function initCapabilities(origin: string, instance: InstanceLike, store: 
   if (translation === false) known.set('translation.languages', { value: 'unsupported', checkedAt: now() });
   else if (translation === true && known.get('translation.languages')?.value === 'unsupported') known.delete('translation.languages');
   persist();
+  notify();
+}
+
+function notify() {
+  for (const listener of listeners) listener();
+}
+
+/** For components that render on a capability: they re-read it when a probe answers. */
+export function subscribeSupport(listener: () => void) {
+  listeners.add(listener);
+  return () => { listeners.delete(listener); };
 }
 
 export function support(capability: Capability): Support {
@@ -92,10 +104,13 @@ export function setSupport(capability: Capability, value: Exclude<Support, 'unkn
   if (previous?.value === value && value === 'supported') return;
   known.set(capability, { value, checkedAt: now() });
   persist();
+  notify();
 }
 
+/** Errors from the API client carry `response.status`, errors from `request()` carry `status`. */
 function isNotFound(error: unknown): boolean {
-  return (error as { response?: { status?: number } } | null)?.response?.status === 404;
+  const failure = error as { status?: number; response?: { status?: number } } | null;
+  return failure?.status === 404 || failure?.response?.status === 404;
 }
 
 /** Uses `fallback` once `request` answered 404; other errors are passed on. */

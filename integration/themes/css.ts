@@ -97,6 +97,11 @@ export function halfVariables(half: Half): [string, string][] {
     ['--td-column-ground', cards ? 'var(--td-page)' : 'var(--td-surface)'],
     ['--td-post-bg', cards ? 'var(--td-surface)' : 'transparent'],
     ['--td-grain-opacity', half.grain ? '0.09' : '0'],
+    // Sizes for the brand name and captions where a design sets them (attributes in index.ts switch them on).
+    ['--td-brand-size', half.brandName === 'plain' ? 'inherit' : half.brandName.size],
+    ['--td-brand-tracking', half.brandName === 'plain' ? 'normal' : half.brandName.tracking],
+    ['--td-caption-size', half.captions === 'plain' ? 'inherit' : half.captions.size],
+    ['--td-caption-tracking', half.captions === 'plain' ? 'normal' : half.captions.tracking],
     ['--td-clip-card', clip(chamfers.card)],
     ['--td-clip-main', clip(chamfers.main)],
     ['--td-clip-field', clip(chamfers.field)],

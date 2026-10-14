@@ -94,8 +94,23 @@ export interface Half {
   columns: 'joined' | 'spaced';
   /** Column titles centred, or at the start behind an accent marker. */
   titles: 'centered' | 'marked';
-  /** The navigation's bottom links with their names, or as icons only. */
-  footerNav: 'labelled' | 'icons';
+  /**
+   * The navigation's footer: Mastodon's labelled links and framed account
+   * card, or icon tiles (names for screen readers) and the account on a tile.
+   */
+  navFooter: 'labelled' | 'tiles';
+  /** The server's name at the top: as Mastodon sets it, or in the brand face at a size of its own. */
+  brandName: 'plain' | { size: string; tracking: string };
+  /** The selected tab and navigation item: Mastodon's tint, or underlined and on a card in the accent. */
+  selection: 'tinted' | 'marked';
+  /** Unread counts: a number, or a small square. */
+  badges: 'count' | 'dot';
+  /** A notification's kind ("Mention"): as Mastodon sets it, or a small caption in the label face. */
+  captions: 'plain' | { size: string; tracking: string };
+  /** Settings fields: Mastodon's look, or labels in the label face and switches as a framed track. */
+  controls: 'standard' | 'framed';
+  /** Links in posts: underlined, or bare in the link colour until hovered. */
+  links: 'underlined' | 'bare';
   /** Stroke of the line icons. */
   icons: 'regular' | 'bold';
   /** A fine grain over the whole interface. */

@@ -23,6 +23,7 @@ test('"Profil bearbeiten" works on GoToSocial through verify_credentials and upd
   const notFound = respond(404, { error: 'Not Found' });
   const server = await mockMastodon(context, origin, {
     '/api/v2/instance': gtsInstance,
+    '/api/v1/interaction_policies/defaults': {},
     '/api/v1/profile': notFound,
     'PATCH /api/v1/accounts/update_credentials': ({ body }) => {
       updates.push(body);

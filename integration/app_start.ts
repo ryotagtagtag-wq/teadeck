@@ -13,8 +13,8 @@ import {
 import { startHomeTimelinePolling } from './polling.ts';
 import { loadAccountInteractionDefaults } from './reply_audience.ts';
 import type { DefaultInteractionPolicies } from './reply_audience.ts';
-import { detectServerFeatures, setServerFeatures } from './server_features.ts';
-import { initCapabilities, setSupport, support } from './api_capabilities.ts';
+import { detectServerFeatures, setServerBranding, setServerFeatures } from './server_features.ts';
+import { initCapabilities, setSupport, support, withCapability } from './api_capabilities.ts';
 import { defaultFrontendSettings, frontendSettingsKey, frontendSettingsMeta, layoutStartPath, resolveFrontendSettings } from './frontend_settings.ts';
 import { withFilterBarDefault } from './notification_settings.ts';
 import { applyAppearance, lastLocale } from './appearance.ts';
@@ -67,10 +67,11 @@ export async function startApp(session: Session) {
   setBrandLogo(logo);
 
   initCapabilities(session.origin, instance);
-  const features = detectServerFeatures(instance, account);
-  setServerFeatures(features);
-  // GoToSocial: a post restricting replies copies the other defaults from these.
-  if (features.goToSocial && support('interactionPolicies.defaults') !== 'unsupported') {
+  setServerBranding(instance);
+  setServerFeatures(detectServerFeatures(instance, account));
+  // Probed, not read from the server's name: a post restricting replies copies the other
+  // defaults from these. Not waited for; the reply audience menu follows the answer.
+  if (support('interactionPolicies.defaults') !== 'unsupported') {
     loadAccountInteractionDefaults(() => request('/api/v1/interaction_policies/defaults').then((defaults: DefaultInteractionPolicies) => {
       setSupport('interactionPolicies.defaults', 'supported');
       return defaults;
@@ -80,6 +81,11 @@ export async function startApp(session: Session) {
       setSupport('interactionPolicies.defaults', 'unsupported');
       return null;
     }));
+  }
+  // Collections decide the account menu, which renders early, so they are probed here too.
+  if (support('collections') === 'unknown') {
+    void withCapability('collections', () => request(`/api/v1/accounts/${account.id}/collections`), () => null)
+      .catch((error: unknown) => console.warn('Collections unavailable', error));
   }
   let streamingUrl = '';
   if (instance.configuration?.urls?.streaming) {

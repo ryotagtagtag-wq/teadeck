@@ -29,6 +29,7 @@ test('works against a GoToSocial-shaped API: missing status fields, v1-only noti
   const notFound = respond(404, { error: 'Not Found' });
   const server = await mockMastodon(context, origin, {
     '/api/v2/instance': gtsInstance,
+    '/api/v1/interaction_policies/defaults': {},
     '/api/v1/accounts/lookup': account,
     [`/api/v1/accounts/${account.id}`]: account,
     '/api/v1/timelines/home': [gtsStatus],

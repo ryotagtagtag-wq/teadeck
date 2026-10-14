@@ -76,6 +76,7 @@ async function signedInPage({ instance: instanceBody, account: accountBody, stat
   const ownStatus = { ...status, account: accountBody };
   await mockMastodon(context, origin, {
     '/api/v2/instance': instanceBody,
+    '/api/v1/interaction_policies/defaults': {},
     '/api/v1/accounts/verify_credentials': accountBody,
     '/api/v1/timelines/home': [ownStatus],
     '/api/v1/markers': {},

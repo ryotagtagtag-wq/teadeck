@@ -2,6 +2,7 @@
 import assam from './assam.ts';
 import hibiscus from './hibiscus.ts';
 import sencha from './sencha.ts';
+import type { Half } from './tokens.ts';
 
 export const designs = [assam, sencha, hibiscus] as const;
 export type DesignId = (typeof designs)[number]['id'];
@@ -15,12 +16,24 @@ const half = (id: string, scheme: Scheme) => designs.find((design) => design.id 
  * for a choice apply only where a design makes it, so Mastodon's own layout
  * stays untouched elsewhere. Mastodon's design (no Teadeck design) has none.
  */
-export const designAttributeNames = ['teadeckShape', 'teadeckPosts', 'teadeckColumns', 'teadeckTitles', 'teadeckFooterNav'] as const;
+export const designAttributeNames = [
+  'teadeckShape', 'teadeckPosts', 'teadeckColumns', 'teadeckTitles', 'teadeckNavFooter', 'teadeckBrandName',
+  'teadeckSelection', 'teadeckBadges', 'teadeckCaptions', 'teadeckControls', 'teadeckLinks',
+] as const;
+
+/** The attributes one half sets. */
+export function halfAttributes(half: Half): Partial<Record<(typeof designAttributeNames)[number], string>> {
+  return {
+    teadeckShape: half.shape, teadeckPosts: half.posts, teadeckColumns: half.columns, teadeckTitles: half.titles,
+    teadeckNavFooter: half.navFooter, teadeckBrandName: half.brandName === 'plain' ? 'plain' : 'display',
+    teadeckSelection: half.selection, teadeckBadges: half.badges, teadeckCaptions: half.captions === 'plain' ? 'plain' : 'small',
+    teadeckControls: half.controls, teadeckLinks: half.links,
+  };
+}
 
 export function designAttributes(id: string, scheme: Scheme): Partial<Record<(typeof designAttributeNames)[number], string>> {
   const chosen = half(id, scheme);
-  if (!chosen) return {};
-  return { teadeckShape: chosen.shape, teadeckPosts: chosen.posts, teadeckColumns: chosen.columns, teadeckTitles: chosen.titles, teadeckFooterNav: chosen.footerNav };
+  return chosen ? halfAttributes(chosen) : {};
 }
 
 /** The stroke of the line icons; Mastodon's own is regular. */

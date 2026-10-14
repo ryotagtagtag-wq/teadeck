@@ -8,7 +8,7 @@ import type { Half } from './tokens.ts';
 
 export const classicFonts = [...files.spaceGrotesk, ...files.ibmPlexSans, ...files.newsreader, ...files.publicSans, ...files.ibmPlexMono];
 
-type Look = Pick<Half, 'fonts' | 'type' | 'shape' | 'mainButton' | 'secondaryButtons' | 'posts' | 'columns' | 'titles' | 'footerNav' | 'icons' | 'grain' | 'avatars' | 'hashtags'>;
+type Look = Pick<Half, 'fonts' | 'type' | 'shape' | 'mainButton' | 'secondaryButtons' | 'posts' | 'columns' | 'titles' | 'navFooter' | 'brandName' | 'selection' | 'badges' | 'captions' | 'controls' | 'links' | 'icons' | 'grain' | 'avatars' | 'hashtags'>;
 
 const common = {
   shape: 'rounded',
@@ -17,7 +17,13 @@ const common = {
   posts: 'divided',
   columns: 'joined',
   titles: 'centered',
-  footerNav: 'labelled',
+  navFooter: 'labelled',
+  brandName: 'plain',
+  selection: 'tinted',
+  badges: 'count',
+  captions: 'plain',
+  controls: 'standard',
+  links: 'underlined',
   icons: 'regular',
   grain: false,
   avatars: 'plain',

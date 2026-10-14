@@ -4,7 +4,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 
 import { designsCss, halfVariables } from '../integration/themes/css.ts';
-import { designIds, designs } from '../integration/themes/index.ts';
+import { designAttributeNames, designIds, designs, halfAttributes } from '../integration/themes/index.ts';
 import { designLabel } from '../integration/themes/tokens.ts';
 
 // The design framework (integration/themes/): designs are values in Teadeck's
@@ -137,4 +137,83 @@ test('the configuration docs and .env.example list every design with its names',
   }
   assert.match(docs, new RegExp(`\`${designIds.join('`, `')}\` or \`mastodon\``));
   assert.equal(designLabel(designs.find((design) => design.id === 'hibiscus'), 'de'), 'Hibiskus & Rooibos');
+});
+
+// A design that combines choices no shipped design combines, so a rule that
+// quietly ties one choice to another shows up.
+const assam = designs.find((design) => design.id === 'assam').dark;
+const hibiscus = designs.find((design) => design.id === 'hibiscus').dark;
+const synthetic = {
+  ...assam,
+  shape: 'chamfered',
+  type: { ...assam.type, caps: false },
+  secondaryButtons: { background: '#123456', text: '#abcdef' },
+  posts: 'cards',
+  titles: 'centered',
+  icons: 'bold',
+  logo: { tea: '#100001', teaDark: '#100002', teaLight: '#100003', teaShade: '#100004', line: '#100005', steam: '#100006', body: '#100007', bodyDark: '#100008', highlight: '#100009' },
+};
+
+test('each design choice is its own: changing one changes only its own attribute', () => {
+  const choices = ['shape', 'posts', 'columns', 'titles', 'navFooter', 'brandName', 'selection', 'badges', 'captions', 'controls', 'links'];
+  const base = halfAttributes(assam);
+  assert.deepEqual(Object.keys(base).sort(), [...designAttributeNames].sort());
+  for (const choice of choices) {
+    assert.notDeepEqual(assam[choice], hibiscus[choice], `${choice}: Assam and Hibiscus should differ to test it`);
+    const changed = halfAttributes({ ...assam, [choice]: hibiscus[choice] });
+    const differing = Object.keys(base).filter((name) => base[name] !== changed[name]);
+    assert.equal(differing.length, 1, `${choice} changes ${differing.join(', ')}`);
+  }
+});
+
+test('a synthetic design keeps every value it sets, whatever else it chooses', () => {
+  const variables = Object.fromEntries(halfVariables(synthetic));
+  // Chamfered corners without capitals.
+  assert.match(variables['--td-clip-card'], /^polygon/);
+  assert.equal(variables['--td-caps'], 'none');
+  // Secondary buttons in colours of their own.
+  assert.equal(variables['--td-secondary-bg'], '#123456');
+  assert.equal(variables['--td-secondary-fg'], '#abcdef');
+  assert.equal(variables['--td-secondary-fill'], '100%');
+  // Every role of the teacup.
+  for (const [role, value] of Object.entries(synthetic.logo)) {
+    assert.equal(variables[`--td-logo-${role.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`], value, role);
+  }
+  // Cards with centred titles.
+  const attributes = halfAttributes(synthetic);
+  assert.equal(attributes.teadeckPosts, 'cards');
+  assert.equal(attributes.teadeckTitles, 'centered');
+  // A rounded design gets no clips at all.
+  assert.ok(halfVariables(assam).filter(([name]) => name.startsWith('--td-clip-')).every(([, value]) => value === 'none'));
+});
+
+test('in mastodon.css a choice\'s rules do only that choice\'s job', async () => {
+  const css = withoutComments(await read('integration/themes/mastodon.css'));
+  const known = new Set(designAttributeNames.map((name) => `data-${name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`));
+  // The shape is geometry: corners and where focus rings sit, nothing about type or colour.
+  const geometry = new Set(['clip-path', 'outline-offset', 'border-radius']);
+  for (const [, selector, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    for (const [, attribute] of selector.matchAll(/\[(data-teadeck-[a-z-]+)=/g)) {
+      assert.ok(known.has(attribute), `${attribute} is not one of designAttributeNames`);
+    }
+    if (selector.includes('data-teadeck-shape')) {
+      for (const [, property] of body.matchAll(/([a-z-]+)\s*:/g)) assert.ok(geometry.has(property), `shape rule sets ${property}: ${selector.trim()}`);
+    }
+  }
+});
+
+test('the shape framework reaches the visible composer and its component roles', async () => {
+  const css = withoutComments(await read('integration/themes/mastodon.css'));
+  const expected = [
+    ['form.teadeck-large-composer', '--td-clip-card'],
+    ['._compose_redesign_attachments__mediaUpload', '--td-clip-card'],
+    ['._comp_callout_redesign__rootLarge', '--td-clip-field'],
+    ['textarea', '--td-clip-field'],
+    ['._comp_button_redesign__base', '--td-clip-secondary'],
+  ];
+  for (const [selector, variable] of expected) {
+    const rule = allRules(css).find(([selectors, body]) => selectors.includes(selector) && body.includes(variable));
+    assert.ok(rule, `${selector} has no shape rule`);
+    assert.match(rule[1], new RegExp(`clip-path\\s*:\\s*var\\(${variable.replaceAll('-', '\\-')}\\)`), selector);
+  }
 });

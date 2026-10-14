@@ -39,6 +39,7 @@
 
 /* The cheat sheet: a dialog in the current design. */
 .teadeck-markdown-help {
+  clip-path: var(--td-clip-card, none);
   display: flex;
   flex-direction: column;
   width: min(760px, calc(100vw - 32px));

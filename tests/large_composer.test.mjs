@@ -3,7 +3,7 @@ import { test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
 import { account, instance, postedStatus } from './fixtures.mjs';
-import { mockMastodon, signIn, waitUntil } from './mastodon_mock.mjs';
+import { mockMastodon, openPreferences, signIn, waitUntil } from './mastodon_mock.mjs';
 import { engines } from './browsers.mjs';
 import { browser, collectPageErrors, origin, signedInPage, useApp, useMultiColumnLayout } from './harness.mjs';
 
@@ -16,10 +16,14 @@ const gtsInstance = {
 };
 const markdownAccount = { ...account, source: { ...account.source, status_content_type: 'text/markdown' } };
 const text = '# Teekanne\n\nEin **längerer** Beitrag.\n\n```js\nconst tea = "Assam";\n```';
+const undescribedMedia = {
+  id: 'media-1', type: 'image', url: `${origin}/photo.png`, preview_url: `${origin}/photo.png`, description: '',
+  meta: { original: { width: 100, height: 100, aspect: 1 }, small: { width: 100, height: 100, aspect: 1 } },
+};
 
 useApp();
 
-async function composerPage({ instanceFixture = gtsInstance, accountFixture = markdownAccount, engine = 'chromium' } = {}) {
+async function composerPage({ instanceFixture = gtsInstance, accountFixture = markdownAccount, engine = 'chromium', routes = {} } = {}) {
   const posted = [];
   const signedIn = await signedInPage({
     engine,
@@ -29,6 +33,7 @@ async function composerPage({ instanceFixture = gtsInstance, accountFixture = ma
       '/api/v1/accounts/verify_credentials': accountFixture,
       '/api/v1/markers': {},
       'POST /api/v1/statuses': ({ body }) => { posted.push(body); return postedStatus(body); },
+      ...routes,
     },
   });
   return { ...signedIn, posted };
@@ -105,10 +110,42 @@ test('the left part of "New post" opens the regular composer, and without Markdo
   }
 });
 
+test('the Hibiscus large composer takes every corner from the design framework', { timeout: 60_000 }, async () => {
+  const { context, page, pageErrors } = await composerPage({ routes: { 'POST /api/v2/media': undescribedMedia } });
+  try {
+    await openPreferences(page);
+    await page.locator('#teadeck-settings-theme').waitFor();
+    await page.locator('#teadeck-settings-theme').selectOption('hibiscus');
+    await page.locator('#teadeck-settings-color-scheme').selectOption('dark');
+    await page.goto(origin);
+    await page.getByRole('button', { name: 'Neuer Beitrag im großen Eingabefeld' }).click();
+    await form(page).locator('input[type="file"]').setInputFiles({
+      name: 'photo.png', mimeType: 'image/png', buffer: Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex'),
+    });
+    await form(page).getByRole('button', { name: 'Bild entfernen' }).waitFor();
+
+    const shapes = await form(page).evaluate((composer) => {
+      const clip = (element) => element && getComputedStyle(element).clipPath;
+      return {
+        composer: clip(composer),
+        textarea: clip(composer.querySelector('textarea')),
+        toolbarButton: clip(composer.querySelector('button[class*="_comp_button_redesign__base"]')),
+        publish: clip([...composer.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Veröffentlichen')),
+        attachment: clip(composer.querySelector('[class*="_compose_redesign_attachments__mediaUpload"]')),
+        warning: clip(composer.querySelector('[class*="_comp_callout_redesign__rootLarge"]')),
+      };
+    });
+    for (const [part, clip] of Object.entries(shapes)) assert.match(clip, /^polygon/, `${part}: ${clip}`);
+    assert.deepEqual(pageErrors, []);
+  } finally {
+    await context.close();
+  }
+});
+
 test('in the multi-column layout the large composer lies above the columns, and a click beside it makes it the regular one', { timeout: 60_000 }, async () => {
   const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1400, height: 900 } });
   await useMultiColumnLayout(context);
-  await mockMastodon(context, origin, { '/api/v2/instance': gtsInstance, '/api/v1/accounts/verify_credentials': markdownAccount, '/api/v1/markers': {} });
+  await mockMastodon(context, origin, { '/api/v2/instance': gtsInstance, '/api/v1/interaction_policies/defaults': {}, '/api/v1/accounts/verify_credentials': markdownAccount, '/api/v1/markers': {} });
   const page = await context.newPage();
   const pageErrors = collectPageErrors(page);
   await signIn(page, origin);
@@ -134,7 +171,7 @@ test('in the multi-column layout the large composer lies above the columns, and 
 test('in the multi-column layout, /deck/publish shows the redesigned composer, not the legacy form', { timeout: 60_000 }, async () => {
   const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1400, height: 900 } });
   await useMultiColumnLayout(context);
-  await mockMastodon(context, origin, { '/api/v2/instance': gtsInstance, '/api/v1/accounts/verify_credentials': markdownAccount, '/api/v1/markers': {} });
+  await mockMastodon(context, origin, { '/api/v2/instance': gtsInstance, '/api/v1/interaction_policies/defaults': {}, '/api/v1/accounts/verify_credentials': markdownAccount, '/api/v1/markers': {} });
   const page = await context.newPage();
   const pageErrors = collectPageErrors(page);
   await signIn(page, origin);

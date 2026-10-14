@@ -17,8 +17,6 @@ interface InstanceLike {
 }
 
 export interface ServerFeatures {
-  /** GoToSocial: its "who can reply" policies, and no Mastodon-only features. */
-  goToSocial: boolean;
   /** Posts can be written as plain text or Markdown (`content_type`). */
   statusFormat: boolean;
   /** What this account writes posts in unless a post says otherwise (GoToSocial). */
@@ -28,8 +26,10 @@ export interface ServerFeatures {
 }
 
 /**
- * Whether the server is GoToSocial. `source_url` is checked too, since
- * GoToSocial can report a Mastodon version.
+ * Whether the server calls itself GoToSocial. `source_url` is checked too, since
+ * GoToSocial can report a Mastodon version. Only for branding texts (isGoToSocial);
+ * what the server can do is asked of the API (api_capabilities.ts), so a fork or
+ * another server with the same API gets the same features.
  */
 function detectGoToSocial(instance: InstanceLike): boolean {
   const haystack = `${instance.source_url ?? ''} ${instance.version ?? ''}`.toLowerCase();
@@ -45,27 +45,34 @@ export function supportsStatusFormat(instance: InstanceLike): boolean {
 export function detectServerFeatures(instance: InstanceLike, account: { source?: { status_content_type?: unknown } }): ServerFeatures {
   const contentType = account.source?.status_content_type;
   return {
-    goToSocial: detectGoToSocial(instance),
     statusFormat: supportsStatusFormat(instance),
     accountContentType: typeof contentType === 'string' ? contentType : '',
     privacyPolicy: Boolean(instance.configuration?.urls?.privacy_policy),
   };
 }
 
-let current: ServerFeatures = { goToSocial: false, statusFormat: false, accountContentType: '', privacyPolicy: false };
+let current: ServerFeatures = { statusFormat: false, accountContentType: '', privacyPolicy: false };
+let branded = false;
 
 export function setServerFeatures(features: ServerFeatures) {
   current = features;
 }
 
-export const isGoToSocial = () => current.goToSocial;
+/**
+ * Branding only: whether the server names itself GoToSocial, for the texts that
+ * say Mastodon or GoToSocial (patches/08-brand-logo.patch). Features never depend on it.
+ */
+export function setServerBranding(instance: InstanceLike) {
+  branded = detectGoToSocial(instance);
+}
+export const isGoToSocial = () => branded;
 export const statusFormatAvailable = () => current.statusFormat;
 export const accountStatusContentType = () => current.accountContentType;
 export const privacyPolicyAvailable = () => current.privacyPolicy;
 
-/** Collections of accounts (Mastodon 4.6): GoToSocial is known not to have them; elsewhere a 404 tells. */
+/** Collections of accounts (Mastodon 4.6): app_start.ts probes them; a 404 means the server has none. */
 export function collectionsAvailable(): boolean {
-  return !current.goToSocial && support('collections') !== 'unsupported';
+  return support('collections') !== 'unsupported';
 }
 
 /** Whether the server publishes which servers it restricts; a 404 says it does not (api_fallbacks.ts). */

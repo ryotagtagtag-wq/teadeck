@@ -43,6 +43,8 @@ export async function mockMastodon(target, origin, routes = {}) {
     '/api/v1/timelines/home': [status],
     '/api/v2/notifications': { notification_groups: [], accounts: [], statuses: [] },
     '/api/v2/notifications/policy': notificationPolicy,
+    // Plain Mastodon has no interaction policy defaults (GoToSocial tests provide them).
+    '/api/v1/interaction_policies/defaults': respond(404, { error: 'Not Found' }),
     ...routes,
   };
   const requests = [];

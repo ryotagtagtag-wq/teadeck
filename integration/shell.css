@@ -57,6 +57,7 @@ body > [hidden], #teadeck-shell [hidden] { display: none !important; }
 .teadeck-reply-audience-picker { display: contents; }
 /* A post with its thread, large in the middle of the window (status_overlay_modal.tsx). */
 .teadeck-status-overlay {
+  clip-path: var(--td-clip-card, none);
   position: relative;
   flex-direction: column;
   width: min(960px, calc(100vw - 32px));
