@@ -23,9 +23,12 @@ test('every half of every design yields the same variables, all with a value', (
   for (const id of designIds) for (const scheme of ['dark', 'light']) assert.ok(css.includes(`html[data-teadeck-theme='${id}'][data-color-scheme='${scheme}'] {`), `${id}/${scheme}`);
 });
 
-test('only Hibiscus and Rooibos choose angular steam', () => {
+test('only Hibiscus and Rooibos choose angular steam, and only the cup of blood has none and drips', () => {
+  const steam = { hibiscus: 'angular', lapsang: 'none' };
   for (const design of designs) for (const scheme of ['dark', 'light']) {
-    assert.equal(halfAttributes(design[scheme]).teadeckLogoSteam, design.id === 'hibiscus' ? 'angular' : 'soft', `${design.id}/${scheme}`);
+    const attributes = halfAttributes(design[scheme]);
+    assert.equal(attributes.teadeckLogoSteam, steam[design.id] ?? 'soft', `${design.id}/${scheme}`);
+    assert.equal(attributes.teadeckLogoBlood, design.id === 'lapsang' ? 'drips' : 'none', `${design.id}/${scheme}: drips`);
   }
 });
 
@@ -189,6 +192,30 @@ test('mastodon.css gives the new values their rules, and no other design\'s', as
   assert.doesNotMatch(css, /mask-border/);
 });
 
+test('the Markdown details of the chamfered and gothic designs are scoped to their shape or ornaments', async () => {
+  const css = withoutComments(await read('integration/themes/mastodon.css'));
+  const rules = allRules(css);
+  const find = (...parts) => rules.filter(([selector]) => parts.every((part) => selector.includes(part)));
+  // Code blocks and inline code: the callout cut and the tag cut when chamfered, straight corners when chamfered or gothic.
+  assert.ok(find("data-teadeck-shape='chamfered'", '.teadeck-code').some(([, body]) => /clip-path:\s*var\(--td-clip-callout\)/.test(body)), 'chamfered code block');
+  assert.ok(find("data-teadeck-shape='chamfered'", ':not(pre)').some(([, body]) => /clip-path:\s*var\(--td-clip-tag\)/.test(body)), 'chamfered inline code');
+  assert.ok(find("data-teadeck-shape='gothic'", '.teadeck-code').some(([, body]) => /border-radius:\s*0/.test(body)), 'gothic code block');
+  assert.ok(find("data-teadeck-shape='gothic'", ':not(pre)').some(([, body]) => /border-radius:\s*0/.test(body)), 'gothic inline code');
+  // The frame along the cut of a chamfered code block.
+  assert.ok(css.includes(".status__content__text .teadeck-code,"), 'chamfered frame lists code blocks');
+  // Quotes: square ends on both shapes, 3px in the accent only when chamfered.
+  assert.ok(find("data-teadeck-shape='chamfered'", 'blockquote', '::before').some(([, body]) => /width:\s*3px/.test(body)), 'chamfered quote bar');
+  assert.ok(find("data-teadeck-shape", 'blockquote', '::before').some(([selector, body]) => selector.includes("'gothic'") && /border-radius:\s*0/.test(body)), 'gothic quote bar');
+  // Gothic titles and the rule's ornament: only where the gothic ornaments are chosen.
+  const titles = find("data-teadeck-ornaments='gothic'", 'h1');
+  assert.ok(titles.some(([, body]) => /font-family:\s*var\(--td-font-title\)/.test(body) && /text-transform:\s*none/.test(body) && /letter-spacing:\s*0/.test(body)), 'gothic titles');
+  assert.ok(find("data-teadeck-ornaments='gothic'", 'hr::before').length === 1, 'gothic rule ornament');
+  // Blackletter in post text is used only by the gothic titles.
+  for (const [selector, body] of rules.filter(([selector, body]) => selector.includes('status__content__text') && /font-family:\s*var\(--td-font-title\)/.test(body))) {
+    assert.ok(selector.includes("data-teadeck-ornaments='gothic'") || selector.includes('data-teadeck-titles'), `blackletter outside its design: ${selector}`);
+  }
+});
+
 test('the blackletter is bundled with its licence and is a real woff2', async () => {
   const font = await readFile(path.join(root, 'integration/fonts/unifraktur-maguntia-latin.woff2'));
   assert.equal(font.subarray(0, 4).toString('latin1'), 'wOF2');
@@ -261,9 +288,9 @@ test('a synthetic design keeps every value it sets, whatever else it chooses', (
 test('in mastodon.css a choice\'s rules do only that choice\'s job', async () => {
   const css = withoutComments(await read('integration/themes/mastodon.css'));
   const known = new Set(designAttributeNames.map((name) => `data-${name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`));
-  // The shape is geometry: corners and where focus rings sit, nothing about type or colour.
+  // The shape is geometry: corners, the width of a quote's bar and where focus rings sit, nothing about type or colour.
   const geometry = new Set([
-    'clip-path', 'outline', 'outline-offset', 'border-radius', 'border-color',
+    'clip-path', 'outline', 'outline-offset', 'border-radius', 'border-color', 'width',
     'background-image', 'background-position', 'background-size', 'background-repeat',
   ]);
   for (const [, selector, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {

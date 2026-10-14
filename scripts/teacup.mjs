@@ -169,6 +169,15 @@ ${material.opaque ? `${tea(material, id)}\n` : ''}
   <path d="M106 208 C108 246 120 280 140 304" fill="none" stroke="${c.highlight}" stroke-opacity="0.22" stroke-width="12.5" stroke-linecap="round"/>
   <path d="M118 214 C120 232 124 246 130 258" fill="none" stroke="${c.highlight}" stroke-opacity="0.11" stroke-width="5" stroke-linecap="round"/>
   <path d="M294 222 C291 246 284 266 274 281" fill="none" stroke="${c.body}" stroke-opacity="0.14" stroke-width="7.5" stroke-linecap="round"/>
+
+  <!-- Tea run over the rim and dripping: hidden unless a design shows it (data-teadeck-logo-blood). -->
+  <g class="teadeck-logo-blood" display="none" fill="${c.tea}" stroke="${c.teaShade}" stroke-width="3" stroke-linejoin="round">
+    <path d="M120 201 Q135 210 150 202 Q144 210 142 224 L141 256 A6 6 0 0 1 129 256 L128 224 Q126 210 120 201 Z"/>
+    <path d="M135 276 Q141 285 141 289 A6 6 0 0 1 129 289 Q129 285 135 276 Z"/>
+    <path d="M183 207 Q190 210 197 207 Q194 212 193 218 A3 3 0 0 1 187 218 Q186 212 183 207 Z"/>
+    <path d="M244 203 Q256 210 268 203 Q262 210 261 220 L260 236 A5 5 0 0 1 250 236 L249 220 Q248 210 244 203 Z"/>
+    <path d="M131 214 L131 250" fill="none" stroke="${c.highlight}" stroke-opacity="0.45" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
   </g>
 </svg>
 `;

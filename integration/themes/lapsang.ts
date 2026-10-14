@@ -4,7 +4,8 @@
  * controls, grain), with the server's name and the column titles in blackletter.
  * Straight corners with gothic ornaments on the cards, pointed arch avatars, a
  * Latin cross before the titles and a drop for unread counts. A faint red glow
- * sits in the top left, the tea is opaque and the cup has fangs.
+ * sits in the top left; the tea is opaque blood that does not steam but drips
+ * over the rim, and fangs hang below the server's name.
  */
 import { files, stacks } from './fonts.ts';
 import type { Half } from './tokens.ts';
@@ -22,7 +23,7 @@ const look = {
   columns: 'spaced',
   titles: 'cross',
   navFooter: 'tiles',
-  brandName: 'plain',
+  brandName: { size: '34px', tracking: '0' },
   selection: 'marked',
   badges: 'drop',
   captions: { size: '12px', tracking: '0.1em' },
@@ -35,7 +36,7 @@ const look = {
 } as const satisfies Partial<Half>;
 
 /** The cup in dark iron with a blood red tea that covers the wall of the glass. */
-const cup = { tea: '#8d0404', teaDark: '#4e0000', teaLight: '#b01818', teaShade: '#3a0000', steam: '#7a6866', opaqueTea: true } as const;
+const cup = { tea: '#8d0404', teaDark: '#4e0000', teaLight: '#b01818', teaShade: '#3a0000', steamShape: 'none', opaqueTea: true, drips: true } as const;
 
 const darkNeutral = ['#f7f1ee', '#ece0db', '#d0c3bd', '#9d8d87', '#7a6c67', '#5a4d49', '#3a302e', '#2a2224', '#1b1517', '#120e0f', '#0a0708'] as const;
 const lightNeutral = ['#f3f2f6', '#dcdbe3', '#b7b7c5', '#8a8a94', '#70707e', '#5c5c6a', '#4b4b58', '#424351', '#373845', '#2b2c37', '#1f2028'] as const;
@@ -49,7 +50,7 @@ export default defineDesign({
     neutral: darkNeutral,
     // 300 is the interface's accent (links, active icons); 600 fills the main button.
     accent: ['#fdeceb', '#fad3d1', '#f29a96', '#e0454c', '#c5303a', '#b4242f', '#910f17', '#7a1119', '#5e0d14', '#2a1014', '#1a0a0c'],
-    ground: { surface: '#181213', page: '#100c0c', desktop: '#080607', text: '#ece0db', glow: 'radial-gradient(circle at 0 0, rgb(150 14 20 / 11%), transparent 42%)' },
+    ground: { surface: '#181213', page: '#100c0c', desktop: '#080607', text: '#ece0db', glow: 'radial-gradient(ellipse 340px 420px at 0 0, rgb(150 14 20 / 42%), rgb(150 14 20 / 12%) 55%, transparent)' },
     logo: { ...cup, line: '#080607', body: '#3a2e30', bodyDark: '#1b1517', highlight: '#f4ece9' },
     frame: '#3b2f31',
     ornaments: '#7e1a22',
@@ -67,8 +68,8 @@ export default defineDesign({
     neutral: lightNeutral,
     // 300 is the interface's accent in the light; the main button fills at 600.
     accent: ['#ffecec', '#ffd3d4', '#ffb0b3', '#ff7d82', '#f35a62', '#d8343f', '#9e111a', '#84101a', '#6a0d15', '#3c0a0f', '#22080b'],
-    ground: { surface: '#424351', page: '#373845', desktop: '#2b2c37', text: '#f3f2f6', glow: 'radial-gradient(circle at 0 0, rgb(170 30 50 / 12%), transparent 42%)' },
-    logo: { ...cup, line: '#1f2028', body: '#5c5c6a', bodyDark: '#2b2c37', steam: '#b7b7c5', highlight: '#f3f2f6' },
+    ground: { surface: '#424351', page: '#373845', desktop: '#2b2c37', text: '#f3f2f6', glow: 'radial-gradient(ellipse 340px 420px at 0 0, rgb(170 24 40 / 38%), rgb(170 24 40 / 10%) 55%, transparent)' },
+    logo: { ...cup, line: '#1f2028', body: '#5c5c6a', bodyDark: '#2b2c37', highlight: '#f3f2f6' },
     frame: '#5b5c6e',
     ornaments: '#a33a42',
     mainButton: { background: '#9e111a', text: '#f4ece9', hover: '#b51b25', line: 'rgb(255 255 255 / 35%)' },

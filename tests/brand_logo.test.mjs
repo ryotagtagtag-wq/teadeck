@@ -217,9 +217,12 @@ test('the placeholder joins the message and cup softly, with steam chosen by the
       const steam = await cup.evaluate((svg) => ({
         soft: getComputedStyle(svg.querySelector('.teadeck-logo-steam--soft')).display,
         angular: getComputedStyle(svg.querySelector('.teadeck-logo-steam--angular')).display,
+        blood: getComputedStyle(svg.querySelector('.teadeck-logo-blood')).display,
       }));
-      assert.equal(steam.soft === 'none', theme === 'hibiscus', `${theme}/${colorScheme}: soft steam`);
+      // Lapsang's cup of blood has no steam, only drips.
+      assert.equal(steam.soft === 'none', theme === 'hibiscus' || theme === 'lapsang', `${theme}/${colorScheme}: soft steam`);
       assert.equal(steam.angular === 'none', theme !== 'hibiscus', `${theme}/${colorScheme}: angular steam`);
+      assert.equal(steam.blood === 'none', theme !== 'lapsang', `${theme}/${colorScheme}: drips`);
       const transition = await page.locator('.teadeck-placeholder__illustration').evaluate((element) => getComputedStyle(element).backgroundImage);
       assert.match(transition, /^linear-gradient\(/, `${theme}/${colorScheme}: ${transition}`);
     }

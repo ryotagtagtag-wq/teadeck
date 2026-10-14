@@ -20,7 +20,7 @@ const half = (id: string, scheme: Scheme) => designs.find((design) => design.id 
 export const designAttributeNames = [
   'teadeckShape', 'teadeckPosts', 'teadeckColumns', 'teadeckTitles', 'teadeckNavFooter', 'teadeckBrandName',
   'teadeckSelection', 'teadeckBadges', 'teadeckCaptions', 'teadeckControls', 'teadeckLinks',
-  'teadeckLogoSteam', 'teadeckBrandFangs', 'teadeckAvatars', 'teadeckOrnaments',
+  'teadeckLogoSteam', 'teadeckLogoBlood', 'teadeckBrandFangs', 'teadeckAvatars', 'teadeckOrnaments',
 ] as const;
 
 /** The attributes one half sets. */
@@ -30,6 +30,7 @@ export function halfAttributes(half: Half): Partial<Record<(typeof designAttribu
     teadeckNavFooter: half.navFooter, teadeckBrandName: half.brandName === 'plain' ? 'plain' : 'display',
     teadeckSelection: half.selection, teadeckBadges: half.badges, teadeckCaptions: half.captions === 'plain' ? 'plain' : 'small',
     teadeckControls: half.controls, teadeckLinks: half.links, teadeckLogoSteam: half.logo.steamShape ?? 'soft',
+    teadeckLogoBlood: half.logo.drips ? 'drips' : 'none',
     teadeckBrandFangs: half.fangs ? 'fangs' : 'none', teadeckAvatars: half.avatars,
     teadeckOrnaments: half.ornaments ? 'gothic' : 'none',
   };

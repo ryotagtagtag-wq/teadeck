@@ -44,6 +44,14 @@ test('each cup has soft steam and the angular alternative selected by a design',
   }
 });
 
+test('each cup has drips of tea that stay hidden unless a design shows them', async () => {
+  for (const name of [...teacupMaterials, 'flat']) {
+    const svg = await readFile(fileFor(name), 'utf8');
+    // Hidden by the drawing itself, so the file shows no drips as an image or favicon.
+    assert.match(svg, /<g class="teadeck-logo-blood" display="none"/, name);
+  }
+});
+
 test('every referenced gradient and clip path is defined in the same file', async () => {
   for (const name of [...teacupMaterials, 'flat']) {
     const svg = await readFile(fileFor(name), 'utf8');

@@ -48,34 +48,57 @@ html[data-teadeck-theme] {
 /* A design may replace the cup's calm wisps with angular steam. */
 html[data-teadeck-logo-steam='angular'] .teadeck-logo-steam--soft { display: none; }
 html[data-teadeck-logo-steam='angular'] .teadeck-logo-steam--angular { display: inline; }
+/* Or none at all, and the tea running over the rim (a cup of blood). */
+html[data-teadeck-logo-steam='none'] :is(.teadeck-logo-steam--soft, .teadeck-logo-steam--angular) { display: none; }
+html[data-teadeck-logo-blood='drips'] .teadeck-logo-blood { display: inline; }
 
-/* Vampire fangs hanging below the logo: white fangs, then their blood red tips and drops
-   (masks, so the colours come from the design). Only a design with fangs sets the attribute. */
-html[data-teadeck-brand-fangs='fangs'] .teadeck-logo { position: relative; }
-html[data-teadeck-brand-fangs='fangs'] .teadeck-logo::before,
-html[data-teadeck-brand-fangs='fangs'] .teadeck-logo::after {
+/* Vampire fangs below the server's name: a blood red lip across the navigation's
+   head, two white fangs hanging from it with red tips and drops of blood below.
+   Masks, so the colours come from the design; the fangs on the header, the blood
+   on its link, as each pseudo-element draws one colour. Only a design with fangs
+   sets the attribute, and it also lights the navigation with the design's red
+   glow: on the panel, its sticky header and footer, fixed so they show one gradient. */
+html[data-teadeck-brand-fangs='fangs'] :is(._navigation_panel_redesign__root, ._navigation_panel_redesign_header__root, ._navigation_panel_redesign__footer) {
+  background-color: var(--navigation-background-color);
+  background-image: var(--td-glow);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+html[data-teadeck-brand-fangs='fangs'] ._navigation_panel_redesign_header__root {
+  padding-bottom: 62px;
+}
+html[data-teadeck-brand-fangs='fangs'] ._navigation_panel_redesign_header__siteNameLink {
+  --app-icon-size: 64px;
+}
+html[data-teadeck-brand-fangs='fangs'] ._navigation_panel_redesign_header__root::before,
+html[data-teadeck-brand-fangs='fangs'] ._navigation_panel_redesign_header__siteNameLink::after {
   content: '';
   position: absolute;
-  top: 100%;
-  left: 50%;
-  width: 40%;
-  aspect-ratio: 100 / 44;
-  transform: translateX(-50%);
+  inset-inline: var(--space-5, 20px);
+  bottom: 2px;
+  aspect-ratio: 240 / 50;
   pointer-events: none;
   mask-size: 100% 100%;
   -webkit-mask-size: 100% 100%;
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
 }
-html[data-teadeck-brand-fangs='fangs'] .teadeck-logo::before {
+html[data-teadeck-brand-fangs='fangs'] ._navigation_panel_redesign_header__root::before {
   background: var(--td-fang);
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 44'%3E%3Cpath d='M6 0H32Q28 16 20 33Q19 35 18 33Q10 16 6 0Z M94 0H68Q72 16 80 33Q81 35 82 33Q90 16 94 0Z'/%3E%3C/svg%3E");
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 44'%3E%3Cpath d='M6 0H32Q28 16 20 33Q19 35 18 33Q10 16 6 0Z M94 0H68Q72 16 80 33Q81 35 82 33Q90 16 94 0Z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 64' preserveAspectRatio='none'%3E%3Cpath d='M64 7Q78 12 92 7Q88 27 79 45Q78 47 77 45Q68 27 64 7Z M176 7Q162 12 148 7Q152 27 161 45Q162 47 163 45Q172 27 176 7Z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 64' preserveAspectRatio='none'%3E%3Cpath d='M64 7Q78 12 92 7Q88 27 79 45Q78 47 77 45Q68 27 64 7Z M176 7Q162 12 148 7Q152 27 161 45Q162 47 163 45Q172 27 176 7Z'/%3E%3C/svg%3E");
 }
-html[data-teadeck-brand-fangs='fangs'] .teadeck-logo::after {
+html[data-teadeck-brand-fangs='fangs'] ._navigation_panel_redesign_header__siteNameLink::after {
   background: var(--td-fang-blood);
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 44'%3E%3Cpath d='M12.9 19Q19 22 25.1 19Q22.6 26 19 33Q15.4 26 12.9 19Z M87.1 19Q81 22 74.9 19Q77.4 26 81 33Q84.6 26 87.1 19Z M19 35Q21.6 39 21.6 41A2.6 2.6 0 0 1 16.4 41Q16.4 39 19 35Z M81 35Q83.6 39 83.6 41A2.6 2.6 0 0 1 78.4 41Q78.4 39 81 35Z'/%3E%3C/svg%3E");
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 44'%3E%3Cpath d='M12.9 19Q19 22 25.1 19Q22.6 26 19 33Q15.4 26 12.9 19Z M87.1 19Q81 22 74.9 19Q77.4 26 81 33Q84.6 26 87.1 19Z M19 35Q21.6 39 21.6 41A2.6 2.6 0 0 1 16.4 41Q16.4 39 19 35Z M81 35Q83.6 39 83.6 41A2.6 2.6 0 0 1 78.4 41Q78.4 39 81 35Z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 64' preserveAspectRatio='none'%3E%3Cpath d='M0 1Q120 13 240 1Q120 7 0 1Z M72.4 33Q78 35.5 83.6 33Q81.5 39 79 45Q78 47 77 45Q74.5 39 72.4 33Z M167.6 33Q162 35.5 156.4 33Q158.5 39 161 45Q162 47 163 45Q165.5 39 167.6 33Z M78 49Q81.2 54 81.2 56.4A3.2 3.2 0 0 1 74.8 56.4Q74.8 54 78 49Z M162 50Q164.4 54 164.4 55.8A2.4 2.4 0 0 1 159.6 55.8Q159.6 54 162 50Z M171 39Q172.8 42 172.8 43.4A1.8 1.8 0 0 1 169.2 43.4Q169.2 42 171 39Z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 64' preserveAspectRatio='none'%3E%3Cpath d='M0 1Q120 13 240 1Q120 7 0 1Z M72.4 33Q78 35.5 83.6 33Q81.5 39 79 45Q78 47 77 45Q74.5 39 72.4 33Z M167.6 33Q162 35.5 156.4 33Q158.5 39 161 45Q162 47 163 45Q165.5 39 167.6 33Z M78 49Q81.2 54 81.2 56.4A3.2 3.2 0 0 1 74.8 56.4Q74.8 54 78 49Z M162 50Q164.4 54 164.4 55.8A2.4 2.4 0 0 1 159.6 55.8Q159.6 54 162 50Z M171 39Q172.8 42 172.8 43.4A1.8 1.8 0 0 1 169.2 43.4Q169.2 42 171 39Z'/%3E%3C/svg%3E");
+}
+/* The list titles of the navigation (custom feeds) as captions, like the settings'. */
+html[data-teadeck-brand-fangs='fangs'] ._navigation_panel_redesign_list_section__title {
+  font-family: var(--td-font-label);
+  font-weight: var(--td-label-weight, 700);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 /* Teadeck's variables in Mastodon's: colour ramps, ground, typefaces and radii.
@@ -436,7 +459,8 @@ html[data-teadeck-theme] ._navigation_panel_redesign_header__serverName {
 html[data-teadeck-brand-name='display'] ._navigation_panel_redesign_header__serverName {
   font-size: var(--td-brand-size);
   font-weight: 400;
-  text-transform: var(--td-caps);
+  /* Set like the titles: a blackletter has no capitals to set it in. */
+  text-transform: var(--td-title-caps);
   letter-spacing: var(--td-brand-tracking);
 }
 
@@ -518,6 +542,7 @@ html[data-teadeck-shape='chamfered'] :is(
   form.teadeck-composer,
   .teadeck-status-overlay,
   .teadeck-markdown-help,
+  .status__content__text .teadeck-code,
   ._compose_redesign_attachments__audioWrapper,
   ._compose_redesign_attachments__poll,
   select,
@@ -809,6 +834,14 @@ html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :
 html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) h1 { font-size: var(--td-h1); }
 html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) h2 { font-size: var(--td-h2); }
 html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(h3, h4, h5, h6) { font-size: var(--td-h3); }
+/* Gothic titles: the top two levels in blackletter, the rest keep the heading face. */
+html[data-teadeck-ornaments='gothic'] :is(.status__content__text, .reply-indicator__content) :is(h1, h2) {
+  font-family: var(--td-font-title);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: none;
+}
 html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(b, strong) {
   font-family: var(--td-font-bold, inherit);
   font-weight: var(--td-bold-weight, 600);
@@ -875,6 +908,37 @@ html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :
   font-size: 0.75em;
 }
 
+/* Quotes: a square bar on the straight and the chamfered designs, heavier when chamfered. */
+html:is([data-teadeck-shape='chamfered'], [data-teadeck-shape='gothic']) :is(.status__content__text, .reply-indicator__content) :is(blockquote, blockquote blockquote)::before {
+  border-radius: 0;
+}
+html[data-teadeck-shape='chamfered'] :is(.status__content__text, .reply-indicator__content) :is(blockquote, blockquote blockquote)::before {
+  width: 3px;
+}
+
+/* A small gothic ornament on the rule, drawn over the line. */
+html[data-teadeck-ornaments='gothic'] :is(.status__content__text, .reply-indicator__content) hr {
+  position: relative;
+}
+html[data-teadeck-ornaments='gothic'] :is(.status__content__text, .reply-indicator__content) hr::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  background: var(--td-content-accent);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+/* Inline code: a small chamfer on the chamfered designs, straight corners on the gothic. */
+html:is([data-teadeck-shape='chamfered'], [data-teadeck-shape='gothic']) :is(.status__content__text, .reply-indicator__content) :not(pre) > code {
+  border-radius: 0;
+}
+html[data-teadeck-shape='chamfered'] :is(.status__content__text, .reply-indicator__content) :not(pre) > code {
+  clip-path: var(--td-clip-tag);
+}
+
 /*
  * A code block (code_block.tsx). Also used with Mastodon's own themes, so its
  * colours fall back to theirs.
@@ -891,6 +955,15 @@ html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :
 }
 .status__content__text .teadeck-code:last-child {
   margin-bottom: 0;
+}
+/* Chamfered code blocks take the callout cut, framed in the content border along it; gothic blocks stay straight. */
+html:is([data-teadeck-shape='chamfered'], [data-teadeck-shape='gothic']) .status__content__text .teadeck-code {
+  border-radius: 0;
+}
+html[data-teadeck-shape='chamfered'] .status__content__text .teadeck-code {
+  --td-chamfer-cut: var(--td-cut-callout);
+  --td-chamfer-frame-color: var(--td-content-border);
+  clip-path: var(--td-clip-callout);
 }
 
 .teadeck-code__header {

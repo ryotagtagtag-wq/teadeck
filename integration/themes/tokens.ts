@@ -44,8 +44,8 @@ export interface Half {
    */
   logo: {
     tea: string;
-    /** Soft wisps by default; angular steam belongs to designs such as Hibiscus. */
-    steamShape?: 'soft' | 'angular';
+    /** Soft wisps by default; angular steam belongs to designs such as Hibiscus, none to a cup of blood. */
+    steamShape?: 'soft' | 'angular' | 'none';
     teaDark?: string;
     teaLight?: string;
     teaShade?: string;
@@ -56,6 +56,8 @@ export interface Half {
     highlight?: string;
     /** The tea is opaque: it covers the wall of a glass cup instead of showing through it. */
     opaqueTea?: boolean;
+    /** The tea runs over the rim and drips down the cup. */
+    drips?: boolean;
   };
   fonts: {
     /** The server's name at the top of the navigation. */
