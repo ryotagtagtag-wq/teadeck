@@ -1,7 +1,7 @@
 diff --git a/app/javascript/mastodon/components/status/action_bar.tsx b/app/javascript/mastodon/components/status/action_bar.tsx
 --- a/app/javascript/mastodon/components/status/action_bar.tsx
 +++ b/app/javascript/mastodon/components/status/action_bar.tsx
-@@ -35,6 +35,7 @@ import {
+@@ -33,6 +33,7 @@ import {
  } from './hooks';
  import { RemoveQuoteHint } from './legacy/action_bar/remove_quote_hint';
  import classes from './styles.module.scss';
@@ -9,7 +9,7 @@ diff --git a/app/javascript/mastodon/components/status/action_bar.tsx b/app/java
  
  interface StatusActionBarProps {
    statusId: string;
-@@ -151,6 +152,8 @@ export const StatusActionBar: React.FC<StatusActionBarProps> = ({
+@@ -136,6 +137,8 @@ export const StatusActionBar: React.FC<StatusActionBarProps> = ({
          {bookmark.title}
        </ToggleIconButton>
  
@@ -48,15 +48,15 @@ diff --git a/app/javascript/mastodon/components/status/header.tsx b/app/javascri
 diff --git a/app/javascript/mastodon/components/status/hooks.ts b/app/javascript/mastodon/components/status/hooks.ts
 --- a/app/javascript/mastodon/components/status/hooks.ts
 +++ b/app/javascript/mastodon/components/status/hooks.ts
-@@ -54,6 +54,7 @@ import type { AppDispatch } from '@/mastodon/store';
- import { isRedesignEnabled } from '@/mastodon/utils/environment';
+@@ -55,6 +55,7 @@ import { useAppSelector, useAppDispatch } from '@/mastodon/store';
+ import type { AppDispatch } from '@/mastodon/store';
  import type { OnElementHandler } from '@/mastodon/utils/html';
  import { CodeBlock } from '@/teadeck/code_block';
 +import { openInActiveStatusOverlay } from '@/teadeck/status_overlay';
  
  import type { HotkeyHandlerFunction, HotkeyName } from '../hotkeys';
  import { FOCUS_TARGET } from '../navigation_focus_target';
-@@ -151,6 +152,10 @@ export function useStatusHandlers({
+@@ -152,6 +153,10 @@ export function useStatusHandlers({
          return;
        }
  

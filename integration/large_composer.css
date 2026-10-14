@@ -30,9 +30,13 @@
 /* The same form as the regular composer, at the size of the status overlay. Its
    header and footer stay put while the text and the preview scroll. */
 @media (width >= 760px) {
-  .teadeck-large-composer__backdrop { position: fixed; inset: 0; z-index: 100; background: rgb(0 0 0 / 50%); }
+  /* Upstream's container lets clicks through to the columns and sits just
+     above them; the large composer covers everything. */
+  .teadeck-large-composer__root { z-index: 100; }
+  .teadeck-large-composer__backdrop { position: fixed; inset: 0; background: rgb(0 0 0 / 50%); pointer-events: auto; }
   form.teadeck-large-composer {
-    z-index: 101;
+    position: fixed;
+    z-index: 1;
     inset: 32px auto auto 50%;
     transform: translateX(-50%);
     width: min(960px, calc(100vw - 32px));

@@ -8,10 +8,9 @@ import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
-import { focusCompose } from '@/mastodon/actions/compose';
 import { IconButton } from '@/mastodon/components/icon_button';
 import { StatusPage } from '@/mastodon/features/status/redesign';
-import { useAppDispatch, useAppSelector } from '@/mastodon/store';
+import { useAppSelector } from '@/mastodon/store';
 
 import { currentUiTextLocale, t } from './settings_strings';
 import { registerStatusOverlay } from './status_overlay';
@@ -21,7 +20,6 @@ type StatusesState = { getIn: (path: string[]) => unknown };
 
 const StatusOverlayModal = forwardRef<HTMLDivElement, { statusId: string; onClose: (ignoreFocus?: boolean) => void }>(({ statusId: openedId, onClose }, ref) => {
   const history = useHistory();
-  const dispatch = useAppDispatch();
   // Posts opened from inside the overlay ("Read more", the thread) are shown here too.
   const [statusId, setStatusId] = useState(openedId);
   useEffect(() => registerStatusOverlay(setStatusId), []);
@@ -47,11 +45,11 @@ const StatusOverlayModal = forwardRef<HTMLDivElement, { statusId: string; onClos
   useEffect(() => {
     if (composeFocus === focusAtOpen.current) return;
     const path = replyTo && replyAcct ? `/@${replyAcct}/${replyTo}` : undefined;
-    if (path && history.location.pathname.replace(/^\/deck(?=\/)/, '') !== path) history.push(path);
+    // No focus target: the composer keeps the focus, not the page's heading.
+    if (path && history.location.pathname.replace(/^\/deck(?=\/)/, '') !== path) history.push(path, { focusTarget: false });
     else onClose(true);
-    // Once the page behind is no longer inert.
-    setTimeout(() => { dispatch(focusCompose()); }, 0);
-  }, [composeFocus, replyTo, replyAcct, history, onClose, dispatch]);
+    focusComposerAfterOverlay();
+  }, [composeFocus, replyTo, replyAcct, history, onClose]);
 
   // Without the click event: onClose takes its first argument as "ignore focus".
   const close = useCallback(() => { onClose(); }, [onClose]);
@@ -66,6 +64,20 @@ const StatusOverlayModal = forwardRef<HTMLDivElement, { statusId: string; onClos
 });
 
 StatusOverlayModal.displayName = 'StatusOverlayModal';
+
+/**
+ * The redesigned composer is already open (it focused itself while the page
+ * was inert) and doesn't follow focusCompose(), so its text field is focused
+ * once the overlay is gone, after the modal root has restored the old focus.
+ */
+function focusComposerAfterOverlay(tries = 30) {
+  const field = document.querySelector<HTMLTextAreaElement>('form[role="dialog"] textarea');
+  if (field && !document.querySelector('.teadeck-status-overlay')) {
+    setTimeout(() => { field.focus(); }, 0);
+  } else if (tries > 0) {
+    setTimeout(() => { focusComposerAfterOverlay(tries - 1); }, 30);
+  }
+}
 
 // eslint-disable-next-line import/no-default-export -- loaded through upstream's modal bundles
 export default StatusOverlayModal;

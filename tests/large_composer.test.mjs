@@ -60,7 +60,9 @@ for (const engine of engines) {
 
       // As large as the status overlay: in the middle of the window, nearly its full height.
       const box = await form(page).boundingBox();
-      assert.ok(Math.abs(box.x + box.width / 2 - 700) < 2, `centred: ${box.x}+${box.width}`);
+      // Centred in the page, which leaves room for a scrollbar (scrollbar-gutter).
+      const middle = await page.evaluate(() => document.body.getBoundingClientRect().width / 2);
+      assert.ok(Math.abs(box.x + box.width / 2 - middle) < 2, `centred: ${box.x}+${box.width} in ${middle * 2}`);
       assert.ok(box.height > 800, `height ${box.height}`);
 
       // The preview follows the text, rendered like a post, code blocks included.

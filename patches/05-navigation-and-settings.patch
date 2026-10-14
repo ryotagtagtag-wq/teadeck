@@ -82,9 +82,9 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
    SignOutIcon,
 -  MastodonLogoIcon,
    GithubLogoIcon,
- } from '@phosphor-icons/react';
- 
-@@ -39,7 +42,7 @@ import {
+   BellSlashIcon,
+   HandWavingIcon,
+@@ -41,7 +44,7 @@ import {
  } from '@/mastodon/components/menu';
  import { useAccount } from '@/mastodon/hooks/useAccount';
  import { useIdentity } from '@/mastodon/identity_context';
@@ -93,7 +93,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
  import {
    canManageReports,
    canViewAdminDashboard,
-@@ -118,22 +121,33 @@ export const AccountMenuItems: React.FC<{
+@@ -120,22 +123,33 @@ export const AccountMenuItems: React.FC<{
          />
        </MenuItemLink>
  
@@ -136,17 +136,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
        <MenuItemLink to='/favourites' icon={HeartIcon}>
          <FormattedMessage
            id='navigation_bar.liked_posts'
-@@ -152,7 +166,8 @@ export const AccountMenuItems: React.FC<{
- 
-       <MenuItemDivider />
- 
--      <MenuItemLink as='a' href='/relationships' icon={UsersThreeIcon}>
-+      {/* Teadeck's own lists: the server's /relationships page exists only on Mastodon. */}
-+      <MenuItemLink to={`${accountBasePath}/following`} icon={UsersThreeIcon}>
-         <FormattedMessage
-           id='navigation_bar.followers_and_following'
-           defaultMessage='Followers & Following'
-@@ -171,7 +186,7 @@ export const AccountMenuItems: React.FC<{
+@@ -193,7 +207,7 @@ export const AccountMenuItems: React.FC<{
            <MenuItemDivider />
  
            {isAdmin && (
@@ -155,7 +145,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
                <FormattedMessage
                  id='navigation_bar.administration'
                  defaultMessage='Administration'
-@@ -180,7 +195,7 @@ export const AccountMenuItems: React.FC<{
+@@ -202,7 +216,7 @@ export const AccountMenuItems: React.FC<{
            )}
  
            {isManager && (
@@ -164,7 +154,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
                <FormattedMessage
                  id='navigation_bar.moderation'
                  defaultMessage='Moderation'
-@@ -192,24 +207,14 @@ export const AccountMenuItems: React.FC<{
+@@ -214,24 +228,14 @@ export const AccountMenuItems: React.FC<{
  
        <MenuItemDivider />
  

@@ -41,15 +41,15 @@ diff --git a/app/javascript/mastodon/features/compose/redesign/index.tsx b/app/j
 diff --git a/app/javascript/mastodon/features/compose/redesign/trigger.tsx b/app/javascript/mastodon/features/compose/redesign/trigger.tsx
 --- a/app/javascript/mastodon/features/compose/redesign/trigger.tsx
 +++ b/app/javascript/mastodon/features/compose/redesign/trigger.tsx
-@@ -22,6 +22,7 @@ import { useBreakpoint } from '../../ui/hooks/useBreakpoint';
- 
- import { ComposeFormHeader } from './header';
+@@ -23,6 +23,7 @@ import { ComposeFormHeader } from './header';
+ import { RedesignComposeForm } from './index';
+ import composerClasses from './styles.module.scss';
  import classes from './trigger.module.scss';
 +import { useComposerLarge } from '@/teadeck/large_composer';
  
- const ComposeLazyForm = lazy(() =>
-   import('./index').then(({ RedesignComposeForm }) => ({
-@@ -67,6 +68,8 @@ export const ComposeRedesignButton: React.FC<{
+ export const ComposeRedesignButton: React.FC<{
+   /**
+@@ -62,6 +63,8 @@ export const ComposeRedesignButton: React.FC<{
    }, [dispatch]);
  
    const { signedIn } = useIdentity();
@@ -58,21 +58,28 @@ diff --git a/app/javascript/mastodon/features/compose/redesign/trigger.tsx b/app
  
    if (!isRedesignEnabled() || !signedIn) {
      return null;
-@@ -112,7 +115,15 @@ export const ComposeRedesignButton: React.FC<{
-           </FloatingActionButton>
-         }
-       >
--        <ComposeLazyForm autoFocus className={classes.composer} style={style} />
+@@ -104,8 +107,21 @@ export const ComposeRedesignButton: React.FC<{
+ 
+   if (displayState === 'showing') {
+     return (
+-      <div className={classes.root} style={style}>
+-        <RedesignComposeForm autoFocus className={classes.composer} />
++      <div
++        className={classNames(
++          classes.root,
++          isLarge && 'teadeck-large-composer__root',
++        )}
++        style={style}
++      >
 +        {isLarge && <div className='teadeck-large-composer__backdrop' />}
-+        <ComposeLazyForm
++        <RedesignComposeForm
 +          autoFocus
 +          className={classNames(
 +            classes.composer,
 +            isLarge && 'teadeck-large-composer',
 +          )}
-+          style={style}
 +        />
-       </Suspense>
+       </div>
      );
    }
 diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/index.tsx b/app/javascript/mastodon/features/navigation_panel/redesign/index.tsx
@@ -102,29 +109,27 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/index.ts
  
  const messages = defineMessages({
    main: {
-@@ -180,19 +179,15 @@ export const RedesignNavigationPanel: React.FC<{
-           {transientSingleColumn && <TransientSingleColumnCallout />}
-           <ul className={classes.list}>
-             <li>
+@@ -241,18 +240,12 @@ export const RedesignNavigationPanel: React.FC<{
+ 
+           <footer className={classes.footer} data-stuck={!isScrolledToBottom}>
+             <div className={classes.newPostButton}>
 -              <Button
 -                leadingIcon={PenNibIcon}
 -                onClick={openComposer}
 -                variant='solid'
 -                color='accent'
 -                size='md'
-+              <NewPostSplitButton
-+                onOpen={openComposer}
-                 className={classes.newPostButton}
-               >
+-              >
++              <NewPostSplitButton onOpen={openComposer}>
                  <FormattedMessage
                    id='tabs_bar.publish'
                    defaultMessage='New Post'
                  />
 -              </Button>
 +              </NewPostSplitButton>
-             </li>
-             <NavigationLink to='/home' iconComponent={HouseIcon}>
-               <FormattedMessage id='tabs_bar.home' defaultMessage='Home' />
+             </div>
+ 
+             {mode !== 'slide-out' && (
 diff --git a/app/javascript/mastodon/features/ui/components/modal_root.jsx b/app/javascript/mastodon/features/ui/components/modal_root.jsx
 --- a/app/javascript/mastodon/features/ui/components/modal_root.jsx
 +++ b/app/javascript/mastodon/features/ui/components/modal_root.jsx

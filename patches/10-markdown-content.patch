@@ -37,15 +37,15 @@ diff --git a/app/javascript/mastodon/components/status/content.tsx b/app/javascr
 diff --git a/app/javascript/mastodon/components/status/hooks.ts b/app/javascript/mastodon/components/status/hooks.ts
 --- a/app/javascript/mastodon/components/status/hooks.ts
 +++ b/app/javascript/mastodon/components/status/hooks.ts
-@@ -53,6 +53,7 @@ import { useAppSelector, useAppDispatch } from '@/mastodon/store';
+@@ -54,6 +54,7 @@ import {
+ import { useAppSelector, useAppDispatch } from '@/mastodon/store';
  import type { AppDispatch } from '@/mastodon/store';
- import { isRedesignEnabled } from '@/mastodon/utils/environment';
  import type { OnElementHandler } from '@/mastodon/utils/html';
 +import { CodeBlock } from '@/teadeck/code_block';
  
  import type { HotkeyHandlerFunction, HotkeyName } from '../hotkeys';
  import { FOCUS_TARGET } from '../navigation_focus_target';
-@@ -489,6 +490,8 @@ export function useHandlersForStatus(
+@@ -481,6 +482,8 @@ export function useHandlersForStatus(
            { key: key as React.Key, 'aria-disabled': true, ...props },
            children,
          );
