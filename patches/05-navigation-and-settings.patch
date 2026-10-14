@@ -310,49 +310,31 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/mobile_n
 diff --git a/app/javascript/mastodon/features/ui/components/columns_area/multi_column_content.tsx b/app/javascript/mastodon/features/ui/components/columns_area/multi_column_content.tsx
 --- a/app/javascript/mastodon/features/ui/components/columns_area/multi_column_content.tsx
 +++ b/app/javascript/mastodon/features/ui/components/columns_area/multi_column_content.tsx
-@@ -1,11 +1,13 @@
--import { Children, cloneElement, isValidElement } from 'react';
--
--import { useRouteMatch } from 'react-router-dom';
-+import { Children, cloneElement, isValidElement, useEffect } from 'react';
+@@ -4,6 +4,7 @@ import { useRouteMatch } from 'react-router-dom';
  
  import type { List, Record } from 'immutable';
  
-+import { useLocation, useRouteMatch } from 'react-router-dom';
-+
-+import { pinnedColumnIndexForPath } from '@/teadeck/pinned_columns';
++import { usePinnedColumnIndex } from '@/teadeck/pinned_column_scroll';
  import { ColumnIndexContext } from '@/mastodon/components/column/context';
  import MultiColumnPlaceholderColumn from '@/mastodon/features/multi_column_placeholder';
-+import { getColumnSkipLinkId } from '@/mastodon/features/ui/components/skip_links';
  import { useAppSelector } from '@/mastodon/store';
- import { isRedesignEnabled } from '@/mastodon/utils/environment';
- 
-@@ -78,6 +80,20 @@ export const MultiColumnContent: React.FC<{
+@@ -77,6 +78,10 @@ export const MultiColumnContent: React.FC<{
+   const isHomepagePinned = columns.some(
      (column) => column.get('id') === 'HOME',
    );
- 
-+  const { pathname } = useLocation();
-+  const pinnedIndex = pinnedColumnIndexForPath(
-+    pathname,
++  // Teadeck: a route that a pinned column already shows is not opened a second time.
++  const pinnedIndex = usePinnedColumnIndex(
 +    columns.map((column) => column.get('id')).toArray(),
 +  );
-+
-+  // Show the pinned column instead of opening it a second time.
-+  useEffect(() => {
-+    if (pinnedIndex < 0) return;
-+    document
-+      .getElementById(getColumnSkipLinkId(pinnedIndex))
-+      ?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
-+  }, [pinnedIndex]);
-+
+ 
    return (
      <>
-       {columns.map((column, index) => {
-@@ -115,7 +131,7 @@ export const MultiColumnContent: React.FC<{
+@@ -115,7 +120,8 @@ export const MultiColumnContent: React.FC<{
  
        <ColumnIndexContext.Provider value={columns.size}>
          {Children.map(children, (child) => {
 -          if (isHomeRoute && isHomepagePinned) {
++          // Teadeck: the placeholder stands in for the pinned route's column (see pinned_columns.ts).
 +          if ((isHomeRoute && isHomepagePinned) || pinnedIndex >= 0) {
              return <MultiColumnPlaceholderColumn />;
            }

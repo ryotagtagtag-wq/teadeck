@@ -47,6 +47,13 @@ export function apiUrl(path: string): string {
   return url.href;
 }
 
+/** Mastodon's API client sends its calls through this: to the session's server, without cookies. */
+export function prepareRequest<T extends { url?: string; withCredentials?: boolean }>(config: T): T {
+  config.url = apiUrl(config.url ?? '');
+  config.withCredentials = false;
+  return config;
+}
+
 async function fetchJson(url: string, init: RequestInit = {}) {
   const response = await fetch(url, {
     ...init, credentials: 'omit', redirect: 'error',
