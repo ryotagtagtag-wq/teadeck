@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { test } from 'node:test';
@@ -68,4 +69,27 @@ test('texts live in texts.ts and are shown through t(); no component keeps a tab
     if (file === 'integration/texts.ts' || file.startsWith('integration/themes/')) continue;
     assert.doesNotMatch(text, /\bde:\s*['"`]/, `${file} keeps German texts of its own`);
   }
+});
+
+test('a module exports only what another file uses; helpers of its own stay private', async () => {
+  const own = await sources(['.ts', '.tsx']);
+  const readAll = async (dir, pattern) => Promise.all((await readdir(path.join(root, dir)))
+    .filter((name) => pattern.test(name)).map((name) => readFile(path.join(root, dir, name), 'utf8')));
+  const elsewhere = [
+    ...own.map(({ text }) => text),
+    ...await readAll('patches', /\.patch$/), ...await readAll('tests', /\.mjs$/), ...await readAll('scripts', /\.mjs$/),
+  ];
+  for (const { file, text } of own) {
+    for (const [, name] of text.matchAll(/^export (?:async )?(?:function|const|let|class) (\w+)/gm)) {
+      const word = new RegExp(`\\b${name}\\b`, 'g');
+      const uses = elsewhere.reduce((count, other) => count + (other.match(word)?.length ?? 0), 0);
+      assert.ok(uses > (text.match(word)?.length ?? 0), `${file}: ${name} is exported but used nowhere else`);
+    }
+  }
+});
+
+test('no browser network export (.har, it carries access tokens) is part of the repository', () => {
+  const tracked = spawnSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' });
+  assert.equal(tracked.status, 0, tracked.stderr);
+  assert.deepEqual(tracked.stdout.split('\0').filter((name) => /\.har$/i.test(name)), []);
 });

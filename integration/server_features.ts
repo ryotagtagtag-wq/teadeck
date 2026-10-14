@@ -1,6 +1,6 @@
 /**
  * What the signed-in server offers beyond what every Mastodon-compatible server
- * has. Known from its instance data at start (bootstrap.ts calls
+ * has. Known from its instance data at start (app_start.ts calls
  * setServerFeatures), or from the API itself (api_capabilities.ts). Everything
  * else asks here.
  */
@@ -31,7 +31,7 @@ export interface ServerFeatures {
  * Whether the server is GoToSocial. `source_url` is checked too, since
  * GoToSocial can report a Mastodon version.
  */
-export function detectGoToSocial(instance: InstanceLike): boolean {
+function detectGoToSocial(instance: InstanceLike): boolean {
   const haystack = `${instance.source_url ?? ''} ${instance.version ?? ''}`.toLowerCase();
   return haystack.includes('gotosocial');
 }

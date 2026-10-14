@@ -13,7 +13,7 @@ export function hasBrandLogo() {
   return configured;
 }
 
-export function isThemeableLogo(text: string): boolean {
+function isThemeableLogo(text: string): boolean {
   return /<svg[^>]*\sdata-teadeck-logo\b/.test(text);
 }
 
@@ -24,7 +24,7 @@ const referenceAttributes = ['clip-path', 'fill', 'stroke', 'mask', 'filter', 'h
  * its IDs prefixed so several copies on one page do not clash. `null` if the
  * text is not an SVG.
  */
-export function inlinableSvg(text: string, prefix: string): string | null {
+function inlinableSvg(text: string, prefix: string): string | null {
   const document_ = new DOMParser().parseFromString(text, 'image/svg+xml');
   const svg = document_.documentElement;
   if (svg.localName !== 'svg' || document_.querySelector('parsererror')) return null;

@@ -1,5 +1,5 @@
 /** A small cup, coloured from the same computed roles as the large drawing. */
-export function faviconSvg(body: string, line: string, tea: string): string {
+function faviconSvg(body: string, line: string, tea: string): string {
   const escape = (value: string) => value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g stroke="${escape(line)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 12h2c6 0 4 10-3 10" fill="none"/><path d="M6 12h18c0 9-3 13-9 13S6 21 6 12Z" fill="${escape(body)}"/><path d="M7 14h16" stroke="${escape(tea)}" stroke-width="3"/><path d="M4 27h22M12 8c-3-3 3-3 0-6M19 8c-3-3 3-3 0-6" fill="none"/></g></svg>`;
 }

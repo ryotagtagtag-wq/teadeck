@@ -46,6 +46,8 @@ git -C .work/upstream diff -- <file> | grep -v '^index ' > patches/<nn>-<name>.p
 - `localStorage` and `sessionStorage` are used through `browser_storage.ts`, which names every key.
 - What the server offers is asked of `server_features.ts`.
 - Components style through CSS classes; an inline style only passes a value as a `--teadeck-` variable.
+- A module exports only what another file (code, patch, test or script) uses; its own helpers stay private.
+- Browser network exports (`.har`) carry access tokens and never enter the repository; `.gitignore` keeps them out, the test catches a forced add.
 
 ## Designs
 

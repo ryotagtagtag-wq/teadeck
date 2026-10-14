@@ -3,7 +3,7 @@
  * page the one last chosen here, else the browser's. Translations come from
  * /texts/<locale>.json (scripts/texts.mjs); English is built in and used
  * whenever a translation cannot be loaded. The app starts only once they are
- * loaded (bootstrap.ts), so t() always answers in the current language.
+ * loaded (app_start.ts, shell.ts), so t() always answers in the current language.
  */
 
 import { englishTexts, texts } from './texts.ts';
@@ -27,7 +27,7 @@ export function shellLocale(lastChosen: unknown): UiLocale {
 }
 
 /** Never rejects: on any failure the page stays in English. */
-export async function loadShellMessages(locale: UiLocale): Promise<void> {
+async function loadShellMessages(locale: UiLocale): Promise<void> {
   if (locale === 'en') return;
   try {
     const response = await fetch(`/texts/${locale}.json`);
@@ -43,7 +43,7 @@ export async function loadShellMessages(locale: UiLocale): Promise<void> {
 }
 
 /** `data-teadeck-text` names the message, `data-teadeck-text-attr` an attribute to fill instead of the text. */
-export function applyShellText(root: ParentNode = document): void {
+function applyShellText(root: ParentNode = document): void {
   for (const element of root.querySelectorAll<HTMLElement>('[data-teadeck-text]')) {
     const id = element.dataset.teadeckText as TextId;
     const attribute = element.dataset.teadeckTextAttr;

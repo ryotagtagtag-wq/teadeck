@@ -24,7 +24,7 @@ import './large_composer.css';
 
 const large = createExternalState(() => false);
 
-export const setComposerLarge = large.set;
+const setComposerLarge = large.set;
 export const useComposerLarge = large.use;
 
 /**
