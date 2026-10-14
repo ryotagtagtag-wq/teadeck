@@ -29,7 +29,7 @@ The Teadeck host supplies the JavaScript running in your browser, and that code 
 
 ### Layouts and designs
 
-Mastodon's single- and multi-column layouts, with six designs of Teadeck's own and Mastodon's design to choose from. Hibiscus goes further than the others: square shapes, condensed capitals and outlined buttons. Layout, design and language are set per account under **Settings** in the account menu.
+Mastodon's single- and multi-column layouts, with six designs of Teadeck's own and Mastodon's design to choose from. Hibiscus goes further than the others: chamfered corners, condensed capitals, borderless cards on spaced columns, bolder icons and a fine grain. Layout, design and language are set per account under **Settings** in the account menu.
 
 ![The six designs: Assam, Sencha and Hibiscus, each dark and light](docs/images/themes.png)
 
