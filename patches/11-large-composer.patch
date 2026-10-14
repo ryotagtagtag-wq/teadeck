@@ -133,14 +133,3 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/index.ts
              </div>
  
              {mode !== 'slide-out' && (
-diff --git a/app/javascript/mastodon/features/ui/components/modal_root.jsx b/app/javascript/mastodon/features/ui/components/modal_root.jsx
---- a/app/javascript/mastodon/features/ui/components/modal_root.jsx
-+++ b/app/javascript/mastodon/features/ui/components/modal_root.jsx
-@@ -115,6 +115,7 @@ export const MODAL_COMPONENTS = {
-   'NOTIFICATION_REQUESTS_SETTINGS': () => import('@/mastodon/features/notifications/components/notification_requests_settings').then(module => ({default: module.NotificationRequestsSettingsModal})),
-   'HASHTAG_SETTINGS': () => import('@/mastodon/features/hashtag_timeline/components/column_settings_modal'),
-   'TEADECK_STATUS': () => import('@/teadeck/status_overlay_modal'),
-+  'TEADECK_MARKDOWN_HELP': () => import('@/teadeck/markdown_cheatsheet'),
- };
- 
- /** @param {keyof import('@/mastodon/features/account_edit/modals')} type */

@@ -133,20 +133,39 @@ export function applyNotificationDefaults<T extends NotificationLike>(notificati
   return notification;
 }
 
+/** The post a kind of notification carries, if any. */
+type PostOf<T> = T extends { status?: infer S } ? NonNullable<S> : never;
+
+/**
+ * The group a v1 notification becomes, per kind of notification: its own
+ * fields, the group's, and the post's id where it has a post.
+ */
+export type GroupedNotification<T extends NotificationLike> = T extends unknown
+  ? Omit<T, 'id' | 'created_at' | 'account' | 'status' | 'group_key'> & {
+    group_key: string;
+    notifications_count: number;
+    sample_account_ids: string[];
+    latest_page_notification_at: string;
+    most_recent_notification_id: string;
+    page_min_id: string;
+    page_max_id: string;
+  } & ([PostOf<T>] extends [never] ? unknown : { status_id: string })
+  : never;
+
 /** A grouped v2 notifications response built from a v1 list, one group per notification. */
 export function notificationGroupsFromNotifications<T extends NotificationLike>(notifications: T[]) {
-  const accounts = new Map<string, AccountLike>();
-  const statuses = new Map<string, StatusLike>();
-  const notificationGroups = notifications.map(notification => {
-    const { id, type, created_at: createdAt, account, status, group_key: _groupKey, ...rest } = notification;
+  const accounts = new Map<string, T['account']>();
+  const statuses = new Map<string, PostOf<T>>();
+  const notificationGroups = notifications.map((notification) => {
+    const { id, created_at: createdAt, account, status, group_key: _groupKey, ...rest } = notification;
     accounts.set(account.id, account);
     if (status) {
-      statuses.set(status.id, status);
+      statuses.set(status.id, status as PostOf<T>);
       accounts.set(status.account.id, status.account);
     }
+    // Spreading a union loses which kind it was; GroupedNotification<T> restores it.
     return {
       ...rest,
-      type,
       group_key: `ungrouped-${id}`,
       notifications_count: 1,
       sample_account_ids: [account.id],
@@ -154,8 +173,8 @@ export function notificationGroupsFromNotifications<T extends NotificationLike>(
       most_recent_notification_id: id,
       page_min_id: id,
       page_max_id: id,
-      status_id: status?.id ?? null,
-    };
+      ...(status ? { status_id: status.id } : {}),
+    } as GroupedNotification<T>;
   });
   return { accounts: [...accounts.values()], statuses: [...statuses.values()], notification_groups: notificationGroups };
 }

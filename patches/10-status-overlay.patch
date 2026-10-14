@@ -48,14 +48,11 @@ diff --git a/app/javascript/mastodon/components/status/header.tsx b/app/javascri
 diff --git a/app/javascript/mastodon/components/status/hooks.ts b/app/javascript/mastodon/components/status/hooks.ts
 --- a/app/javascript/mastodon/components/status/hooks.ts
 +++ b/app/javascript/mastodon/components/status/hooks.ts
-@@ -55,6 +55,7 @@ import { useAppSelector, useAppDispatch } from '@/mastodon/store';
- import type { AppDispatch } from '@/mastodon/store';
- import type { OnElementHandler } from '@/mastodon/utils/html';
- import { CodeBlock } from '@/teadeck/code_block';
+@@ -1,3 +1,4 @@
 +import { openInActiveStatusOverlay } from '@/teadeck/status_overlay';
+ import { createContext, createElement, use, useCallback, useMemo } from 'react';
  
- import type { HotkeyHandlerFunction, HotkeyName } from '../hotkeys';
- import { FOCUS_TARGET } from '../navigation_focus_target';
+ import { defineMessages, useIntl } from 'react-intl';
 @@ -152,6 +153,10 @@ export function useStatusHandlers({
          return;
        }
@@ -145,11 +142,16 @@ diff --git a/app/javascript/mastodon/features/status/redesign.tsx b/app/javascri
 diff --git a/app/javascript/mastodon/features/ui/components/modal_root.jsx b/app/javascript/mastodon/features/ui/components/modal_root.jsx
 --- a/app/javascript/mastodon/features/ui/components/modal_root.jsx
 +++ b/app/javascript/mastodon/features/ui/components/modal_root.jsx
-@@ -114,6 +114,7 @@ export const MODAL_COMPONENTS = {
+@@ -1,3 +1,4 @@
++import { teadeckModalComponents } from '@/teadeck/modal_components';
+ import PropTypes from 'prop-types';
+ import { PureComponent } from 'react';
+ 
+@@ -114,6 +115,7 @@ export const MODAL_COMPONENTS = {
    'NOTIFICATION_SETTINGS': () => import('@/mastodon/features/notifications_v2/components/notification_settings_modal'),
    'NOTIFICATION_REQUESTS_SETTINGS': () => import('@/mastodon/features/notifications/components/notification_requests_settings').then(module => ({default: module.NotificationRequestsSettingsModal})),
    'HASHTAG_SETTINGS': () => import('@/mastodon/features/hashtag_timeline/components/column_settings_modal'),
-+  'TEADECK_STATUS': () => import('@/teadeck/status_overlay_modal'),
++  ...teadeckModalComponents,
  };
  
  /** @param {keyof import('@/mastodon/features/account_edit/modals')} type */

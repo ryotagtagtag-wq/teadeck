@@ -41,8 +41,18 @@ export function withFallback<A extends unknown[], R, F = R>(
 
 // api/instance.ts: servers without these pages (GoToSocial) carry their texts in the v1 instance.
 
-export const termsOfServiceFallback = async (): Promise<ApiTermsOfServiceJSON> =>
+const termsOfServiceFallback = async (): Promise<ApiTermsOfServiceJSON> =>
   termsOfServiceFromInstance(await apiRequestGet<{ terms?: string }>('v1/instance'));
+
+/**
+ * The current terms fall back like the pages above. An earlier version
+ * (`version`) exists only on Mastodon, and its 404 means that version is
+ * missing, not the API: it says nothing about the current terms.
+ */
+export const withTermsOfServiceFallback = (upstream: (version?: string) => Promise<ApiTermsOfServiceJSON>) =>
+  (version?: string) => (version
+    ? upstream(version)
+    : withCapability('instance.termsOfService', () => upstream(), termsOfServiceFallback));
 
 export const extendedDescriptionFallback = async (): Promise<ApiExtendedDescriptionJSON> =>
   extendedDescriptionFromInstance(await apiRequestGet<{ description?: string }>('v1/instance'));
@@ -60,7 +70,7 @@ export const ungroupedNotifications = async (params?: { grouped_types?: string[]
     url: '/api/v1/notifications',
     params: notificationParamsForV1(params),
   });
-  const { statuses, accounts, notification_groups } = notificationGroupsFromNotifications(response.data) as unknown as ApiNotificationGroupsResultJSON;
+  const { statuses, accounts, notification_groups }: ApiNotificationGroupsResultJSON = notificationGroupsFromNotifications(response.data);
   return { statuses, accounts, notifications: notification_groups, links: getLinks(response) };
 };
 

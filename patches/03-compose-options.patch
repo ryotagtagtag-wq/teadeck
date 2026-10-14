@@ -1,16 +1,37 @@
 diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodon/actions/compose.js
 --- a/app/javascript/mastodon/actions/compose.js
 +++ b/app/javascript/mastodon/actions/compose.js
-@@ -4,6 +4,8 @@ import { isCancel } from 'axios';
+@@ -4,6 +4,10 @@ import { isCancel } from 'axios';
  import { throttle } from 'lodash';
  
  import api from '@/mastodon/api';
 +import { InteractionDefaultsUnavailableError, interactionPolicyFor } from '@/teadeck/reply_audience';
++import { statusFormatAvailable } from '@/teadeck/server_features';
++import { statusContentType } from '@/teadeck/status_format';
 +import { interactionDefaultsUnavailableMessage } from '@/teadeck/reply_audience_picker';
  import { browserHistory } from '@/mastodon/components/router';
  import { countableText } from '@/mastodon/features/compose/util/counter';
  import { tagHistory } from '@/mastodon/settings';
-@@ -247,7 +249,9 @@ export function submitCompose(successCallback) {
+@@ -101,7 +105,7 @@ export const ensureComposeIsVisible = (getState) => {
+   }
+ };
+ 
+-export function setComposeToStatus(status, text, spoiler_text) {
++export function setComposeToStatus(status, text, spoiler_text, contentType) {
+   return (dispatch, getState) => {
+     const maxOptions = getState().server.server.item?.configuration.polls.max_options;
+ 
+@@ -110,6 +114,9 @@ export function setComposeToStatus(status, text, spoiler_text) {
+       status,
+       text,
+       spoiler_text,
++      // GoToSocial: the text format this post was written in, so editing it does
++      // not silently re-parse Markdown as plain text (or the other way round).
++      contentType,
+       maxOptions,
+     });
+   }
+@@ -247,7 +254,9 @@ export function submitCompose(successCallback) {
      }
  
      const visibility = getState().getIn(['compose', 'privacy']);
@@ -21,11 +42,12 @@ diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodo
        url: statusId === null ? '/api/v1/statuses' : `/api/v1/statuses/${statusId}`,
        method: statusId === null ? 'post' : 'put',
        data: {
-@@ -262,11 +266,12 @@ export function submitCompose(successCallback) {
+@@ -262,11 +271,13 @@ export function submitCompose(successCallback) {
          language: getState().getIn(['compose', 'language']),
          quoted_status_id: getState().getIn(['compose', 'quoted_status_id']),
          quote_approval_policy: visibility === 'private' || visibility === 'direct' ? 'nobody' : getState().getIn(['compose', 'quote_policy']),
 +        interaction_policy: interactionPolicy,
++        content_type: statusContentType(getState().getIn(['compose', 'content_type'], 'default'), statusFormatAvailable()),
        },
        headers: {
          'Idempotency-Key': getState().getIn(['compose', 'idempotencyKey']),
@@ -35,7 +57,7 @@ diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodo
        if (isStandaloneComposePath(browserHistory.location.pathname) && window.history.state) {
          browserHistory.goBack();
        }
-@@ -318,6 +323,11 @@ export function submitCompose(successCallback) {
+@@ -318,6 +329,11 @@ export function submitCompose(successCallback) {
          ),
        }));
      }).catch(function (error) {
@@ -50,15 +72,16 @@ diff --git a/app/javascript/mastodon/actions/compose.js b/app/javascript/mastodo
 diff --git a/app/javascript/mastodon/actions/compose_typed.ts b/app/javascript/mastodon/actions/compose_typed.ts
 --- a/app/javascript/mastodon/actions/compose_typed.ts
 +++ b/app/javascript/mastodon/actions/compose_typed.ts
-@@ -7,6 +7,7 @@ import { apiUpdateMedia } from '@/mastodon/api/compose';
+@@ -7,6 +7,8 @@ import { apiUpdateMedia } from '@/mastodon/api/compose';
  import { apiGetSearch } from '@/mastodon/api/search';
  import type { ApiMediaAttachmentJSON } from '@/mastodon/api_types/media_attachments';
  import type { ApiQuotePolicy } from '@/mastodon/api_types/quotes';
 +import type { ReplyAudience } from '@/teadeck/reply_audience';
++import type { StatusFormat } from '@/teadeck/status_format';
  import type { MediaAttachment } from '@/mastodon/models/media_attachment';
  import type {
    MediaAttachmentShape,
-@@ -337,6 +338,10 @@ export const setComposeQuotePolicy = createAction<ApiQuotePolicy>(
+@@ -337,6 +339,14 @@ export const setComposeQuotePolicy = createAction<ApiQuotePolicy>(
    'compose/setQuotePolicy',
  );
  
@@ -66,9 +89,54 @@ diff --git a/app/javascript/mastodon/actions/compose_typed.ts b/app/javascript/m
 +  'compose/setReplyAudience',
 +);
 +
++export const setComposeContentType = createAction<StatusFormat>(
++  'compose/setContentType',
++);
++
  export const setDragUploadEnabled = createAction<boolean>(
    'compose/setDragUploadEnabled',
  );
+diff --git a/app/javascript/mastodon/actions/statuses.js b/app/javascript/mastodon/actions/statuses.js
+--- a/app/javascript/mastodon/actions/statuses.js
++++ b/app/javascript/mastodon/actions/statuses.js
+@@ -5,6 +5,8 @@ import { browserHistory } from 'mastodon/components/router';
+ import api from '../api';
+ 
+ import { showAlert } from './alerts';
++import { statusFormatOfSource } from '@/teadeck/status_format';
++
+ import { ensureComposeIsVisible, setComposeToStatus } from './compose';
+ import { importFetchedStatus, importFetchedAccount } from './importer';
+ import { fetchContext } from './statuses_typed';
+@@ -135,7 +137,7 @@ export const editStatus = (id) => (dispatch, getState) => {
+   api().get(`/api/v1/statuses/${id}/source`).then(response => {
+     dispatch(fetchStatusSourceSuccess());
+     ensureComposeIsVisible(getState);
+-    dispatch(setComposeToStatus(status, response.data.text, response.data.spoiler_text));
++    dispatch(setComposeToStatus(status, response.data.text, response.data.spoiler_text, statusFormatOfSource(response.data.content_type)));
+   }).catch(error => {
+     dispatch(fetchStatusSourceFail(error));
+   });
+diff --git a/app/javascript/mastodon/features/compose/redesign/footer.tsx b/app/javascript/mastodon/features/compose/redesign/footer.tsx
+--- a/app/javascript/mastodon/features/compose/redesign/footer.tsx
++++ b/app/javascript/mastodon/features/compose/redesign/footer.tsx
+@@ -28,6 +28,7 @@ import {
+   selectComposeType,
+ } from './selectors';
+ import classes from './styles.module.scss';
++import { StatusFormatToggleButton } from '@/teadeck/status_format_toggle';
+ 
+ export const ComposeFooter: React.FC<{ onEmojiPick: OnEmojiPick }> = ({
+   onEmojiPick,
+@@ -65,6 +66,8 @@ export const ComposeFooter: React.FC<{ onEmojiPick: OnEmojiPick }> = ({
+ 
+       <ComposeEmojiButton onPick={onEmojiPick} />
+ 
++      <StatusFormatToggleButton />
++
+       <IconButton
+         size='sm'
+         icon={ChartBarHorizontalIcon}
 diff --git a/app/javascript/mastodon/features/compose/redesign/settings.tsx b/app/javascript/mastodon/features/compose/redesign/settings.tsx
 --- a/app/javascript/mastodon/features/compose/redesign/settings.tsx
 +++ b/app/javascript/mastodon/features/compose/redesign/settings.tsx
@@ -92,20 +160,22 @@ diff --git a/app/javascript/mastodon/features/compose/redesign/settings.tsx b/ap
 diff --git a/app/javascript/mastodon/reducers/compose.js b/app/javascript/mastodon/reducers/compose.js
 --- a/app/javascript/mastodon/reducers/compose.js
 +++ b/app/javascript/mastodon/reducers/compose.js
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +import { loadReplyAudience } from '@/teadeck/reply_audience';
++import { loadStatusFormat } from '@/teadeck/status_format';
  import { Map as ImmutableMap, List as ImmutableList, OrderedSet as ImmutableOrderedSet, fromJS, isList } from 'immutable';
  
  import {
-@@ -7,6 +8,7 @@ import {
+@@ -7,6 +9,8 @@ import {
    quoteCompose,
    quoteComposeCancel,
    setComposeQuotePolicy,
 +  setComposeReplyAudience,
++  setComposeContentType,
    pasteLinkCompose,
    cancelPasteLinkCompose,
    setDragUploadEnabled,
-@@ -103,6 +105,11 @@ const initialState = ImmutableMap({
+@@ -103,6 +107,16 @@ const initialState = ImmutableMap({
    quote_policy: 'public',
    default_quote_policy: 'public', // Set in hydration.
    fetching_link: null,
@@ -114,23 +184,41 @@ diff --git a/app/javascript/mastodon/reducers/compose.js b/app/javascript/mastod
 +  // Remembered per account: new posts keep the last choice.
 +  reply_audience: loadReplyAudience(),
 +  default_reply_audience: loadReplyAudience(),
++
++  // GoToSocial text format (plain text or Markdown; Teadeck-specific).
++  // 'default' sends nothing, so the account's own setting applies.
++  content_type: loadStatusFormat(),
++  default_content_type: loadStatusFormat(),
  });
  
  const initialPoll = ImmutableMap({
-@@ -144,6 +151,7 @@ function clearAll(state) {
+@@ -144,6 +158,8 @@ function clearAll(state) {
      map.set('idempotencyKey', uuid());
      map.set('quoted_status_id', null);
      map.set('quote_policy', state.get('default_quote_policy'));
 +    map.set('reply_audience', state.get('default_reply_audience'));
++    map.set('content_type', state.get('default_content_type'));
      map.set('isDragDisabled', false);
    });
  }
-@@ -383,6 +391,8 @@ export const composeReducer = (state = initialState, action) => {
+@@ -383,6 +399,10 @@ export const composeReducer = (state = initialState, action) => {
      return state.set('quoted_status_id', null);
    } else if (setComposeQuotePolicy.match(action)) {
      return state.set('quote_policy', action.payload);
 +  } else if (setComposeReplyAudience.match(action)) {
 +    return state.set('reply_audience', action.payload).set('default_reply_audience', action.payload);
++  } else if (setComposeContentType.match(action)) {
++    return state.set('content_type', action.payload).set('default_content_type', action.payload);
    } else if (pasteLinkCompose.pending.match(action)) {
      return state.set('fetching_link', action.meta.requestId);
    } else if (pasteLinkCompose.fulfilled.match(action) || pasteLinkCompose.rejected.match(action)) {
+@@ -638,6 +658,9 @@ export const composeReducer = (state = initialState, action) => {
+       map.set('quoted_status_id', action.status.getIn(['quote', 'quoted_status'], null));
+       // Mastodon-authored posts can be expected to have at most one automatic approval policy
+       map.set('quote_policy', action.status.getIn(['quote_approval', 'automatic', 0]) || 'nobody');
++      // GoToSocial reports what an existing post was written in; without it the
++      // account's own setting stays, as it did when the post was written.
++      map.set('content_type', action.contentType ?? state.get('default_content_type'));
+ 
+       if (action.spoiler_text.length > 0) {
+         map.set('spoiler', true);

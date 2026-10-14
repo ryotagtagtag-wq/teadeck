@@ -43,7 +43,7 @@ test('turns a v1 notification list into a v2 grouped response with one group per
     {
       type: 'follow', group_key: 'ungrouped-n1', notifications_count: 1, sample_account_ids: ['alice'],
       latest_page_notification_at: '2026-09-13T09:00:00Z', most_recent_notification_id: 'n1',
-      page_min_id: 'n1', page_max_id: 'n1', status_id: null,
+      page_min_id: 'n1', page_max_id: 'n1',
     },
   ]);
 });

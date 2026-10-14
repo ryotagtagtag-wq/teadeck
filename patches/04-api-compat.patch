@@ -71,8 +71,8 @@ diff --git a/app/javascript/mastodon/api/instance.ts b/app/javascript/mastodon/a
 +  extendedDescriptionFallback,
 +  noDomainBlocks,
 +  noTranslationLanguages,
-+  termsOfServiceFallback,
 +  withFallback,
++  withTermsOfServiceFallback,
 +} from '@/teadeck/api_fallbacks';
  import { apiRequestGet } from 'mastodon/api';
  import type {
@@ -105,7 +105,7 @@ diff --git a/app/javascript/mastodon/api/instance.ts b/app/javascript/mastodon/a
    apiRequestGet<ApiDomainBlockJSON[]>('v1/instance/domain_blocks');
 +
 +// Teadeck: what servers without these calls answer instead (teadeck/api_fallbacks.ts).
-+export const apiGetTermsOfService = withFallback('instance.termsOfService', upstreamGetTermsOfService, termsOfServiceFallback);
++export const apiGetTermsOfService = withTermsOfServiceFallback(upstreamGetTermsOfService);
 +export const apiGetExtendedDescription = withFallback('instance.extendedDescription', upstreamGetExtendedDescription, extendedDescriptionFallback);
 +export const apiGetTranslationLanguages = withFallback('translation.languages', upstreamGetTranslationLanguages, noTranslationLanguages);
 +export const apiGetDomainBlocks = withFallback('instance.domainBlocks', upstreamGetDomainBlocks, noDomainBlocks);
