@@ -14,3 +14,55 @@ diff --git a/app/javascript/mastodon/features/lists/new.tsx b/app/javascript/mas
      setSubmitting(true);
  
      if (id) {
+diff --git a/app/javascript/mastodon/features/ui/components/confirmation_modals/missing_alt_text.tsx b/app/javascript/mastodon/features/ui/components/confirmation_modals/missing_alt_text.tsx
+--- a/app/javascript/mastodon/features/ui/components/confirmation_modals/missing_alt_text.tsx
++++ b/app/javascript/mastodon/features/ui/components/confirmation_modals/missing_alt_text.tsx
+@@ -6,6 +6,7 @@ import type { Map as ImmutableMap, List as ImmutableList } from 'immutable';
+ 
+ import { submitCompose } from 'mastodon/actions/compose';
+ import { openModal } from 'mastodon/actions/modal';
++import { resetComposer } from 'mastodon/reducers/slices/composer';
+ import type { MediaAttachment } from 'mastodon/models/media_attachment';
+ import { useAppDispatch, useAppSelector } from 'mastodon/store';
+ 
+@@ -64,7 +65,14 @@ export const ConfirmMissingAltTextModal: React.FC<
+   }, [dispatch, mediaId]);
+ 
+   const handleSecondary = useCallback(() => {
+-    dispatch(submitCompose());
++    // Teadeck: close the redesigned composer once posted, as its own submit
++    // does; otherwise it stays open, emptied. Not fixed upstream as of
++    // mastodon/mastodon@7f5bc799.
++    dispatch(
++      submitCompose(() => {
++        dispatch(resetComposer());
++      }),
++    );
+   }, [dispatch]);
+ 
+   return (
+diff --git a/app/javascript/mastodon/features/ui/components/confirmation_modals/private_quote_notify.tsx b/app/javascript/mastodon/features/ui/components/confirmation_modals/private_quote_notify.tsx
+--- a/app/javascript/mastodon/features/ui/components/confirmation_modals/private_quote_notify.tsx
++++ b/app/javascript/mastodon/features/ui/components/confirmation_modals/private_quote_notify.tsx
+@@ -5,6 +5,7 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+ import { submitCompose } from '@/mastodon/actions/compose';
+ import { PRIVATE_QUOTE_MODAL_ID } from '@/mastodon/actions/compose_typed';
+ import { changeSetting } from '@/mastodon/actions/settings';
++import { resetComposer } from '@/mastodon/reducers/slices/composer';
+ import { CheckBox } from '@/mastodon/components/check_box';
+ import { useAppDispatch } from '@/mastodon/store';
+ 
+@@ -51,7 +52,12 @@ export const PrivateQuoteNotify = forwardRef<
+ 
+     const dispatch = useAppDispatch();
+     const handleConfirm = useCallback(() => {
+-      dispatch(submitCompose());
++      // Teadeck: close the redesigned composer once posted (see missing_alt_text.tsx).
++      dispatch(
++        submitCompose(() => {
++          dispatch(resetComposer());
++        }),
++      );
+       if (dismiss) {
+         dispatch(
+           changeSetting(['dismissed_banners', PRIVATE_QUOTE_MODAL_ID], true),
