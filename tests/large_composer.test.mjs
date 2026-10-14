@@ -92,6 +92,9 @@ for (const engine of engines) {
       await form(page).getByRole('button', { name: 'Veröffentlichen' }).click();
       await waitUntil(() => posted.length > 0, { message: 'the post was never sent' });
       assert.equal(posted[0]?.status, text);
+      // And closes afterwards, backdrop included.
+      await form(page).waitFor({ state: 'detached', timeout: 5_000 });
+      assert.equal(await page.locator('.teadeck-large-composer__backdrop').count(), 0);
       assert.deepEqual(pageErrors, []);
     } finally {
       await context.close();
