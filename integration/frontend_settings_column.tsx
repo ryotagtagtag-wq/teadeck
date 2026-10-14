@@ -28,17 +28,17 @@ import {
 import { changeSetting } from '@/mastodon/actions/settings';
 import { useAppDispatch } from '@/mastodon/store';
 
-import { appliedAppearance, applyAppearance } from './appearance';
-import type { ColorScheme, Contrast, DisplayMedia, EmojiStyle, FrontendSettings, Theme } from './frontend_settings';
-import { frontendSettingsKey, resolveFrontendSettings } from './frontend_settings';
-import type { NotificationShows } from './notification_settings';
-import { readNotificationShows } from './notification_settings';
-import { t, uiTextLocale } from './settings_strings';
-import { designs } from './themes';
-import { designLabel } from './themes/tokens';
-import { setStatusOverlayEnabled, statusOverlayEnabled } from './status_overlay';
-import { readObjectPreference, readSettings, readPreference, writePreference } from './storage';
-import { availableLocales } from './ui_locale';
+import { appliedAppearance, applyAppearance } from './appearance.ts';
+import type { ColorScheme, Contrast, DisplayMedia, EmojiStyle, FrontendSettings, Theme } from './frontend_settings.ts';
+import { frontendSettingsKey, resolveFrontendSettings } from './frontend_settings.ts';
+import type { NotificationShows } from './notification_settings.ts';
+import { readNotificationShows } from './notification_settings.ts';
+import { t, uiTextLocale } from './settings_strings.ts';
+import { designs } from './themes/index.ts';
+import { designLabel } from './themes/tokens.ts';
+import { setStatusOverlayEnabled, statusOverlayEnabled } from './status_overlay.tsx';
+import { readObjectPreference, readSettings, readPreference, writePreference } from './storage.ts';
+import { availableLocales } from './ui_locale.ts';
 
 type BooleanSettingKey = Exclude<keyof FrontendSettings, 'displayMedia' | 'colorScheme' | 'contrast' | 'emojiStyle' | 'theme'>;
 
@@ -70,9 +70,6 @@ const settingsAtStart = (): FrontendSettings => ({
   disableSwiping: Boolean(disableSwiping),
   disableHoverCards: Boolean(disableHoverCards),
 });
-
-// Like upstream's `.simple_form h3`; a bare <h3> has no styling.
-const sectionHeadingStyle: React.CSSProperties = { fontSize: '20px', fontWeight: 600, marginBottom: '16px' };
 
 function localeNameLookup() {
   try { return new Intl.DisplayNames([navigator.language, 'en'], { type: 'language' }); }
@@ -223,7 +220,7 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
             ))}
           </SelectField>
 
-          <h3 style={sectionHeadingStyle}>{t('appearance', locale)}</h3>
+          <h3 className='teadeck-settings__section'>{t('appearance', locale)}</h3>
 
           <SelectField id='teadeck-settings-theme' label={t('theme', locale)} hint={t('themeHint', locale)} value={settings.theme} onChange={handleTheme}>
             <option value='mastodon'>{t('themeMastodon', locale)}</option>
@@ -267,7 +264,7 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
             />
           ))}
 
-          <h3 style={sectionHeadingStyle}>{t('notifications', locale)}</h3>
+          <h3 className='teadeck-settings__section'>{t('notifications', locale)}</h3>
           <p>{t('notificationsHint', locale)}</p>
 
           {notificationToggles.map(({ key, label }) => (

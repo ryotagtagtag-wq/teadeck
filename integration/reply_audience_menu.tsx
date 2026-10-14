@@ -12,8 +12,8 @@ import { MenuItemDivider, MenuItemGroup, MenuItemRadio } from '@/mastodon/compon
 import { initialState } from '@/mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from '@/mastodon/store';
 
-import type { ReplyAudience } from './gotosocial';
-import { chooseReplyAudience, replyAudienceTexts, useReplyAudienceOptions } from './reply_audience_picker';
+import type { ReplyAudience } from './gotosocial.ts';
+import { chooseReplyAudience, replyAudienceTexts, useReplyAudienceOptions } from './reply_audience_picker.tsx';
 
 export const ReplyAudienceMenuGroup: React.FC = () => {
   const value = useAppSelector((state) => state.compose.get('reply_audience', 'default') as ReplyAudience);
@@ -25,7 +25,7 @@ export const ReplyAudienceMenuGroup: React.FC = () => {
   if (!(initialState?.meta as { teadeck_gotosocial?: boolean } | undefined)?.teadeck_gotosocial) return null;
 
   return (
-    <div className='teadeck-reply-audience-picker' data-value={effective} style={{ display: 'contents' }}>
+    <div className='teadeck-reply-audience-picker' data-value={effective}>
       <MenuItemGroup label={replyAudienceTexts[locale].title}>
         {options.map((option) => (
           <MenuItemRadio

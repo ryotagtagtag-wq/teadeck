@@ -78,13 +78,13 @@ export function brandLogoMarkup(prefix: string): string | null {
   return template ? inlinableSvg(template, prefix) : null;
 }
 
-export const BrandLogo: React.FC<{ className?: string; style?: React.CSSProperties }> = ({ className = 'teadeck-logo', style }) => {
+export const BrandLogo: React.FC<{ className?: string }> = ({ className = 'teadeck-logo' }) => {
   const instance = useId().replace(/[^\w-]/g, '');
   const markup = useMemo(() => (template ? inlinableSvg(template, `teadeck-logo-${instance}`) : null), [instance]);
 
   if (!configured) return null;
   if (markup) {
-    return <span className={className} style={style} dangerouslySetInnerHTML={{ __html: markup }} />;
+    return <span className={className} dangerouslySetInnerHTML={{ __html: markup }} />;
   }
-  return <img src='/logo.svg' alt='' draggable='false' className={className} style={style} />;
+  return <img src='/logo.svg' alt='' draggable='false' className={className} />;
 };
