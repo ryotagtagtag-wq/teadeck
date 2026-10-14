@@ -209,11 +209,16 @@ test('the sign-in page shows the configured logo and follows the design of this 
     const tea = await page.locator('#teadeck-shell-logo svg rect').first().evaluate((element) => getComputedStyle(element).fill);
     assert.notEqual(tea, 'rgb(184, 92, 30)', 'the tea of this design, not the drawing\'s own');
 
-    // The heading is the largest thing after the logo, and the button is outlined.
+    // The heading is the largest thing after the logo, and the button is the
+    // design's main button, as inside the app (Sencha fills it in its accent).
     const heading = await page.locator('#teadeck-login .title').evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
     assert.ok(heading >= 28, `${heading}px`);
-    const button = await page.locator('#teadeck-login button[type=submit]').evaluate((element) => getComputedStyle(element).backgroundColor);
-    assert.equal(button, 'rgba(0, 0, 0, 0)');
+    const [button, accent] = await page.locator('#teadeck-login button[type=submit]').evaluate((element) => [
+      getComputedStyle(element).backgroundColor,
+      getComputedStyle(document.documentElement).getPropertyValue('--color-indigo-600').trim(),
+    ]);
+    assert.equal(accent, '#4a7a42');
+    assert.equal(button, 'rgb(74, 122, 66)');
     assert.deepEqual(pageErrors, []);
   } finally {
     await context.close();

@@ -11,7 +11,7 @@ export type EmojiStyle = 'auto' | 'native' | 'twemoji';
  * Teadeck's own designs, each with a dark and a light half (themes.css), named
  * after the tea whose brewed colour they carry: `assam` is Assam (dark) and
  * Silver Needle (light), `sencha` is Sencha (dark) and Jasmine (light),
- * `hibiscus` is Hibiskus (dark) and Rooibos (light; theme_hibiscus.css). Which
+ * `hibiscus` is Hibiskus (dark) and Rooibos (light). Which
  * half appears follows the colour scheme.
  */
 export type Theme = 'mastodon' | 'assam' | 'sencha' | 'hibiscus';

@@ -26,7 +26,6 @@ import { applyWaitingUpdate, enableOffline } from './offline';
 import './shell.css';
 // Teadeck's own designs; only active with data-teadeck-theme (see appearance.ts).
 import './themes.css';
-import './theme_hibiscus.css';
 
 // Before the first API request.
 window.fetch = stripAxiosUserAgent(window.fetch.bind(window));
