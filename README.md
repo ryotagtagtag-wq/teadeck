@@ -29,9 +29,9 @@ The Teadeck host supplies the JavaScript running in your browser, and that code 
 
 ### Layouts and designs
 
-Mastodon's single- and multi-column layouts, with six designs of Teadeck's own and Mastodon's design to choose from. Hibiscus goes further than the others: chamfered corners, condensed capitals, borderless cards on spaced columns, bolder icons and a fine grain. Layout, design and language are set per account under **Settings** in the account menu.
+Mastodon's single- and multi-column layouts, with eight designs of Teadeck's own and Mastodon's design to choose from. Hibiscus goes further than the others: chamfered corners, condensed capitals, borderless cards on spaced columns, bolder icons and a fine grain. Lapsang Souchong and Earl Grey are gothic: blackletter titles, ornaments in the corners of posts, pointed-arch avatars, fangs under the logo and an opaque blood-red tea. Layout, design and language are set per account under **Settings** in the account menu.
 
-![The six designs: Assam, Sencha and Hibiscus, each dark and light](docs/images/themes.png)
+![The eight designs: Assam, Sencha, Hibiscus and Lapsang Souchong, each dark and light](docs/images/themes.png)
 
 ### Post overlay
 
