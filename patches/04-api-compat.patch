@@ -38,203 +38,116 @@ diff --git a/app/javascript/mastodon/api/collections.ts b/app/javascript/mastodo
 --- a/app/javascript/mastodon/api/collections.ts
 +++ b/app/javascript/mastodon/api/collections.ts
 @@ -1,3 +1,4 @@
-+import { withCapability } from '@/teadeck/api_capabilities';
++import { noCollections, withFallback } from '@/teadeck/api_fallbacks';
  import {
    apiRequestPost,
    apiRequestPut,
-@@ -31,11 +32,24 @@ export const apiGetCollection = (collectionId: string) =>
+@@ -31,10 +32,10 @@ export const apiGetCollection = (collectionId: string) =>
      `v1/collections/${collectionId}`,
    );
  
-+// Servers without collections (GoToSocial) have none to list.
- export const apiGetCollectionsCreatedByAccount = (accountId: string) =>
--  apiRequestGet<ApiCollectionsJSON>(`v1/accounts/${accountId}/collections`);
-+  withCapability<ApiCollectionsJSON>(
-+    'collections',
-+    () =>
-+      apiRequestGet<ApiCollectionsJSON>(`v1/accounts/${accountId}/collections`),
-+    () => ({ collections: [] }),
-+  );
+-export const apiGetCollectionsCreatedByAccount = (accountId: string) =>
++const upstreamGetCollectionsCreatedByAccount = (accountId: string) =>
+   apiRequestGet<ApiCollectionsJSON>(`v1/accounts/${accountId}/collections`);
  
- export const apiGetCollectionsFeaturingAccount = (accountId: string) =>
--  apiRequestGet<ApiCollectionsJSON>(`v1/accounts/${accountId}/in_collections`);
-+  withCapability<ApiCollectionsJSON>(
-+    'collections',
-+    () =>
-+      apiRequestGet<ApiCollectionsJSON>(
-+        `v1/accounts/${accountId}/in_collections`,
-+      ),
-+    () => ({ collections: [] }),
-+  );
+-export const apiGetCollectionsFeaturingAccount = (accountId: string) =>
++const upstreamGetCollectionsFeaturingAccount = (accountId: string) =>
+   apiRequestGet<ApiCollectionsJSON>(`v1/accounts/${accountId}/in_collections`);
  
  export const apiAddCollectionItem = (collectionId: string, accountId: string) =>
-   apiRequestPost<WrappedCollectionAccountItem>(
+@@ -52,3 +53,7 @@ export const apiRevokeCollectionInclusion = (
+   collectionId: string,
+   itemId: string,
+ ) => apiRequestPost(`v1/collections/${collectionId}/items/${itemId}/revoke`);
++
++// Teadeck: servers without collections have none (teadeck/api_fallbacks.ts).
++export const apiGetCollectionsCreatedByAccount = withFallback('collections', upstreamGetCollectionsCreatedByAccount, noCollections);
++export const apiGetCollectionsFeaturingAccount = withFallback('collections', upstreamGetCollectionsFeaturingAccount, noCollections);
 diff --git a/app/javascript/mastodon/api/instance.ts b/app/javascript/mastodon/api/instance.ts
 --- a/app/javascript/mastodon/api/instance.ts
 +++ b/app/javascript/mastodon/api/instance.ts
-@@ -1,3 +1,8 @@
-+import { withCapability } from '@/teadeck/api_capabilities';
+@@ -1,3 +1,10 @@
 +import {
-+  extendedDescriptionFromInstance,
-+  termsOfServiceFromInstance,
-+} from '@/teadeck/api_compat';
++  extendedDescriptionFallback,
++  noDomainBlocks,
++  noTranslationLanguages,
++  termsOfServiceFallback,
++  withFallback,
++} from '@/teadeck/api_fallbacks';
  import { apiRequestGet } from 'mastodon/api';
  import type {
    ApiTermsOfServiceJSON,
-@@ -8,11 +13,20 @@ import type {
+@@ -8,7 +15,7 @@ import type {
    ApiDomainBlockJSON,
  } from 'mastodon/api_types/instance';
  
-+// Servers without these pages (GoToSocial) carry their texts in the v1 instance.
- export const apiGetTermsOfService = (version?: string) =>
--  apiRequestGet<ApiTermsOfServiceJSON>(
--    version
--      ? `v1/instance/terms_of_service/${version}`
--      : 'v1/instance/terms_of_service',
-+  withCapability<ApiTermsOfServiceJSON>(
-+    'instance.termsOfService',
-+    () =>
-+      apiRequestGet<ApiTermsOfServiceJSON>(
-+        version
-+          ? `v1/instance/terms_of_service/${version}`
-+          : 'v1/instance/terms_of_service',
-+      ),
-+    async () =>
-+      termsOfServiceFromInstance(
-+        await apiRequestGet<{ terms?: string }>('v1/instance'),
-+      ),
-   );
- 
- export const apiGetPrivacyPolicy = () =>
-@@ -22,12 +36,31 @@ export const apiGetInstance = () =>
+-export const apiGetTermsOfService = (version?: string) =>
++const upstreamGetTermsOfService = (version?: string) =>
+   apiRequestGet<ApiTermsOfServiceJSON>(
+     version
+       ? `v1/instance/terms_of_service/${version}`
+@@ -21,13 +28,19 @@ export const apiGetPrivacyPolicy = () =>
+ export const apiGetInstance = () =>
    apiRequestGet<ApiInstanceJSON>('v2/instance');
  
- export const apiGetExtendedDescription = () =>
--  apiRequestGet<ApiExtendedDescriptionJSON>('v1/instance/extended_description');
-+  withCapability<ApiExtendedDescriptionJSON>(
-+    'instance.extendedDescription',
-+    () =>
-+      apiRequestGet<ApiExtendedDescriptionJSON>(
-+        'v1/instance/extended_description',
-+      ),
-+    async () =>
-+      extendedDescriptionFromInstance(
-+        await apiRequestGet<{ description?: string }>('v1/instance'),
-+      ),
-+  );
+-export const apiGetExtendedDescription = () =>
++const upstreamGetExtendedDescription = () =>
+   apiRequestGet<ApiExtendedDescriptionJSON>('v1/instance/extended_description');
  
- export const apiGetTranslationLanguages = () =>
--  apiRequestGet<ApiTranslationLanguagesJSON>(
--    'v1/instance/translation_languages',
-+  withCapability<ApiTranslationLanguagesJSON>(
-+    'translation.languages',
-+    () =>
-+      apiRequestGet<ApiTranslationLanguagesJSON>(
-+        'v1/instance/translation_languages',
-+      ),
-+    () => ({}),
+-export const apiGetTranslationLanguages = () =>
++const upstreamGetTranslationLanguages = () =>
+   apiRequestGet<ApiTranslationLanguagesJSON>(
+     'v1/instance/translation_languages',
    );
  
- export const apiGetDomainBlocks = () =>
--  apiRequestGet<ApiDomainBlockJSON[]>('v1/instance/domain_blocks');
-+  withCapability<ApiDomainBlockJSON[]>(
-+    'instance.domainBlocks',
-+    () => apiRequestGet<ApiDomainBlockJSON[]>('v1/instance/domain_blocks'),
-+    () => [],
-+  );
+-export const apiGetDomainBlocks = () =>
++const upstreamGetDomainBlocks = () =>
+   apiRequestGet<ApiDomainBlockJSON[]>('v1/instance/domain_blocks');
++
++// Teadeck: what servers without these calls answer instead (teadeck/api_fallbacks.ts).
++export const apiGetTermsOfService = withFallback('instance.termsOfService', upstreamGetTermsOfService, termsOfServiceFallback);
++export const apiGetExtendedDescription = withFallback('instance.extendedDescription', upstreamGetExtendedDescription, extendedDescriptionFallback);
++export const apiGetTranslationLanguages = withFallback('translation.languages', upstreamGetTranslationLanguages, noTranslationLanguages);
++export const apiGetDomainBlocks = withFallback('instance.domainBlocks', upstreamGetDomainBlocks, noDomainBlocks);
 diff --git a/app/javascript/mastodon/api/notification_policies.ts b/app/javascript/mastodon/api/notification_policies.ts
 --- a/app/javascript/mastodon/api/notification_policies.ts
 +++ b/app/javascript/mastodon/api/notification_policies.ts
-@@ -1,8 +1,16 @@
-+import { withCapability } from '@/teadeck/api_capabilities';
+@@ -1,9 +1,13 @@
++import { noNotificationPolicy, withFallback } from '@/teadeck/api_fallbacks';
  import { apiRequestGet, apiRequestPut } from 'mastodon/api';
  import type { NotificationPolicyJSON } from 'mastodon/api_types/notification_policies';
  
-+// Without the policy API (e.g. GoToSocial) there is no policy: `null` keeps
-+// the policy controls and the filtered-notifications banner hidden instead of
-+// showing settings that cannot be saved.
- export const apiGetNotificationPolicy = () =>
--  apiRequestGet<NotificationPolicyJSON>('v2/notifications/policy');
-+  withCapability<NotificationPolicyJSON | null>(
-+    'notifications.policy',
-+    () => apiRequestGet<NotificationPolicyJSON>('v2/notifications/policy'),
-+    () => null,
-+  );
+-export const apiGetNotificationPolicy = () =>
++const upstreamGetNotificationPolicy = () =>
+   apiRequestGet<NotificationPolicyJSON>('v2/notifications/policy');
  
  export const apiUpdateNotificationsPolicy = (
    policy: Partial<NotificationPolicyJSON>,
+ ) => apiRequestPut<NotificationPolicyJSON>('v2/notifications/policy', policy);
++
++// Teadeck: no policy where the server has none (teadeck/api_fallbacks.ts).
++export const apiGetNotificationPolicy = withFallback('notifications.policy', upstreamGetNotificationPolicy, noNotificationPolicy);
 diff --git a/app/javascript/mastodon/api/notifications.ts b/app/javascript/mastodon/api/notifications.ts
 --- a/app/javascript/mastodon/api/notifications.ts
 +++ b/app/javascript/mastodon/api/notifications.ts
-@@ -4,6 +4,13 @@ import api, {
-   apiRequestGet,
-   apiRequestPost,
- } from 'mastodon/api';
-+import type { AxiosResponse } from 'axios';
-+
-+import { withCapability } from '@/teadeck/api_capabilities';
-+import {
-+  notificationGroupsFromNotifications,
-+  notificationParamsForV1,
-+} from '@/teadeck/api_compat';
- import type {
-   ApiNotificationGroupsResultJSON,
-   ApiNotificationRequestJSON,
-@@ -29,6 +36,26 @@ export const apiFetchNotifications = async (
+@@ -1,3 +1,4 @@
++import { ungroupedNotifications, withFallback } from '@/teadeck/api_fallbacks';
+ import api, {
+   apiRequest,
+   getLinks,
+@@ -29,7 +30,7 @@ export const apiFetchNotifications = async (
    };
  };
  
-+// Servers without grouped notifications (e.g. GoToSocial) get their v1
-+// endpoint, grouped client-side (capability notifications.grouped).
-+
-+const fetchUngroupedNotifications = async (
-+  params: Parameters<typeof apiFetchNotificationGroups>[0],
-+) => {
-+  const response = await api().request<ApiNotificationJSON[]>({
-+    method: 'GET',
-+    url: '/api/v1/notifications',
-+    params: notificationParamsForV1(params),
-+  });
-+
-+  return {
-+    data: notificationGroupsFromNotifications(
-+      response.data,
-+    ) as unknown as ApiNotificationGroupsResultJSON,
-+    response,
-+  };
-+};
-+
- export const apiFetchNotificationGroups = async (params?: {
+-export const apiFetchNotificationGroups = async (params?: {
++const upstreamFetchNotificationGroups = async (params?: {
    url?: string;
    grouped_types?: string[];
-@@ -36,13 +63,24 @@ export const apiFetchNotificationGroups = async (params?: {
-   max_id?: string;
-   since_id?: string;
- }) => {
--  const response = await api().request<ApiNotificationGroupsResultJSON>({
--    method: 'GET',
--    url: '/api/v2/notifications',
--    params,
--  });
-+  const result = await withCapability<{
-+    data: ApiNotificationGroupsResultJSON;
-+    response: AxiosResponse;
-+  }>(
-+    'notifications.grouped',
-+    async () => {
-+      const response = await api().request<ApiNotificationGroupsResultJSON>({
-+        method: 'GET',
-+        url: '/api/v2/notifications',
-+        params,
-+      });
-+      return { data: response.data, response };
-+    },
-+    () => fetchUngroupedNotifications(params),
-+  );
- 
--  const { statuses, accounts, notification_groups } = response.data;
-+  const { response } = result;
-+  const { statuses, accounts, notification_groups } = result.data;
- 
-   return {
-     statuses,
+   exclude_types?: string[];
+@@ -94,3 +95,6 @@ export const apiAcceptNotificationRequests = async (id: string[]) => {
+ export const apiDismissNotificationRequests = async (id: string[]) => {
+   return apiRequestPost('v1/notifications/requests/dismiss', { id });
+ };
++
++// Teadeck: servers without grouped notifications get their v1 list, grouped (teadeck/api_fallbacks.ts).
++export const apiFetchNotificationGroups = withFallback('notifications.grouped', upstreamFetchNotificationGroups, ungroupedNotifications);
