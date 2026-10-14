@@ -168,3 +168,21 @@ test('cleanup preserves an installation that starts during cache enumeration', a
   await scope.worker.start();
   assert.ok(await scope.caches.has(`teadeck-core-${buildB.version}`));
 });
+
+test('the background fill gives way to a newer version, whose activation would wait for it', async () => {
+  const scope = world(buildA);
+  const worker = scope.newWorker(buildA.version);
+  await worker.install();
+  await worker.activate();
+
+  // A newer version waits: the browser activates it ("Refresh") only once this worker is idle.
+  worker.context.self.registration.waiting = {};
+  scope.server.requests.length = 0;
+  await worker.start();
+  assert.deepEqual(scope.server.requests.filter(({ path }) => path.startsWith('/emoji/')), [], 'nothing downloaded for a version on its way out');
+
+  // Without one, the next start fills what was left.
+  delete worker.context.self.registration.waiting;
+  await worker.start();
+  assert.ok(scope.server.requests.some(({ path }) => path === '/emoji/1f600.svg'));
+});

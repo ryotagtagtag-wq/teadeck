@@ -43,8 +43,23 @@ export function shellTextReady(): Promise<void> {
 
 /** Offers a downloaded new version until the user reloads. */
 export function offerUpdate(apply: () => void) {
-  document.getElementById('teadeck-update')!.hidden = false;
-  document.getElementById('teadeck-update-reload')!.onclick = apply;
+  const banner = document.getElementById('teadeck-update')!;
+  const button = document.getElementById('teadeck-update-reload') as HTMLButtonElement;
+  const label = (id: TextId) => {
+    button.dataset.teadeckText = id;
+    button.textContent = t(id);
+  };
+  banner.hidden = false;
+  banner.removeAttribute('aria-busy');
+  button.disabled = false;
+  label('updateReload');
+  button.onclick = () => {
+    // Switching versions takes a moment before the page reloads: show at once that the click was taken.
+    button.disabled = true;
+    banner.setAttribute('aria-busy', 'true');
+    label('updating');
+    apply();
+  };
 }
 
 /** What this installation configured. */

@@ -103,8 +103,18 @@ test('a new deploy is offered during the session and used after the reload butto
     // Stays visible (Mastodon's own alerts disappear after 5 seconds).
     await page.waitForTimeout(6_000);
     assert.equal(await reload.isVisible(), true);
-    // Activating the new worker and reloading can take long while other test files run.
-    await Promise.all([page.waitForEvent('load', { timeout: 90_000 }), reload.click()]);
+    // The click shows at once that it was taken. The old worker stops filling its
+    // background cache for the new one, which the browser activates only once the
+    // old one is idle; the margin is for other test files running meanwhile.
+    // Read in the same task as the click: the reload may follow quickly.
+    const [clicked] = await Promise.all([
+      reload.evaluate((button) => {
+        button.click();
+        return { disabled: button.disabled, text: button.dataset.teadeckText };
+      }),
+      page.waitForEvent('load', { timeout: 30_000 }),
+    ]);
+    assert.deepEqual(clicked, { disabled: true, text: 'updating' });
     await page.getByText(timelineText).waitFor();
 
     const cacheNames = await page.evaluate(() => caches.keys());

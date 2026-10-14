@@ -39,6 +39,7 @@ export const texts = {
   updateTitle: { en: 'New version', de: 'Neue Version' },
   updateBody: { en: 'A new version of Teadeck is ready.', de: 'Eine neue Version von Teadeck ist bereit.' },
   updateReload: { en: 'Refresh', upstream: 'js:refresh' },
+  updating: { en: 'Updating…', de: 'Wird aktualisiert …' },
 
   errorInstanceUrl: {
     en: 'Enter an HTTPS address of a server, without a path or credentials.',

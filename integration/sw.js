@@ -157,13 +157,16 @@ self.addEventListener('activate', (event) => {
     const cache = await caches.open(CORE_CACHE);
     if (!await cache.match(MANIFEST_URL)) await storeResponse(cache, MANIFEST_URL, undefined, { cache: 'no-cache' });
     const manifest = await (await cache.match(MANIFEST_URL)).json();
-    await inBatches(manifest.core, async (path) => {
-      if (!hashMatches(await cache.match(`/${path}`), manifest.hashes?.[path])) {
-        await storeResponse(cache, `/${path}`, manifest.hashes?.[path]);
-      }
-    });
+    // The page that clicked "Refresh" waits for this: check the cache all at once
+    // (local reads), and download only what is missing, in batches.
+    const present = await Promise.all(manifest.core.map(async (path) => hashMatches(await cache.match(`/${path}`), manifest.hashes?.[path])));
+    const missing = manifest.core.filter((path, index) => !present[index]);
+    await inBatches(missing, (path) => storeResponse(cache, `/${path}`, manifest.hashes?.[path]));
     await self.clients.claim();
-    await cleanUp();
+    // Not awaited: the reload of the page that clicked "Refresh" is held until
+    // activation ends, and the cleanup walks thousands of cache entries. Every
+    // page start runs it again (fill-background), should this one be cut short.
+    void cleanUp();
   })());
 });
 
@@ -216,9 +219,10 @@ async function versionRecords() {
   return records;
 }
 
-let cleaning = null;
+let cleaning = Promise.resolve();
+/** Runs after any cleanup in progress rather than joining it, so it sees the tabs open now. */
 function cleanUp() {
-  cleaning ??= removeUnusedVersions().finally(() => { cleaning = null; });
+  cleaning = cleaning.catch(() => {}).then(removeUnusedVersions);
   return cleaning;
 }
 
@@ -286,15 +290,30 @@ async function pruneSharedCaches(retained) {
 
 let backgroundFill = null;
 
+/**
+ * A newer version is installing or waiting. The fill keeps this worker busy
+ * (waitUntil), and the browser activates the new version only once the old
+ * one is idle: "Refresh" would wait for thousands of downloads this version
+ * no longer needs. So the fill stops; the new version fills its own.
+ */
+function superseded() {
+  return Boolean(self.registration.installing || self.registration.waiting);
+}
+
+/** The number of files not stored: failed, or left because a newer version came. */
 async function cacheMissing(cacheName, paths, hashes) {
   const cache = await caches.open(cacheName);
   const missing = [];
   for (const path of paths) {
+    if (superseded()) return paths.length;
     if (!hashMatches(await cache.match(`/${path}`), hashes[path])) missing.push(path);
   }
   // Failures are left for the next start instead of retrying now.
   let failed = 0;
-  await inBatches(missing, (path) => storeResponse(cache, `/${path}`, hashes[path]).catch(() => { failed++; }));
+  await inBatches(missing, async (path) => {
+    if (superseded()) failed++;
+    else await storeResponse(cache, `/${path}`, hashes[path]).catch(() => { failed++; });
+  });
   return failed;
 }
 

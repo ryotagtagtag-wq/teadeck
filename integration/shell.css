@@ -52,6 +52,7 @@ body > [hidden], #teadeck-shell [hidden] { display: none !important; }
 /* Bottom right, clear of Mastodon's own alerts at the bottom left. Unlike those, the
    update notice stays until the page is reloaded; upstream's disappear after five seconds. */
 #teadeck-update { inset-inline-start: auto; inset-inline-end: 1rem; }
+#teadeck-update-reload:disabled { cursor: progress; opacity: 0.7; }
 /* Section headings on the settings page, like upstream's `.simple_form h3`; a bare <h3> has no styling. */
 .teadeck-settings__section { font-size: 20px; font-weight: 600; margin-bottom: 16px; }
 /* The "who can reply" group sits in the composer's settings menu as if it were part of it. */
