@@ -7,20 +7,15 @@
   <g stroke-linecap="round" stroke-linejoin="round">
 
     <g fill="none" transform="translate(0 -8)">
-      <g stroke="var(--teadeck-logo-line, #1c2229)" stroke-width="10">
-        <path d="M113 88 C105 78 115 70 118 61 C121 51 109 45 115 35 C118 30 124 28 126 23"/>
-        <path d="M131 84 C127 74 140 68 138 57 C136 47 127 41 135 31 C140 25 147 23 151 16"/>
-        <path d="M150 88 C146 81 155 75 157 68 C159 61 153 57 158 50"/>
+      <g stroke="var(--teadeck-logo-line, #1c2229)" stroke-width="10" stroke-linejoin="miter">
+        <path d="M114 88 L107 68 L121 63 L111 42 L126 22"/>
+        <path d="M132 84 L125 61 L142 55 L131 33 L151 14"/>
+        <path d="M150 88 L145 73 L158 68 L153 49"/>
       </g>
-      <g stroke="var(--teadeck-logo-steam, #6f7c89)" stroke-width="6.5">
-        <path d="M113 88 C105 78 115 70 118 61 C121 51 109 45 115 35 C118 30 124 28 126 23"/>
-        <path d="M131 84 C127 74 140 68 138 57 C136 47 127 41 135 31 C140 25 147 23 151 16"/>
-        <path d="M150 88 C146 81 155 75 157 68 C159 61 153 57 158 50"/>
-      </g>
-      <g stroke="var(--teadeck-logo-body, #53606c)" stroke-width="2.2">
-        <path d="M114 84 C109 78 113 72 116 67"/>
-        <path d="M132 80 C130 74 136 70 137 66"/>
-        <path d="M151 85 C149 81 153 77 154 74"/>
+      <g stroke="var(--teadeck-logo-steam, #6f7c89)" stroke-width="6.5" stroke-linejoin="miter">
+        <path d="M114 88 L107 68 L121 63 L111 42 L126 22"/>
+        <path d="M132 84 L125 61 L142 55 L131 33 L151 14"/>
+        <path d="M150 88 L145 73 L158 68 L153 49"/>
       </g>
     </g>
 

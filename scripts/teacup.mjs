@@ -111,7 +111,7 @@ ${material.opaque ? `      <stop offset="0" stop-color="${c.body}"/>
       <stop offset="0" stop-color="${c.bodyDark}" stop-opacity="0.4"/>
       <stop offset="1" stop-color="${c.bodyDark}" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="steam-${name}" gradientUnits="userSpaceOnUse" x1="0" y1="70" x2="0" y2="180">
+    <linearGradient id="steam-${name}" gradientUnits="userSpaceOnUse" x1="0" y1="50" x2="0" y2="180">
       <stop offset="0" stop-color="${c.steam}" stop-opacity="0"/>
       <stop offset="0.55" stop-color="${c.steam}" stop-opacity="0.45"/>
       <stop offset="1" stop-color="${c.steam}" stop-opacity="0"/>
@@ -128,9 +128,10 @@ ${material.opaque ? `      <stop offset="0" stop-color="${c.body}"/>
     </mask>
   </defs>
 
-  <g transform="translate(0 8)" fill="none" stroke="${id('steam')}" stroke-linecap="round">
-    <path d="M186 70 C212 90 206 114 186 132 C170 147 173 162 186 176" stroke-width="20"/>
-    <path d="M218 100 C236 114 232 133 218 146 C208 156 211 166 220 176" stroke-width="16"/>
+  <g transform="translate(0 8)" fill="none" stroke="${id('steam')}" stroke-width="11" stroke-linecap="round" stroke-linejoin="miter">
+    <path d="M176 176 L165 144 L187 136 L171 102 L195 70"/>
+    <path d="M205 170 L193 133 L221 123 L203 88 L235 58"/>
+    <path d="M233 176 L225 152 L246 144 L238 114"/>
   </g>
 
   <path d="M50 336 C62 378 338 378 350 336 Z" fill="${c.bodyDark}" fill-opacity="0.18"/>
