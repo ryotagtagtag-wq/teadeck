@@ -1,29 +1,25 @@
 import assert from 'node:assert/strict';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { after, before, test } from 'node:test';
+import { test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
-import { account, status, timelineText } from './fixtures.mjs';
-import { mockMastodon } from './mastodon_mock.mjs';
+import { account, timelineText } from './fixtures.mjs';
+import { signedInPage, useApp } from './harness.mjs';
 import { createStaticServer } from './server.mjs';
-import { submitSignIn } from './harness.mjs';
 
-let browser;
+useApp();
 
-before(async () => { browser = await chromium.launch({ headless: true }); });
-after(async () => { await browser?.close(); });
-
-async function signedInPage(origin) {
-  const context = await browser.newContext({ locale: 'de-DE' });
-  await mockMastodon(context, origin, {
-    '/api/v1/accounts/lookup': account,
-    [`/api/v1/accounts/${account.id}`]: account,
+/** A signed-in page against the server of this test, with the timeline loaded. */
+async function openTimeline(origin) {
+  const session = await signedInPage({
+    origin,
+    routes: {
+      '/api/v1/accounts/lookup': account,
+      [`/api/v1/accounts/${account.id}`]: account,
+    },
   });
-  const page = await context.newPage();
-  await submitSignIn(page, origin);
-  await page.getByText(timelineText).waitFor();
-  return { context, page };
+  await session.page.getByText(timelineText).waitFor();
+  return session;
 }
 
 /** Polls an async page function; Playwright's waitForFunction treats the returned promise itself as truthy. */
@@ -53,7 +49,7 @@ async function stop(server) {
 
 test('after the first start the app runs without the Teadeck web server', { timeout: 120_000 }, async () => {
   const { server, origin } = await createStaticServer();
-  const { context, page } = await signedInPage(origin);
+  const { context, page } = await openTimeline(origin);
   try {
     await waitForOfflineReady(page);
 
@@ -96,7 +92,7 @@ test('a new deploy is offered during the session and used after the reload butto
       return undefined;
     },
   });
-  const { context, page } = await signedInPage(origin);
+  const { context, page } = await openTimeline(origin);
   try {
     await waitForOfflineReady(page);
 

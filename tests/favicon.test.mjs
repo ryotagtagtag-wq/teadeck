@@ -2,13 +2,15 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { stripTypeScriptTypes } from 'node:module';
 import { test } from 'node:test';
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
+
+import { browser, useApp } from './harness.mjs';
+
+useApp();
 
 test('favicon resolves theme colours and updates without leaving DOM nodes', async () => {
   const source = stripTypeScriptTypes(await readFile(new URL('../integration/favicon.ts', import.meta.url), 'utf8'));
-  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
   try {
-    const page = await browser.newPage();
     await page.setContent('<html><head><link rel="icon" href="/favicon.svg"></head><body></body></html>');
     await page.addScriptTag({ type: 'module', content: `${source}\nwindow.updateFavicon = updateFavicon;` });
     await page.waitForFunction(() => typeof window.updateFavicon === 'function');
@@ -32,6 +34,6 @@ test('favicon resolves theme colours and updates without leaving DOM nodes', asy
     assert.equal(results.stable, true);
     assert.equal(results.clean, true);
   } finally {
-    await browser.close();
+    await page.close();
   }
 });

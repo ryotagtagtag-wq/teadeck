@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { after, before, test } from 'node:test';
+import { test } from 'node:test';
 
-import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
-import { createStaticServer } from './server.mjs';
+import { storageKeys } from '../integration/browser_storage.ts';
 import { texts } from '../integration/texts.ts';
 import { availableLocales } from '../integration/ui_locale.ts';
 import { textsFor, upstreamEnglish, upstreamLocales } from '../scripts/texts.mjs';
+import { browser, origin, useApp } from './harness.mjs';
 
 /**
  * Teadeck speaks the reader's language: words Mastodon itself translates come
@@ -59,23 +59,20 @@ test('a language upstream does not translate falls back to English', () => {
   assert.equal(english.lead, texts.lead.en);
 });
 
-let browser;
-before(async () => { browser = await chromium.launch({ headless: true }); });
-after(async () => { await browser?.close(); });
+useApp();
 
 /** The sign-in page as a browser with these languages (and optionally a stored choice) sees it. */
 async function signInPage({ locale, stored }) {
-  const { server, origin } = await createStaticServer();
   const context = await browser.newContext({ locale });
   if (stored) {
-    await context.addInitScript((value) => {
-      localStorage.setItem('teadeck.appearance', JSON.stringify({ theme: 'assam', colorScheme: 'auto', locale: value }));
-    }, stored);
+    await context.addInitScript(({ key, value }) => {
+      localStorage.setItem(key, JSON.stringify({ theme: 'assam', colorScheme: 'auto', locale: value }));
+    }, { key: storageKeys.appearance, value: stored });
   }
   const page = await context.newPage();
   await page.goto(`${origin}/login`);
   await page.locator('#teadeck-login').waitFor();
-  return { page, stop: async () => { await context.close(); server.closeAllConnections(); server.close(); } };
+  return { page, stop: () => context.close() };
 }
 
 test('the page greets in the browser language, and marks the document with it', async () => {

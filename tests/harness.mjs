@@ -47,20 +47,21 @@ export async function useMultiColumnLayout(context) {
 /**
  * A page signed in to the mock server (mastodon_mock.mjs) with `routes` on top
  * of its defaults; `deployment` is served as /teadeck.json (TEADECK_THEME, …).
+ * `origin` names the server to sign in against, by default the shared one.
  */
 export async function signedInPage({
-  locale = 'de-DE', viewport, colorScheme, layout = 'single', deployment, routes = {}, engine = 'chromium',
+  locale = 'de-DE', viewport, colorScheme, layout = 'single', deployment, routes = {}, engine = 'chromium', origin: appOrigin = origin,
 } = {}) {
   const context = await (engine === 'chromium' ? browser : await launchBrowser(engine)).newContext({
     locale, ...(viewport ? { viewport } : {}), ...(colorScheme ? { colorScheme } : {}),
   });
   if (layout === 'multi') await useMultiColumnLayout(context);
   if (deployment) {
-    await context.route(`${origin}/teadeck.json`, (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(deployment) }));
+    await context.route(`${appOrigin}/teadeck.json`, (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(deployment) }));
   }
-  const { requests } = await mockMastodon(context, origin, routes);
+  const { requests } = await mockMastodon(context, appOrigin, routes);
   const page = await context.newPage();
   const pageErrors = collectPageErrors(page);
-  await signIn(page, origin);
+  await signIn(page, appOrigin);
   return { context, page, pageErrors, requests };
 }
