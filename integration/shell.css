@@ -12,7 +12,7 @@
  * The colour roles of the logo drawings (see integration/logos/, scripts/teacup.mjs).
  * They are derived from the theme's own colours, so a design - or a change to one -
  * carries over to the cup without touching any SVG file. Single roles can be
- * overridden by a design (themes.css) or by hand.
+ * overridden by a design (integration/themes/) or by hand.
  */
 html {
   --teadeck-logo-line: var(--color-text-primary);

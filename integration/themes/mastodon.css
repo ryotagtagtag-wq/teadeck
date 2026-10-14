@@ -1,0 +1,442 @@
+/*
+ * The bridge between Teadeck's designs and Mastodon: the only stylesheet that
+ * names Mastodon's variables and classes for the designs. The designs
+ * (themes/*.ts) set `--td-*` variables (themes/css.ts writes them to
+ * designs.css); this file applies them. When Mastodon changes a variable or a
+ * class, this is the one place to follow it.
+ */
+
+/* JetBrains Mono, for code in Mastodon's own design. */
+@font-face {
+  font-family: 'Teadeck JetBrains Mono';
+  src: url('../fonts/jetbrains-mono-latin-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Teadeck JetBrains Mono';
+  src: url('../fonts/jetbrains-mono-latin-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+
+/* The interface's own colours under Teadeck's names, for the designs' values. */
+html[data-teadeck-theme] {
+  --td-brand: var(--color-bg-brand-base);
+  --td-on-brand: var(--color-text-on-brand-base);
+  --td-brand-text: var(--color-text-brand);
+  --td-text-primary: var(--color-text-primary);
+  --td-divider: var(--border-thin);
+}
+
+/* Teadeck's variables in Mastodon's: colour ramps, ground, typefaces and radii.
+   Mastodon's redesign takes surfaces and text from the accent ramp, which would
+   tint each design's ground; the ground is set on its own instead. */
+html[data-teadeck-theme][data-color-scheme] {
+  --color-grey-50: var(--td-neutral-50);
+  --color-grey-100: var(--td-neutral-100);
+  --color-grey-200: var(--td-neutral-200);
+  --color-grey-300: var(--td-neutral-300);
+  --color-grey-400: var(--td-neutral-400);
+  --color-grey-500: var(--td-neutral-500);
+  --color-grey-600: var(--td-neutral-600);
+  --color-grey-700: var(--td-neutral-700);
+  --color-grey-800: var(--td-neutral-800);
+  --color-grey-900: var(--td-neutral-900);
+  --color-grey-950: var(--td-neutral-950);
+
+  --color-indigo-50: var(--td-accent-50);
+  --color-indigo-100: var(--td-accent-100);
+  --color-indigo-200: var(--td-accent-200);
+  --color-indigo-300: var(--td-accent-300);
+  --color-indigo-400: var(--td-accent-400);
+  --color-indigo-500: var(--td-accent-500);
+  --color-indigo-600: var(--td-accent-600);
+  --color-indigo-700: var(--td-accent-700);
+  --color-indigo-800: var(--td-accent-800);
+  --color-indigo-900: var(--td-accent-900);
+  --color-indigo-950: var(--td-accent-950);
+
+  --color-bg-primary: var(--td-surface);
+  --base-color-bg: var(--td-page);
+  --base-color-bg-desktop: var(--td-desktop);
+  --base-color-fg: var(--td-text);
+  --teadeck-logo-tea: var(--td-logo-tea);
+
+  --font-heading: var(--td-font-heading);
+  --font-body: var(--td-font-body);
+  --font-monospace: var(--td-font-code);
+
+  --radius-2: var(--td-radius-1);
+  --radius-3: var(--td-radius-2);
+  --radius-4: var(--td-radius-3);
+  --radius-5: var(--td-radius-4);
+  --radius-6: var(--td-radius-5);
+  --radius-round: var(--td-radius-full);
+  --radius-xs: var(--td-radius-1);
+  --radius-sm: var(--td-radius-1);
+  --radius-md: var(--td-radius-2);
+  --radius-lg: var(--td-radius-3);
+  --radius-xl: var(--td-radius-4);
+}
+
+/* The interface font: Mastodon names its own family directly in many rules
+   (`mastodon-font-sans-serif`), so the family is inherited from the body here.
+   Code keeps the monospace family. In :where(), so the rules below can still
+   name their own family. */
+html[data-teadeck-theme] body {
+  font-family: var(--td-font-body);
+}
+html[data-teadeck-theme] body :where(:not(code, pre, kbd, samp, .monospace)) {
+  font-family: inherit;
+}
+
+/* Headings, titles, names and buttons. */
+html[data-teadeck-theme] :is(h1, h2, h3) {
+  font-family: var(--td-font-heading);
+}
+html[data-teadeck-theme] :is(.column-header__title, ._comp_column_header__title, ._comp_column_header__title button, ._compose_redesign__header h2) {
+  font-family: var(--td-font-title);
+  font-weight: var(--td-title-weight);
+  text-transform: var(--td-caps);
+  letter-spacing: var(--td-title-tracking);
+}
+html[data-teadeck-theme] :is(._comp_status_header__nameLink .display-name, .display-name__name, .account__display-name strong, ._comp_button_redesign__base, .button, .btn) {
+  font-family: var(--td-font-label);
+  font-weight: var(--td-label-weight);
+  text-transform: var(--td-caps);
+  letter-spacing: var(--td-label-tracking);
+}
+
+/* The account's name in the navigation keeps its heading face, in the design's case. */
+html[data-teadeck-theme] ._navigation_panel_redesign_account_card_and_menu__accountLink {
+  text-transform: var(--td-caps);
+  letter-spacing: var(--td-label-tracking);
+}
+
+/* Shapes: Mastodon's radii are set per design above; avatars get a ring. */
+html[data-teadeck-theme] .account__avatar {
+  box-shadow: var(--td-avatar-ring);
+}
+
+/* Main buttons: filled or outlined, by the design's values. */
+html[data-teadeck-theme] ._comp_button_redesign__solid._comp_button_redesign__accent {
+  --bg: var(--td-main-bg);
+  --fg: var(--td-main-fg);
+  box-shadow: inset 0 0 0 var(--td-main-edge) var(--color-bg-brand-base);
+}
+html[data-teadeck-theme] .button:not(:disabled):not(.disabled):not(.button-secondary):not(.button--plain),
+html[data-teadeck-theme] #teadeck-shell .btn {
+  background-color: var(--td-main-bg);
+  border: max(1px, var(--td-main-edge)) solid var(--color-bg-brand-base);
+  color: var(--td-main-fg);
+  border-radius: var(--radius-sm);
+}
+html[data-teadeck-theme] .button:not(:disabled):not(.disabled):not(.button-secondary):not(.button--plain):is(:hover, :focus, :active),
+html[data-teadeck-theme] #teadeck-shell .btn:is(:hover, :focus) {
+  background-color: color-mix(in oklab, var(--td-main-bg) 86%, var(--td-main-fg));
+  border-color: var(--color-bg-brand-base);
+  color: var(--td-main-fg);
+}
+/* Secondary buttons: a tint or a frame. */
+html[data-teadeck-theme] ._comp_button_redesign__tonal._comp_button_redesign__neutral {
+  --bg-opacity: var(--td-secondary-fill);
+  box-shadow: var(--td-secondary-ring);
+}
+/* Hashtags under a post. */
+html[data-teadeck-theme] ._comp_status__hashtags ._comp_button_redesign__tonal {
+  --bg: var(--td-hashtag-bg);
+  --fg: var(--td-hashtag-fg);
+  box-shadow: none;
+  font-family: var(--td-hashtag-font);
+  font-weight: var(--td-hashtag-weight);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Posts in a feed: divided by a line, or framed cards. */
+html[data-teadeck-theme] ._comp_status__variantFeed {
+  margin: var(--td-post-gap);
+  border: var(--td-post-frame);
+  border-bottom: var(--td-post-divider);
+}
+
+/* The sign-in page. */
+html[data-teadeck-theme] #teadeck-shell h1 {
+  font-weight: var(--td-heading-weight);
+  text-transform: var(--td-caps);
+}
+html[data-teadeck-theme] #teadeck-shell label.string {
+  text-transform: var(--td-caps);
+  letter-spacing: var(--td-label-tracking);
+}
+html[data-teadeck-theme] #teadeck-shell :is(input:not([type='checkbox']), select) {
+  border-radius: var(--radius-sm);
+}
+html[data-teadeck-theme] #teadeck-shell input[type='checkbox'] {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border: 1.5px solid var(--color-bg-brand-base);
+  border-radius: calc(var(--radius-2) / 2);
+  background: transparent;
+}
+html[data-teadeck-theme] #teadeck-shell input[type='checkbox']:checked::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: calc(var(--radius-2) / 4);
+  background: var(--color-bg-brand-base);
+}
+html[data-teadeck-theme] #teadeck-shell input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--color-text-brand);
+  outline-offset: 2px;
+}
+
+/*
+ * Post content (headings, lists, quotes, code), replacing Mastodon's rich-text
+ * colours. Mastodon's own design gets colours here too and keeps its fonts,
+ * apart from JetBrains Mono for code.
+ */
+html:not([data-teadeck-theme])[data-color-scheme='dark'] {
+  --td-font-code: 'Teadeck JetBrains Mono', mastodon-font-monospace, monospace;
+  --td-heading-weight: 500;
+  --td-h1: 26px;
+  --td-h2: 20px;
+  --td-h3: 16px;
+  --td-content-heading: #e9e9ed;
+  --td-content-text: #c6c8d6;
+  --td-content-muted: #9a9db5;
+  --td-content-accent: #9184d9;
+  --td-content-link: #a79cdf;
+  --td-content-border: #2c3150;
+  --td-content-raised: #232740;
+  --td-content-inline-code: #cdc6f0;
+  --td-content-inline-code-background: rgb(145 132 217 / 14%);
+  --td-content-code-background: #12141f;
+  --td-content-function: #8fb8de;
+  --td-content-string: #b5c99a;
+  --td-content-number: #e0b27f;
+  --td-content-comment: #7d809f;
+}
+html:not([data-teadeck-theme])[data-color-scheme='light'] {
+  --td-font-code: 'Teadeck JetBrains Mono', mastodon-font-monospace, monospace;
+  --td-heading-weight: 500;
+  --td-h1: 26px;
+  --td-h2: 20px;
+  --td-h3: 16px;
+  --td-content-heading: #1f2033;
+  --td-content-text: #3d4058;
+  --td-content-muted: #62667f;
+  --td-content-accent: #6a5fc4;
+  --td-content-link: #5347b0;
+  --td-content-border: #dcdcea;
+  --td-content-raised: #e9e8f5;
+  --td-content-inline-code: #43389e;
+  --td-content-inline-code-background: rgb(106 95 196 / 12%);
+  --td-content-code-background: #f2f2f9;
+  --td-content-function: #2f5f8a;
+  --td-content-string: #52692b;
+  --td-content-number: #9c5028;
+  --td-content-comment: #686b86;
+}
+html[data-color-scheme] {
+  --td-content-keyword: var(--td-content-link);
+  --rich-text-container-color: var(--td-content-inline-code-background);
+  --rich-text-text-color: var(--td-content-inline-code);
+  --rich-text-decorations-color: var(--td-content-accent);
+}
+
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) {
+  color: var(--td-content-text);
+}
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(h1, h2, h3, h4, h5, h6) {
+  margin: 18px 0 8px;
+  font-family: var(--td-font-heading);
+  font-weight: var(--td-heading-weight);
+  line-height: 1.25;
+  letter-spacing: var(--td-heading-tracking, -0.015em);
+  text-transform: var(--td-caps, none);
+  color: var(--td-content-heading);
+}
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(h1, h2, h3, h4, h5, h6):first-child {
+  margin-top: 0;
+}
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) h1 { font-size: var(--td-h1); }
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) h2 { font-size: var(--td-h2); }
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(h3, h4, h5, h6) { font-size: var(--td-h3); }
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(b, strong) {
+  font-family: var(--td-font-bold, inherit);
+  font-weight: var(--td-bold-weight, 600);
+  color: var(--td-content-heading);
+}
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(del, s) {
+  text-decoration: line-through;
+  color: var(--td-content-muted);
+}
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) a:not(.mention) {
+  color: var(--td-content-link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--td-content-accent);
+}
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :not(pre) > code {
+  padding: 2px 6px;
+  border-radius: calc(var(--radius-2, 8px) * 0.625);
+  font-family: var(--td-font-code, var(--font-monospace));
+  font-size: 0.88em;
+  color: var(--td-content-inline-code);
+  background: var(--td-content-inline-code-background);
+}
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(ul, ol) {
+  padding-inline-start: 16px;
+}
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) li {
+  padding-inline-start: 10px;
+  line-height: 1.6;
+}
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) li + li {
+  margin-top: 4px;
+}
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) li::marker {
+  color: var(--td-content-accent);
+}
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) blockquote {
+  padding-inline-start: 16px;
+  font-style: italic;
+  line-height: 1.65;
+  color: var(--td-content-text);
+}
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) blockquote::before,
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) blockquote blockquote::before {
+  display: block;
+  width: 2px;
+  height: auto;
+  inset-block: 0;
+  border-radius: 1px;
+  mask-image: none;
+  background-color: var(--td-content-accent);
+}
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) blockquote blockquote {
+  border-inline-start: 0;
+  padding-inline-start: 16px;
+}
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) hr {
+  height: 1px;
+  margin: 16px 0;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--td-content-border) 48px, var(--td-content-border) calc(100% - 48px), transparent);
+}
+html[data-color-scheme] :is(.status__content__text, .reply-indicator__content) :is(sup, sub) {
+  font-size: 0.75em;
+}
+
+/*
+ * A code block (code_block.tsx). Also used with Mastodon's own themes, so its
+ * colours fall back to theirs.
+ */
+.status__content__text .teadeck-code {
+  margin-bottom: 22px;
+  border: 1px solid var(--td-content-border, var(--color-border-primary));
+  border-radius: var(--radius-2, 8px);
+  overflow: hidden;
+  background: var(--td-content-code-background, var(--rich-text-container-color));
+  color: var(--td-content-text, var(--rich-text-text-color));
+  font-style: normal;
+
+}
+.status__content__text .teadeck-code:last-child {
+  margin-bottom: 0;
+}
+
+.teadeck-code__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--td-content-border, var(--color-border-primary));
+}
+
+.teadeck-code__language {
+  font-family: var(--td-font-code, var(--font-monospace));
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--td-content-muted, var(--color-text-secondary));
+}
+
+.teadeck-code__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: var(--td-content-muted, var(--color-text-secondary));
+  cursor: pointer;
+}
+.teadeck-code__copy:hover,
+.teadeck-code__copy:focus-visible {
+  color: var(--td-content-link, var(--color-text-brand));
+}
+.teadeck-code__copy .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.teadeck-code__body {
+  font-family: var(--td-font-code, var(--font-monospace));
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* Long lines wrap instead of scrolling; a wrapped line keeps one number. */
+.status__content__text .teadeck-code pre {
+  margin: 0;
+  padding: 14px 14px 14px 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  unicode-bidi: normal;
+  counter-reset: teadeck-code-line;
+}
+.status__content__text .teadeck-code pre code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-family: var(--td-font-code, var(--font-monospace));
+  font-size: inherit;
+  white-space: inherit;
+}
+
+.teadeck-code__line {
+  display: block;
+  position: relative;
+  min-height: 1lh;
+  padding-inline-start: calc(var(--teadeck-code-digits, 1) * 1ch + 28px);
+}
+/* Generated content: never part of a selection or a copy. */
+.teadeck-code__line::before {
+  counter-increment: teadeck-code-line;
+  content: counter(teadeck-code-line);
+  content: counter(teadeck-code-line) / '';
+  position: absolute;
+  inset-inline-start: 0;
+  width: calc(var(--teadeck-code-digits, 1) * 1ch + 14px);
+  text-align: end;
+  color: var(--td-content-comment, var(--color-text-secondary));
+  user-select: none;
+}
+
+.teadeck-code__keyword { color: var(--td-content-keyword); }
+.teadeck-code__function { color: var(--td-content-function); }
+.teadeck-code__string { color: var(--td-content-string); }
+.teadeck-code__number { color: var(--td-content-number); }
+.teadeck-code__comment { color: var(--td-content-comment); }

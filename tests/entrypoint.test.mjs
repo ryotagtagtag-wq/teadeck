@@ -4,13 +4,14 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, wr
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { designIds } from '../integration/themes/index.ts';
 
 // container/entrypoint.sh decides which logo the container serves. A logo is decoration:
 // nothing about it may stop nginx from starting (a broken setting once took the site down).
 const script = join(import.meta.dirname, '..', 'container', 'entrypoint.sh');
 const svg = '<svg xmlns="http://www.w3.org/2000/svg"><title>Test</title></svg>';
 
-function run(logo, { files = {}, file, environment = {} } = {}) {
+function run(logo, { files = {}, file, environment = {}, designs = designIds } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'teadeck-entrypoint-'));
   try {
     const logoDir = join(dir, 'config');
@@ -21,6 +22,8 @@ function run(logo, { files = {}, file, environment = {} } = {}) {
     mkdirSync(stub);
     for (const [name, content] of Object.entries(files)) writeFileSync(join(logoDir, name), content);
     writeFileSync(join(dir, 'default.svg'), '<svg><title>Default</title></svg>');
+    // As scripts/build.mjs writes it.
+    if (designs) writeFileSync(join(dir, 'designs'), `${designs.join('\n')}\n`);
     const bundled = join(dir, 'bundled');
     mkdirSync(bundled);
     for (const name of ['flat', 'glass', 'ceramic']) {
@@ -42,6 +45,7 @@ function run(logo, { files = {}, file, environment = {} } = {}) {
         TEADECK_LOGO_BUNDLED: bundled,
         TEADECK_LOGO_TARGET: target,
         TEADECK_CONFIG_TARGET: config,
+        TEADECK_DESIGNS: join(dir, 'designs'),
       },
     });
     const served = join(target, 'logo.svg');
@@ -133,8 +137,17 @@ test('an unknown design is reported and left out, and never stops the container'
   assert.equal(result.status, 0);
   assert.equal(result.started !== null, true);
   assert.equal(result.config, null);
-  assert.match(result.stderr, /TEADECK_THEME=earlgrey is not mastodon, assam, sencha or hibiscus/);
+  assert.match(result.stderr, new RegExp(`TEADECK_THEME=earlgrey is not mastodon or one of: ${designIds.join(' ')};`));
   assert.match(result.stderr, /TEADECK_COLOR_SCHEME=dunkel is not auto, light or dark/);
+});
+
+test('every design of the build is accepted; without the list only Mastodon\'s is, and the container still starts', () => {
+  for (const id of designIds) assert.deepEqual(run(undefined, { environment: { TEADECK_THEME: id } }).config, { theme: id });
+  assert.deepEqual(run(undefined, { environment: { TEADECK_THEME: 'mastodon' } }).config, { theme: 'mastodon' });
+  const without = run(undefined, { designs: null, environment: { TEADECK_THEME: 'assam' } });
+  assert.equal(without.status, 0);
+  assert.notEqual(without.started, null);
+  assert.equal(without.config, null);
 });
 
 

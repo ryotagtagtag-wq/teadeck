@@ -8,6 +8,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
+import { designs } from '../integration/themes/index.ts';
 import { account as baseAccount, instance } from '../tests/fixtures.mjs';
 import { mockMastodon, respond } from '../tests/mastodon_mock.mjs';
 import { createStaticServer } from '../tests/server.mjs';
@@ -132,17 +133,17 @@ const shots = {
     await save(page, 'post-overlay');
     await context.close();
   },
-  /** Every design: one tea per row, dark and light side by side, laid out by the browser itself. */
+  /** Every design of the registry: one tea per row, dark and light side by side, laid out by the browser itself. */
   async themes() {
     const images = [];
-    for (const theme of ['assam', 'sencha', 'hibiscus']) {
+    for (const { id: theme } of designs) {
       for (const scheme of ['dark', 'light']) {
         const { context, page } = await open({ theme, scheme, width: 1100, height: 700 });
         images.push((await page.screenshot()).toString('base64'));
         await context.close();
       }
     }
-    const context = await browser.newContext({ viewport: { width: 1448, height: 3 * 458 + 2 * 8 } });
+    const context = await browser.newContext({ viewport: { width: 1448, height: designs.length * 458 + (designs.length - 1) * 8 } });
     const page = await context.newPage();
     await page.setContent(`<body style="margin:0;background:#fff;display:grid;grid-template-columns:720px 720px;gap:8px">${images.map((image) => `<img src="data:image/png;base64,${image}" style="width:720px;height:458px">`).join('')}</body>`);
     await save(page, 'themes');

@@ -1,3 +1,5 @@
+import { designIds, type DesignId } from './themes/index.ts';
+
 /**
  * Display and behaviour settings, stored per account in this browser. Mastodon
  * renders them into its page from the server; a standalone client keeps them itself.
@@ -8,13 +10,10 @@ export type ColorScheme = 'auto' | 'light' | 'dark';
 export type Contrast = 'auto' | 'high';
 export type EmojiStyle = 'auto' | 'native' | 'twemoji';
 /**
- * Teadeck's own designs, each with a dark and a light half (themes.css), named
- * after the tea whose brewed colour they carry: `assam` is Assam (dark) and
- * Silver Needle (light), `sencha` is Sencha (dark) and Jasmine (light),
- * `hibiscus` is Hibiskus (dark) and Rooibos (light). Which
- * half appears follows the colour scheme.
+ * Mastodon's own design, or one of Teadeck's (integration/themes/), each with a
+ * dark and a light half. Which half appears follows the colour scheme.
  */
-export type Theme = 'mastodon' | 'assam' | 'sencha' | 'hibiscus';
+export type Theme = 'mastodon' | DesignId;
 
 export interface FrontendSettings {
   autoPlayGif: boolean;
@@ -44,7 +43,7 @@ const displayMediaValues: DisplayMedia[] = ['default', 'show_all', 'hide_all'];
 const colorSchemeValues: ColorScheme[] = ['auto', 'light', 'dark'];
 const contrastValues: Contrast[] = ['auto', 'high'];
 const emojiStyleValues: EmojiStyle[] = ['auto', 'native', 'twemoji'];
-const themeValues: Theme[] = ['mastodon', 'assam', 'sencha', 'hibiscus'];
+const themeValues: Theme[] = ['mastodon', ...designIds];
 /** What this deployment starts with (TEADECK_THEME, TEADECK_COLOR_SCHEME; served as /teadeck.json). */
 export interface DeploymentDefaults {
   theme?: Theme;

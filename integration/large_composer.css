@@ -92,7 +92,7 @@
   margin: 0;
   padding: 8px 10px;
   border-radius: var(--radius-sm, 6px);
-  background: var(--md-code-inline-bg, var(--color-bg-secondary));
+  background: var(--td-content-inline-code-background, var(--color-bg-secondary));
   font-family: var(--font-monospace, monospace);
   font-size: 13px;
   white-space: pre-wrap;

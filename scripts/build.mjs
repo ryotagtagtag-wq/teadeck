@@ -6,6 +6,8 @@ import { writeOfflineFiles } from './offline_manifest.mjs';
 import { writeShellLocales } from './shell_locales.mjs';
 import { requireToolchain, runYarn } from './toolchain.mjs';
 import { assertPrepared, fingerprint, sourceEntries } from './build_state.mjs';
+import { designsCss } from '../integration/themes/css.ts';
+import { designIds, designs } from '../integration/themes/index.ts';
 
 const root = path.resolve(import.meta.dirname, '..');
 const upstream = path.join(root, '.work/upstream');
@@ -21,6 +23,8 @@ await cp(path.join(root, 'integration'), path.join(upstream, 'app/javascript/tea
   recursive: true, filter: source => path.basename(source) !== 'vite.config.mts',
 });
 await cp(path.join(root, 'integration/vite.config.mts'), path.join(upstream, 'teadeck.vite.config.mts'));
+// The designs' variables and fonts, from integration/themes/*.ts.
+await writeFile(path.join(upstream, 'app/javascript/teadeck/themes/designs.css'), designsCss(designs));
 const inputs = await fingerprint(root, sourceEntries);
 await rm(path.join(root, '.work/built.sha256'), { force: true });
 const run = (args, env) => runYarn(args, upstream, env);
@@ -67,6 +71,8 @@ await rm(imageAssets, { recursive: true, force: true });
 await mkdir(imageAssets, { recursive: true });
 await cp(path.join(root, 'integration/logos'), path.join(imageAssets, 'logos'), { recursive: true });
 await cp(path.join(upstream, 'app/javascript/images/logo-symbol-wordmark.svg'), path.join(imageAssets, 'logo-default.svg'));
+// The designs TEADECK_THEME may name, one per line, for the container's entrypoint.
+await writeFile(path.join(imageAssets, 'designs'), `${designIds.join('\n')}\n`);
 // The sign-in page's own texts per interface language, from upstream's translations
 // plus Teadeck's own sentences; the page runs before Mastodon's own are loaded.
 const shellLocales = await writeShellLocales(dist, upstream);

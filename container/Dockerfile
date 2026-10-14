@@ -22,6 +22,7 @@ COPY dist /usr/share/nginx/html
 # Mastodon's own logo for `default`. The build collects them (scripts/build.mjs).
 COPY .work/image/logos /usr/share/teadeck/logos
 COPY .work/image/logo-default.svg /usr/share/teadeck/logo-default.svg
+COPY .work/image/designs /usr/share/teadeck/designs
 
 # Runs as Alpine's unprivileged nginx user; logs go to stdout/stderr, temp files
 # to /tmp (the logo and the deployment's design are written there at startup).

@@ -34,6 +34,8 @@ import { frontendSettingsKey, resolveFrontendSettings } from './frontend_setting
 import type { NotificationShows } from './notification_settings';
 import { readNotificationShows } from './notification_settings';
 import { t, uiTextLocale } from './settings_strings';
+import { designs } from './themes';
+import { designLabel } from './themes/tokens';
 import { setStatusOverlayEnabled, statusOverlayEnabled } from './status_overlay';
 import { readObjectPreference, readSettings, readPreference, writePreference } from './storage';
 import { availableLocales } from './ui_locale';
@@ -225,9 +227,9 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
 
           <SelectField id='teadeck-settings-theme' label={t('theme', locale)} hint={t('themeHint', locale)} value={settings.theme} onChange={handleTheme}>
             <option value='mastodon'>{t('themeMastodon', locale)}</option>
-            <option value='assam'>{t('themeAssam', locale)}</option>
-            <option value='sencha'>{t('themeSencha', locale)}</option>
-            <option value='hibiscus'>{t('themeHibiscus', locale)}</option>
+            {designs.map(design => (
+              <option key={design.id} value={design.id}>{designLabel(design, locale)}</option>
+            ))}
           </SelectField>
 
           <SelectField id='teadeck-settings-color-scheme' label={t('colorScheme', locale)} value={settings.colorScheme} onChange={handleColorScheme}>

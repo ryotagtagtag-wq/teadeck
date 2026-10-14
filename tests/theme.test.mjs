@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 
 import { chromium } from '../.work/upstream/node_modules/playwright/index.mjs';
+import { designs } from '../integration/themes/index.ts';
 import { timelineText } from './fixtures.mjs';
 import { mockMastodon, signIn, openPreferences } from './mastodon_mock.mjs';
 import { createStaticServer } from './server.mjs';
@@ -68,14 +69,10 @@ test('each tea design replaces colours, fonts and radii; Mastodon\'s design stay
     const grounds = new Map([['mastodon/dark', mastodon.surface]]);
     const accents = new Map([['mastodon/dark', mastodon.brand]]);
     const buttons = new Map([['mastodon/dark', mastodon.button.background]]);
-    for (const [theme, colorScheme, font] of [
-      ['assam', 'dark', /Teadeck IBM Plex Sans/],
-      ['assam', 'light', /Teadeck Public Sans/],
-      ['sencha', 'dark', /Teadeck IBM Plex Sans/],
-      ['sencha', 'light', /Teadeck Public Sans/],
-      ['hibiscus', 'dark', /Teadeck Barlow/],
-      ['hibiscus', 'light', /Teadeck Barlow/],
-    ]) {
+    // Every design of the registry, with the body face its half names.
+    for (const [theme, colorScheme, font] of designs.flatMap((design) => ['dark', 'light'].map((scheme) => [
+      design.id, scheme, new RegExp(design[scheme].fonts.body.split(',')[0].replaceAll("'", '').trim()),
+    ]))) {
       const design = await choose(page, { theme, colorScheme });
       const name = `${theme}/${colorScheme}`;
       assert.equal(design.theme, theme, name);
@@ -98,12 +95,12 @@ test('each tea design replaces colours, fonts and radii; Mastodon\'s design stay
     // The design survives a reload, like the other settings.
     await page.reload();
     await page.getByText(timelineText).waitFor();
-    assert.equal(await page.evaluate(() => document.documentElement.dataset.teadeckTheme), 'hibiscus');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.teadeckTheme), designs.at(-1).id);
 
     // The fonts really come from this deployment, not from a remote service.
     const fonts = await page.evaluate(() => performance.getEntriesByType('resource')
       .map((entry) => entry.name).filter((name) => name.endsWith('.woff2')));
-    assert.ok(fonts.some((name) => name.includes('barlow')), fonts.join(' '));
+    assert.ok(fonts.some((name) => designs.at(-1).fonts.some((font) => name.includes(font.file.replace('.woff2', '')))), fonts.join(' '));
     assert.ok(fonts.every((name) => new URL(name).origin === origin), fonts.join(' '));
   } finally {
     await context.close();

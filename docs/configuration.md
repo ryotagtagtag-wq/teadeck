@@ -25,7 +25,7 @@ TEADECK_COLOR_SCHEME=auto
 |---|---|---|
 | `assam` | Assam | Silver Needle |
 | `sencha` | Sencha | Jasmine |
-| `hibiscus` | Hibiskus | Rooibos |
+| `hibiscus` | Hibiscus | Rooibos |
 | `mastodon` | Mastodon dark | Mastodon light |
 
 With `auto`, the colour scheme follows the operating system. The favicon follows the selected theme.

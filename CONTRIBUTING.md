@@ -37,6 +37,17 @@ git -C .work/upstream diff -- <file> | grep -v '^index ' > patches/<nn>-<name>.p
 
 `git apply` does not need those lines, and they go stale as Mastodon moves on.
 
+## Designs
+
+Designs live in `integration/themes/`:
+
+- `tokens.ts` defines what a design describes, per dark and light half: colour ramps, ground, fonts and their case and weight, shape, main and secondary buttons, posts, avatars, hashtags and the colours of post content.
+- One file per design (`assam.ts`, `sencha.ts`, `hibiscus.ts`) contains only values in these terms. It never names Mastodon's variables or classes. `index.ts` lists the designs in the order the settings offer them.
+- `css.ts` turns the designs into `--td-*` variables and `@font-face` rules. The build writes them to `designs.css` and writes the list of design names for the container.
+- `mastodon.css` is the only stylesheet that applies the designs to Mastodon. When Mastodon renames a variable or a class, change it there.
+
+To add a design, add its file, put it in `index.ts`, and add its row to the theme table in `docs/configuration.md` and its line to `.env.example`. The settings, the container's `TEADECK_THEME` check, the design tests and `npm run screenshots` pick it up from the registry. `tests/theme_contract.test.mjs` checks these rules.
+
 ## Tests
 
 After the first build, install Playwright's Chromium and Firefox and their system dependencies:

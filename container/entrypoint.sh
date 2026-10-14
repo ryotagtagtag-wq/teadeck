@@ -11,6 +11,8 @@ bundled_dir=${TEADECK_LOGO_BUNDLED:-/usr/share/teadeck/logos}
 default_logo=${TEADECK_LOGO_DEFAULT:-/usr/share/teadeck/logo-default.svg}
 target=${TEADECK_LOGO_TARGET:-/tmp/logo}
 config_target=${TEADECK_CONFIG_TARGET:-/tmp/config}
+# Teadeck's designs, one per line (written by scripts/build.mjs from integration/themes/).
+designs_file=${TEADECK_DESIGNS:-/usr/share/teadeck/designs}
 
 warn() {
   echo "Teadeck: $1 Starting without a logo." >&2
@@ -68,10 +70,11 @@ install_logo() {
 write_config() {
   theme=${TEADECK_THEME:-}
   scheme=${TEADECK_COLOR_SCHEME:-}
-  case "$theme" in
-    '' | mastodon | assam | sencha | hibiscus) ;;
-    *) note "TEADECK_THEME=$theme is not mastodon, assam, sencha or hibiscus; using the default design."; theme='' ;;
-  esac
+  if [ -n "$theme" ] && [ "$theme" != mastodon ] && ! grep -qxF "$theme" "$designs_file" 2>/dev/null; then
+    known=$( (tr '\n' ' ' < "$designs_file") 2>/dev/null || true)
+    note "TEADECK_THEME=$theme is not mastodon or one of: ${known% }; using the default design."
+    theme=''
+  fi
   case "$scheme" in
     '' | auto | light | dark) ;;
     *) note "TEADECK_COLOR_SCHEME=$scheme is not auto, light or dark; using the default."; scheme='' ;;
