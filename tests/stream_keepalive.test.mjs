@@ -72,7 +72,7 @@ test('reconnects when the network comes back, but never just because the tab was
 useApp();
 
 test('after the streaming connection drops or the network returns, Teadeck reconnects, resubscribes and catches up', { timeout: 90_000 }, async () => {
-  const context = await browser.newContext();
+  const context = await browser.newContext({ locale: 'en-US' });
   const page = await context.newPage();
   const streamingInstance = { ...instance, configuration: { ...instance.configuration, urls: { ...instance.configuration.urls, streaming: 'wss://mastodon.test' } } };
   const sockets = [];

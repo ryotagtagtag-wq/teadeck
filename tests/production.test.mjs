@@ -135,7 +135,7 @@ test('nginx sends the production headers: CSP allowing embedded previews, immuta
     assert.equal((await fetch(`${server.origin}/logo.svg`)).status, 404);
 
     // A video preview card embeds an https iframe; the CSP must not block it.
-    const context = await browser.newContext();
+    const context = await browser.newContext({ locale: 'en-US' });
     const tab = await context.newPage();
     await tab.goto(server.origin);
     const violations = await tab.evaluate(() => new Promise((resolve) => {

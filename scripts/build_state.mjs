@@ -6,7 +6,7 @@ import path from 'node:path';
 export const sourceEntries = [
   'README.md', 'LICENSE', 'NOTICE', 'CONTRIBUTING.md', 'SECURITY.md',
   'package.json', 'upstream.lock.json', 'scripts', 'integration', 'patches',
-  'compose.yml.example', 'compose.build.yml', '.dockerignore', '.gitignore', '.env.example',
+  'compose.yml.example', 'compose.build.yml', 'compose.test.yml', '.dockerignore', '.gitignore', '.env.example',
   '.forgejo', 'container', 'tests', 'docs', 'security',
 ];
 

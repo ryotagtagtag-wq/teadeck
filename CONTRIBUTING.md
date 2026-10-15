@@ -64,6 +64,13 @@ To add a design, add its file, put it in `index.ts`, and add its row to the them
 
 ## Tests
 
+Without Node on the machine, build and test in a container instead. It installs what CI installs (Corepack, the browsers and nginx) and runs `npm run check`, or the command you give it:
+
+```sh
+docker compose -f compose.test.yml run --rm test
+docker compose -f compose.test.yml run --rm test npm run screenshots -- themes
+```
+
 After the first build, install Playwright's Chromium and Firefox and their system dependencies:
 
 ```sh

@@ -1,0 +1,22 @@
+# Build and test in a container, with no Node on the host:
+#   docker compose -f compose.test.yml run --rm test
+# Any other command runs the same way, e.g. the screenshots:
+#   docker compose -f compose.test.yml run --rm test npm run screenshots -- themes
+# Files are written as the image's user node (uid 1000).
+services:
+  test:
+    image: node:26-bookworm
+    working_dir: /repo
+    volumes:
+      - .:/repo
+      - browsers:/home/node/.cache
+      - npm:/home/node/.npm
+    environment:
+      # Fail rather than skip the tests against the production nginx.
+      TEADECK_REQUIRE_NGINX: '1'
+    entrypoint: ["sh", "/repo/scripts/in_container.sh"]
+    command: ["npm", "run", "check"]
+
+volumes:
+  browsers:
+  npm:

@@ -52,7 +52,7 @@ async function signIn(page) {
 }
 
 test('"stay signed in" resumes the account in a new tab without OAuth; signing out from the account menu forgets it', { timeout: 60_000 }, async () => {
-  const context = await browser.newContext();
+  const context = await browser.newContext({ locale: 'en-US' });
   const pageErrors = [];
 
   const server = await mockServer(context);
@@ -94,7 +94,7 @@ test('"stay signed in" resumes the account in a new tab without OAuth; signing o
 });
 
 test('a tab that cannot read the account store keeps the remembered account for the next one', { timeout: 60_000 }, async () => {
-  const context = await browser.newContext();
+  const context = await browser.newContext({ locale: 'en-US' });
   await mockServer(context);
   const page = await context.newPage();
   await signIn(page);

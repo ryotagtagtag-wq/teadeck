@@ -32,7 +32,7 @@ async function settledCount(getCount, quietMs = 1_000) {
 }
 
 test('without a streaming endpoint, the home timeline is refreshed by polling instead', { timeout: 60_000 }, async () => {
-  const context = await browser.newContext();
+  const context = await browser.newContext({ locale: 'en-US' });
   const page = await context.newPage();
   const wsConnections = [];
   page.on('websocket', (ws) => wsConnections.push(ws.url()));
@@ -74,7 +74,7 @@ test('without a streaming endpoint, the home timeline is refreshed by polling in
 });
 
 test('with a streaming endpoint, a real WebSocket delivers a live update instead of polling', { timeout: 60_000 }, async () => {
-  const context = await browser.newContext();
+  const context = await browser.newContext({ locale: 'en-US' });
   const page = await context.newPage();
   const streamingInstance = { ...instance, configuration: { ...instance.configuration, urls: { ...instance.configuration.urls, streaming: 'wss://mastodon.test' } } };
   let homeTimelineRequests = 0;

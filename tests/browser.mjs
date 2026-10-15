@@ -21,7 +21,7 @@ after(async () => {
 });
 
 test('static SPA completes OAuth and renders the Mastodon home timeline', { timeout: 60_000 }, async () => {
-  const context = await browser.newContext();
+  const context = await browser.newContext({ locale: 'en-US' });
   const page = await context.newPage();
   const localApiRequests = [];
   const pageErrors = [];
