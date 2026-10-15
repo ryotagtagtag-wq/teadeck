@@ -38,7 +38,19 @@ if (!theme?.file?.endsWith('.css')) throw new Error('Missing upstream default th
 const nestedIndex = path.join(dist, 'teadeck/index.html');
 let html = await readFile(nestedIndex, 'utf8');
 html = html.replace('<!-- TEADECK_THEME -->', `<link rel="stylesheet" href="/${theme.file}" integrity="${theme.integrity ?? ''}" crossorigin="anonymous">`);
-html = html.replace('<!-- TEADECK_ASSETS -->', '');
+// Mastodon's modules, which app_start.ts imports only once the server answered:
+// bootstrap.ts preloads them meanwhile for a signed-in account.
+const starter = Object.values(manifest).find((chunk) => chunk.dynamicImports?.includes('mastodon/main.tsx'));
+if (!starter) throw new Error('Missing the chunk that starts Mastodon in Vite manifest');
+const appModules = new Set();
+const visit = (key) => {
+  const file = manifest[key]?.file;
+  if (!file || appModules.has(file)) return;
+  appModules.add(file);
+  for (const next of manifest[key].imports ?? []) visit(next);
+};
+for (const key of starter.dynamicImports) visit(key);
+html = html.replace('<!-- TEADECK_ASSETS -->', `<script id="teadeck-app-modules" type="application/json">${JSON.stringify([...appModules].sort())}</script>`);
 await writeFile(nestedIndex, html);
 await rename(nestedIndex, path.join(dist, 'index.html'));
 await rm(path.join(dist, 'teadeck'), { recursive: true, force: true });

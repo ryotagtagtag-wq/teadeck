@@ -27,3 +27,14 @@ test('the image packages the build instead of repeating it', async () => {
   assert.match(dockerfile, /^COPY dist \/usr\/share\/nginx\/html$/m);
   assert.doesNotMatch(dockerfile, /scripts\/(prepare|build)\.mjs/);
 });
+
+test('the page lists Mastodon\'s modules for the early preload, all of them built', async () => {
+  const { readFile, stat } = await import('node:fs/promises');
+  const dist = path.join(import.meta.dirname, '../dist');
+  const html = await readFile(path.join(dist, 'index.html'), 'utf8');
+  const list = html.match(/<script id="teadeck-app-modules" type="application\/json">([^<]*)<\/script>/);
+  assert.ok(list, 'index.html has no module list');
+  const files = JSON.parse(list[1]);
+  assert.ok(files.some((file) => /^main-[\w-]+\.js$/.test(file)), 'Mastodon\'s main module is preloaded');
+  for (const file of files) assert.ok((await stat(path.join(dist, file))).isFile(), file);
+});

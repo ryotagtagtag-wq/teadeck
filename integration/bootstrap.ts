@@ -14,8 +14,32 @@ import './themes/mastodon.css';
 window.fetch = stripAxiosUserAgent(window.fetch.bind(window));
 reloadOnStaleChunks();
 
+/**
+ * Fetches Mastodon's modules (listed by the build) while the server answers
+ * the first requests. They run only once app_start.ts imports them, after the
+ * initial state is in place. Only for an account that is about to start.
+ */
+function preloadApp() {
+  let files: unknown;
+  try {
+    files = JSON.parse(document.getElementById('teadeck-app-modules')?.textContent ?? '[]');
+  } catch {
+    return;
+  }
+  if (!Array.isArray(files)) return;
+  for (const file of files) {
+    if (typeof file !== 'string') continue;
+    const link = document.createElement('link');
+    link.rel = 'modulepreload';
+    link.crossOrigin = '';
+    link.href = `/${file}`;
+    document.head.append(link);
+  }
+}
+
 async function boot() {
   if (location.pathname === '/logout') return logout();
+  if (getSession() || getActiveAccountKey()) preloadApp();
   if (await applyWaitingUpdate().catch(() => false)) return;
   initShell();
   if (location.pathname === '/oauth/callback') await finishLogin();
