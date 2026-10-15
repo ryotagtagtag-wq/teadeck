@@ -1,13 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 210" width="260" height="210" role="img" aria-label="A steaming cup of tea" data-teadeck-logo="teacup">
   <defs>
-    <!-- Across each run of blood: dark edges and a wet shine, so it glistens. -->
-    <linearGradient id="blood" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="var(--teadeck-logo-tea-dark, #8a3c12)"/>
-      <stop offset="0.3" stop-color="var(--teadeck-logo-tea, #b85c1e)"/>
-      <stop offset="0.46" style="stop-color: color-mix(in oklab, var(--teadeck-logo-tea-light, #cf7a32), white 35%)"/>
-      <stop offset="0.62" stop-color="var(--teadeck-logo-tea, #b85c1e)"/>
-      <stop offset="1" stop-color="var(--teadeck-logo-tea-dark, #8a3c12)"/>
-    </linearGradient>
     <clipPath id="inner">
       <path d="M80 102 C80 140 89 163 109 172 Q130 177.5 151 172 C171 163 180 140 180 102 Z"/>
     </clipPath>
@@ -67,9 +59,17 @@
 
     <!-- Tea run over the rim and dripping: hidden unless a design shows it (data-teadeck-logo-blood).
          The runs follow the rim's ellipse and the wall's meridians down towards the foot. -->
-    <g class="teadeck-logo-blood" display="none" fill="url(#blood)" stroke="var(--teadeck-logo-line, #1c2229)" stroke-width="1.2" stroke-linejoin="round">
-      <path d="M95.4 108.5 L95.6 113.7 L95.9 118.7 L96.2 123.5 L96.6 128.1 L97.0 132.6 L97.5 136.8 L98.1 140.9 L98.7 144.7 L99.5 148.4 L100.2 151.8 L100.4 153.7 L101.1 155.0 L102.1 155.8 L103.3 156.1 L104.5 155.8 L105.5 155.0 L106.1 153.7 L106.4 152.6 L106.0 149.2 L105.7 145.6 L105.4 141.8 L105.2 137.9 L105.1 133.7 L105.0 129.3 L104.9 124.7 L105.0 119.9 L105.0 114.9 L105.2 109.8 L105.2 108.6 L103.9 107.7 L102.7 106.9 L101.5 106.3 L100.3 106.0 L99.1 106.0 L97.9 106.2 L96.7 106.7 L95.4 107.3 Z"/>
-      <path d="M147.6 110.4 L147.7 113.5 L147.8 116.5 L147.9 119.5 L147.9 122.4 L148.0 125.2 L148.0 128.0 L148.1 130.7 L148.1 133.3 L148.1 135.8 L148.1 138.3 L148.3 139.4 L148.9 140.5 L149.8 141.2 L150.8 141.5 L151.9 141.2 L152.8 140.5 L153.4 139.4 L153.6 137.8 L153.9 135.3 L154.1 132.7 L154.4 130.1 L154.6 127.4 L154.8 124.6 L155.0 121.8 L155.2 118.9 L155.4 115.9 L155.5 112.8 L155.7 109.7 L155.7 108.5 L154.6 107.8 L153.6 107.3 L152.6 106.9 L151.6 106.9 L150.6 107.1 L149.6 107.6 L148.6 108.4 L147.6 109.2 Z"/>
+    <g class="teadeck-logo-blood" display="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M95.4 108.5 L95.6 113.7 L95.9 118.7 L96.2 123.5 L96.6 128.1 L97.0 132.6 L97.5 136.8 L98.1 140.9 L98.7 144.7 L99.5 148.4 L100.2 151.8 L100.4 153.7 L101.1 155.0 L102.1 155.8 L103.3 156.1 L104.5 155.8 L105.5 155.0 L106.1 153.7 L106.4 152.6 L106.0 149.2 L105.7 145.6 L105.4 141.8 L105.2 137.9 L105.1 133.7 L105.0 129.3 L104.9 124.7 L105.0 119.9 L105.0 114.9 L105.2 109.8 L105.2 108.6 L103.9 107.7 L102.7 106.9 L101.5 106.3 L100.3 106.0 L99.1 106.0 L97.9 106.2 L96.7 106.7 L95.4 107.3 Z" fill="var(--teadeck-logo-tea, #b85c1e)" stroke="var(--teadeck-logo-line, #1c2229)" stroke-width="1.2"/>
+      <path d="M102.7 110.8 L102.6 115.9 L102.7 120.8 L102.7 125.6 L102.9 130.2 L103.1 134.5 L103.4 138.7 L103.7 142.6 L104.1 146.3 L104.5 149.9" fill="none" stroke="var(--teadeck-logo-tea-dark, #8a3c12)" stroke-opacity="0.7" stroke-width="2.4"/>
+      <path d="M98.9 112.4 L99.0 117.4 L99.2 122.3 L99.4 126.9 L99.7 131.5 L100.1 135.7 L100.5 139.9 L101.0 143.7 L101.6 147.4" fill="none" stroke="var(--teadeck-logo-highlight, #b3becd)" stroke-opacity="0.14" stroke-width="2.7"/>
+      <path d="M98.5 112.5 L98.6 117.6 L98.8 122.4 L99.1 127.1 L99.4 131.6 L99.8 135.9 L100.2 140.0 L100.7 143.8" fill="none" stroke="var(--teadeck-logo-highlight, #b3becd)" stroke-opacity="0.5" stroke-width="0.9"/>
+      <circle cx="102.4" cy="152.9" r="0.9" fill="var(--teadeck-logo-highlight, #b3becd)" fill-opacity="0.5"/>
+      <path d="M147.6 110.4 L147.7 113.5 L147.8 116.5 L147.9 119.5 L147.9 122.4 L148.0 125.2 L148.0 128.0 L148.1 130.7 L148.1 133.3 L148.1 135.8 L148.1 138.3 L148.3 139.4 L148.9 140.5 L149.8 141.2 L150.8 141.5 L151.9 141.2 L152.8 140.5 L153.4 139.4 L153.6 137.8 L153.9 135.3 L154.1 132.7 L154.4 130.1 L154.6 127.4 L154.8 124.6 L155.0 121.8 L155.2 118.9 L155.4 115.9 L155.5 112.8 L155.7 109.7 L155.7 108.5 L154.6 107.8 L153.6 107.3 L152.6 106.9 L151.6 106.9 L150.6 107.1 L149.6 107.6 L148.6 108.4 L147.6 109.2 Z" fill="var(--teadeck-logo-tea, #b85c1e)" stroke="var(--teadeck-logo-line, #1c2229)" stroke-width="1.2"/>
+      <path d="M153.6 110.7 L153.5 113.8 L153.5 116.8 L153.3 119.8 L153.2 122.7 L153.0 125.5 L152.9 128.3 L152.8 130.9 L152.5 133.5 L152.4 136.1" fill="none" stroke="var(--teadeck-logo-tea-dark, #8a3c12)" stroke-opacity="0.7" stroke-width="2.1"/>
+      <path d="M150.4 112.2 L150.4 115.2 L150.5 118.3 L150.4 121.2 L150.4 124.0 L150.3 126.8 L150.3 129.6 L150.2 132.2 L150.1 134.7" fill="none" stroke="var(--teadeck-logo-highlight, #b3becd)" stroke-opacity="0.14" stroke-width="2.4"/>
+      <path d="M150.1 112.4 L150.1 115.4 L150.2 118.4 L150.1 121.4 L150.1 124.2 L150.0 127.0 L150.0 129.7 L150.0 132.3" fill="none" stroke="var(--teadeck-logo-highlight, #b3becd)" stroke-opacity="0.5" stroke-width="0.8"/>
+      <circle cx="150.0" cy="138.7" r="0.8" fill="var(--teadeck-logo-highlight, #b3becd)" fill-opacity="0.5"/>
     </g>
   </g>
 </svg>
