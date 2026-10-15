@@ -9,6 +9,10 @@
 export type Ramp = readonly [string, string, string, string, string, string, string, string, string, string, string];
 export const rampSteps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
 
+/** How tightly the interface is set: chosen by the reader, not by a design. */
+export const densities = ['default', 'compact'] as const;
+export type Density = (typeof densities)[number];
+
 /** A font file in integration/fonts, declared by the designs that use it. */
 export interface FontFile {
   family: string;

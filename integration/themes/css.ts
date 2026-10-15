@@ -8,7 +8,7 @@
  *
  * The build writes the result to themes/designs.css (scripts/build.mjs).
  */
-import type { Design, FontFile, Half } from './tokens.ts';
+import type { Density, Design, FontFile, Half } from './tokens.ts';
 import { rampSteps } from './tokens.ts';
 
 const radii = {
@@ -21,12 +21,19 @@ const radii = {
 /** Chamfer sizes by kind of element; the larger the element, the larger the cut. */
 const chamfers = { overlay: 28, panel: 18, card: 14, callout: 12, main: 10, field: 8, avatar: 7, secondary: 6, tag: 5 } as const;
 
+/** Room inside a post card, and inside a card with gothic ornaments (clear of the corners), per density. */
+const cardPadding = { default: '14px 14px 10px', compact: '8px 14px 6px' } as const;
+const ornamentPadding = { default: '20px 22px 16px', compact: '14px 22px 12px' } as const;
+
+/** Compact post text: tighter, as Mastodon tightens its own, but less, since the designs' faces need the room. */
+const compactLeading = (leading: string) => `calc(${leading} * 0.85)`;
+
 /** Top right and bottom left cut off at 45°. */
 const chamfer = (size: number) =>
   `polygon(0 0, calc(100% - ${size}px) 0, 100% ${size}px, 100% 100%, ${size}px 100%, 0 calc(100% - ${size}px))`;
 
-/** Every variable of one half, in a fixed order. */
-export function halfVariables(half: Half): [string, string][] {
+/** Every variable of one half, in a fixed order, at the reader's density. */
+export function halfVariables(half: Half, density: Density = 'default'): [string, string][] {
   const main = half.mainButton;
   const outlined = main === 'outlined';
   const secondary = half.secondaryButtons;
@@ -75,7 +82,7 @@ export function halfVariables(half: Half): [string, string][] {
     ['--td-heading-tracking', type.headingTracking],
     ['--td-title-tracking', type.titleTracking],
     ['--td-label-tracking', type.labelTracking],
-    ['--td-body-leading', type.bodyLeading],
+    ['--td-body-leading', density === 'compact' ? compactLeading(type.bodyLeading) : type.bodyLeading],
 
     ['--td-radius-1', r1],
     ['--td-radius-2', r2],
@@ -102,6 +109,8 @@ export function halfVariables(half: Half): [string, string][] {
     // Cards lie on the page's ground; divided posts share the surface with the column.
     ['--td-column-ground', cards ? 'var(--td-page)' : 'var(--td-surface)'],
     ['--td-post-bg', cards ? 'var(--td-surface)' : 'transparent'],
+    ['--td-card-padding', cardPadding[density]],
+    ['--td-ornament-padding', ornamentPadding[density]],
     ['--td-grain-opacity', half.grain ? '0.09' : '0'],
     // Fangs and their blood, for the design that has them (attribute teadeckBrandFangs).
     ['--td-fang', half.fangs?.fang ?? 'transparent'],
@@ -157,9 +166,15 @@ function fontFace(font: FontFile) {
 export function designsCss(designs: readonly Design[]) {
   const fonts = new Map<string, FontFile>();
   for (const design of designs) for (const font of design.fonts) fonts.set(font.file, font);
-  const blocks = designs.flatMap((design) => (['dark', 'light'] as const).map((scheme) => {
-    const variables = halfVariables(design[scheme]).map(([name, value]) => `  ${name}: ${value};`).join('\n');
-    return `html[data-teadeck-theme='${design.id}'][data-teadeck-half='${scheme}'] {\n${variables}\n}`;
+  const block = (selector: string, variables: [string, string][]) =>
+    `${selector} {\n${variables.map(([name, value]) => `  ${name}: ${value};`).join('\n')}\n}`;
+  const blocks = designs.flatMap((design) => (['dark', 'light'] as const).flatMap((scheme) => {
+    const selector = `html[data-teadeck-theme='${design.id}'][data-teadeck-half='${scheme}']`;
+    const normal = halfVariables(design[scheme]);
+    const values = new Map(normal);
+    // Compact density (data-teadeck-density, set from the reader's setting) overrides only what it changes.
+    const compact = halfVariables(design[scheme], 'compact').filter(([name, value]) => values.get(name) !== value);
+    return [block(selector, normal), block(`${selector}[data-teadeck-density='compact']`, compact)];
   }));
   return [
     '/* Generated from integration/themes/*.ts by scripts/build.mjs; do not edit. */',

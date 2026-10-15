@@ -293,7 +293,7 @@ html[data-teadeck-theme] .notification-ungrouped ._comp_status__variantFeed {
 
 /* Cards: room inside, so the post's actions stay on the card. */
 html[data-teadeck-posts='cards'] ._comp_status__variantFeed {
-  padding: 14px 14px 10px;
+  padding: var(--td-card-padding);
 }
 html[data-teadeck-posts='cards'] .notification-ungrouped ._comp_status__variantFeed {
   padding-top: 0;
@@ -345,7 +345,7 @@ html[data-teadeck-ornaments='gothic'] :is(._comp_status__variantFeed:not(.notifi
 }
 /* Room for the ornaments: content and the menu keep their distance from the corners. */
 html[data-teadeck-ornaments='gothic'] :is(._comp_status__variantFeed:not(.notification-ungrouped *), .notification-ungrouped, .notification-group, ._navigation_panel_redesign_account_card_and_menu__root) {
-  padding: 20px 22px 16px;
+  padding: var(--td-ornament-padding);
 }
 html[data-teadeck-ornaments='gothic'] .notification-ungrouped ._comp_status__variantFeed {
   padding: 0;

@@ -31,13 +31,18 @@ test('a changed setting takes effect at once, and the page stays where it was', 
 
     await page.locator('#teadeck-settings-color-scheme').selectOption('light');
     await page.locator('#teadeck-settings-theme').selectOption('assam');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.density), 'default');
+    await page.locator('#teadeck-settings-density').selectOption('compact');
 
     // Applied immediately: the attributes on <html> and the stored preference.
     assert.equal(await page.evaluate(() => document.documentElement.dataset.colorScheme), 'light');
     assert.equal(await page.evaluate(() => document.documentElement.dataset.teadeckTheme), 'assam');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.density), 'compact');
     const stored = await page.evaluate(() => JSON.parse(localStorage[Object.keys(localStorage).find((key) => key.endsWith(':frontendSettings'))]));
     assert.equal(stored.colorScheme, 'light');
     assert.equal(stored.theme, 'assam');
+    assert.equal(stored.density, 'compact');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.teadeckDensity), 'compact');
 
     // Without a reload, without leaving the settings, without a jump.
     assert.equal(loads, 0);

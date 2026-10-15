@@ -59,6 +59,9 @@ export function applyAppearance(settings: FrontendSettings, locale: string) {
   Object.assign(root.dataset, designAttributes(settings.theme, scheme));
   setIconWeight(designIcons(settings.theme, scheme));
   root.dataset.contrast = resolveContrast(settings.contrast, contrastMediaWatcher.matches) ? 'high' : 'default';
+  // Mastodon's attribute for its own spacing; Teadeck's switches the designs' --td-* values.
+  root.dataset.density = settings.density;
+  root.dataset.teadeckDensity = settings.density;
   if (!watching) {
     watching = true;
     colorSchemeMediaWatcher.addEventListener('change', () => { applyAppearance(current.settings, current.locale); });

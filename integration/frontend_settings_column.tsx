@@ -35,12 +35,12 @@ import type { NotificationShows } from './notification_settings.ts';
 import { readNotificationShows } from './notification_settings.ts';
 import { currentLocale, t } from './i18n.ts';
 import { designs } from './themes/index.ts';
-import { designLabel } from './themes/tokens.ts';
+import { designLabel, type Density } from './themes/tokens.ts';
 import { setStatusOverlayEnabled, statusOverlayEnabled } from './status_overlay.tsx';
 import { readObjectPreference, readSettings, readPreference, writePreference } from './storage.ts';
 import { availableLocales } from './ui_locale.ts';
 
-type BooleanSettingKey = Exclude<keyof FrontendSettings, 'displayMedia' | 'colorScheme' | 'contrast' | 'emojiStyle' | 'theme'>;
+type BooleanSettingKey = Exclude<keyof FrontendSettings, 'displayMedia' | 'colorScheme' | 'contrast' | 'density' | 'emojiStyle' | 'theme'>;
 
 const storedChoices = () => readObjectPreference(frontendSettingsKey);
 
@@ -64,6 +64,7 @@ const settingsAtStart = (): FrontendSettings => ({
   theme: 'assam',
   colorScheme: 'auto',
   contrast: 'auto',
+  density: 'default',
   useSystemFont: false,
   useSystemScrollbars: false,
   emojiStyle: (emojiStyle as EmojiStyle | undefined) ?? 'auto',
@@ -157,6 +158,10 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
     change({ contrast: event.target.value as Contrast }, { instant: true });
   }, [change]);
 
+  const handleDensity = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
+    change({ density: event.target.value as Density }, { instant: true });
+  }, [change]);
+
   const handleEmojiStyle = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
     change({ emojiStyle: event.target.value as EmojiStyle });
   }, [change]);
@@ -237,6 +242,11 @@ const FrontendSettingsColumn: React.FC<{ multiColumn?: boolean }> = ({ multiColu
           <SelectField id='teadeck-settings-contrast' label={t('contrast')} value={settings.contrast} onChange={handleContrast}>
             <option value='auto'>{t('contrastAuto')}</option>
             <option value='high'>{t('contrastHigh')}</option>
+          </SelectField>
+
+          <SelectField id='teadeck-settings-density' label={t('density')} value={settings.density} onChange={handleDensity}>
+            <option value='default'>{t('densityDefault')}</option>
+            <option value='compact'>{t('densityCompact')}</option>
           </SelectField>
 
           <SelectField id='teadeck-settings-emoji-style' label={t('emojiStyle')} value={settings.emojiStyle} onChange={handleEmojiStyle}>

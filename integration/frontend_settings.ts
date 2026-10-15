@@ -1,4 +1,5 @@
 import { designIds, type DesignId } from './themes/index.ts';
+import { densities, type Density } from './themes/tokens.ts';
 
 /**
  * Display and behaviour settings, stored per account in this browser. Mastodon
@@ -29,6 +30,7 @@ export interface FrontendSettings {
   theme: Theme;
   colorScheme: ColorScheme;
   contrast: Contrast;
+  density: Density;
   useSystemFont: boolean;
   useSystemScrollbars: boolean;
   /** These three do go through `frontendSettingsMeta`, like the fields above them. */
@@ -42,6 +44,7 @@ export const frontendSettingsKey = 'frontendSettings';
 const displayMediaValues: DisplayMedia[] = ['default', 'show_all', 'hide_all'];
 const colorSchemeValues: ColorScheme[] = ['auto', 'light', 'dark'];
 const contrastValues: Contrast[] = ['auto', 'high'];
+const densityValues: readonly Density[] = densities;
 const emojiStyleValues: EmojiStyle[] = ['auto', 'native', 'twemoji'];
 const themeValues: Theme[] = ['mastodon', ...designIds];
 /** What this deployment starts with (TEADECK_THEME, TEADECK_COLOR_SCHEME; served as /teadeck.json). */
@@ -93,6 +96,7 @@ export function defaultFrontendSettings(
     theme: deployment.theme ?? 'assam',
     colorScheme: deployment.colorScheme ?? 'auto',
     contrast: 'auto',
+    density: 'default',
     useSystemFont: false,
     useSystemScrollbars: false,
     emojiStyle: 'auto',
@@ -106,6 +110,7 @@ const enumFields: { [K in keyof FrontendSettings]?: readonly FrontendSettings[K]
   theme: themeValues,
   colorScheme: colorSchemeValues,
   contrast: contrastValues,
+  density: densityValues,
   emojiStyle: emojiStyleValues,
 };
 

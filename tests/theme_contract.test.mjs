@@ -23,6 +23,23 @@ test('every half of every design yields the same variables, all with a value', (
   for (const id of designIds) for (const scheme of ['dark', 'light']) assert.ok(css.includes(`html[data-teadeck-theme='${id}'][data-teadeck-half='${scheme}'] {`), `${id}/${scheme}`);
 });
 
+test('compact density changes only spacing and leading, for every half, through the generated variables', async () => {
+  const css = designsCss(designs);
+  for (const design of designs) for (const scheme of ['dark', 'light']) {
+    const normal = new Map(halfVariables(design[scheme]));
+    const changed = halfVariables(design[scheme], 'compact').filter(([name, value]) => normal.get(name) !== value).map(([name]) => name);
+    assert.deepEqual(changed, ['--td-body-leading', '--td-card-padding', '--td-ornament-padding'], `${design.id}/${scheme}`);
+    assert.ok(css.includes(`html[data-teadeck-theme='${design.id}'][data-teadeck-half='${scheme}'][data-teadeck-density='compact'] {`), `${design.id}/${scheme}`);
+  }
+  // mastodon.css reads the room inside cards from the designs, so density reaches it.
+  const bridge = withoutComments(await read('integration/themes/mastodon.css'));
+  for (const [, selector, body] of bridge.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if (/data-teadeck-(posts='cards'|ornaments='gothic')/.test(selector) && /(^|;)\s*padding\s*:/.test(body)) {
+      assert.match(body, /padding:\s*(0|var\(--td-[a-z-]+\));/, selector.trim());
+    }
+  }
+});
+
 test('only Hibiscus and Rooibos choose angular steam, and only the cup of blood has none and drips', () => {
   const steam = { hibiscus: 'angular', lapsang: 'none' };
   for (const design of designs) for (const scheme of ['dark', 'light']) {

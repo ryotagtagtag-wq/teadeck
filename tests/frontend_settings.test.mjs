@@ -40,6 +40,7 @@ test('maps onto the initial-state fields upstream reads', () => {
   const defaults = defaultFrontendSettings({}, false);
   assert.equal(defaults.colorScheme, 'auto');
   assert.equal(defaults.contrast, 'auto');
+  assert.equal(defaults.density, 'default');
   assert.equal(defaults.emojiStyle, 'auto');
   assert.equal(defaults.disableSwiping, false);
   assert.equal(defaults.disableHoverCards, false);
@@ -58,9 +59,11 @@ test('maps onto the initial-state fields upstream reads', () => {
 
 test('resolveFrontendSettings validates the new enum fields the same way as displayMedia', () => {
   const defaults = defaultFrontendSettings({}, false);
-  const resolved = resolveFrontendSettings({ colorScheme: 'dark', contrast: 'high', emojiStyle: 'bogus', useSystemFont: true }, defaults);
+  const resolved = resolveFrontendSettings({ colorScheme: 'dark', contrast: 'high', density: 'roomy', emojiStyle: 'bogus', useSystemFont: true }, defaults);
   assert.equal(resolved.colorScheme, 'dark');
   assert.equal(resolved.contrast, 'high');
+  assert.equal(resolved.density, 'default');
+  assert.equal(resolveFrontendSettings({ density: 'compact' }, defaults).density, 'compact');
   assert.equal(resolved.emojiStyle, 'auto');
   assert.equal(resolved.useSystemFont, true);
 });
