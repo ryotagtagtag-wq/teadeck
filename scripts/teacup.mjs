@@ -80,6 +80,14 @@ export function teacup(name) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img"
      aria-label="${material.label}" data-teadeck-logo="teacup">
   <defs>
+    <!-- Across each run of blood: dark edges and a wet shine, so it glistens. -->
+    <linearGradient id="blood-${name}" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="${c.teaShade}"/>
+      <stop offset="0.3" stop-color="${c.tea}"/>
+      <stop offset="0.46" style="stop-color: color-mix(in oklab, ${c.teaLight}, white 35%)"/>
+      <stop offset="0.62" stop-color="${c.tea}"/>
+      <stop offset="1" stop-color="${c.teaDark}"/>
+    </linearGradient>
     <linearGradient id="tea-${name}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="${c.teaDark}"/>
       <stop offset="0.55" stop-color="${c.tea}"/>
@@ -172,9 +180,8 @@ ${material.opaque ? `${tea(material, id)}\n` : ''}
 
   <!-- Tea run over the rim and dripping: hidden unless a design shows it (data-teadeck-logo-blood).
        The runs follow the rim's ellipse and the wall's meridians down towards the foot. -->
-  <g class="teadeck-logo-blood" display="none" fill="${c.tea}" stroke="${c.teaShade}" stroke-width="3" stroke-linejoin="round">
+  <g class="teadeck-logo-blood" display="none" fill="${id('blood')}" stroke="${c.teaShade}" stroke-width="3" stroke-linejoin="round">
     <path d="M124.9 203.7 L125.3 214.3 L126.0 224.8 L127.0 234.9 L128.2 244.8 L129.7 254.3 L131.5 263.5 L133.5 272.3 L135.9 280.6 L138.5 288.5 L141.3 295.9 L141.6 298.8 L142.6 300.6 L144.1 301.9 L145.9 302.3 L147.7 301.9 L149.2 300.6 L150.2 298.8 L150.5 297.1 L148.4 289.9 L146.7 282.1 L145.1 273.9 L143.9 265.2 L142.8 256.2 L142.0 246.7 L141.4 236.9 L141.1 226.9 L141.0 216.5 L141.1 205.9 L141.1 203.8 L139.1 202.3 L137.1 200.9 L135.1 199.8 L133.0 199.3 L131.0 199.3 L129.0 199.7 L127.0 200.6 L124.9 201.6 Z"/>
-    <path d="M158.8 312.2 Q164.3 319.9 164.3 322.7 A5.5 5.5 0 0 1 153.3 322.7 Q153.3 319.9 158.8 312.2 Z"/>
     <path d="M187.0 208.9 L187.2 211.2 L187.3 213.5 L187.4 215.8 L187.6 218.1 L187.7 220.4 L187.9 222.7 L188.0 225.0 L188.1 227.2 L188.3 229.5 L188.4 231.7 L188.7 233.2 L189.3 234.4 L190.3 235.2 L191.4 235.5 L192.6 235.2 L193.6 234.4 L194.2 233.2 L194.4 231.8 L194.6 229.6 L194.7 227.3 L194.8 225.1 L194.9 222.8 L195.0 220.5 L195.2 218.3 L195.3 216.0 L195.4 213.6 L195.6 211.3 L195.7 209.0 L195.7 207.5 L194.6 206.5 L193.5 205.7 L192.4 205.1 L191.4 204.9 L190.3 205.1 L189.2 205.6 L188.1 206.4 L187.0 207.4 Z"/>
     <path d="M249.1 206.9 L249.3 213.1 L249.4 219.2 L249.5 225.2 L249.5 231.2 L249.4 237.0 L249.2 242.7 L249.0 248.4 L248.7 253.9 L248.3 259.2 L247.9 264.5 L248.2 266.2 L249.2 268.1 L250.7 269.4 L252.5 269.8 L254.3 269.4 L255.8 268.1 L256.8 266.2 L257.1 263.5 L258.1 258.2 L258.9 252.8 L259.7 247.2 L260.5 241.5 L261.1 235.7 L261.7 229.9 L262.2 223.9 L262.6 217.8 L262.9 211.6 L263.2 205.4 L263.2 203.3 L261.4 202.2 L259.7 201.3 L257.9 200.7 L256.2 200.6 L254.4 201.1 L252.6 202.0 L250.9 203.3 L249.1 204.8 Z"/>
   </g>
