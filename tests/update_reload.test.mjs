@@ -28,15 +28,16 @@ test('a lazily loaded view missing after a redeploy reloads the page instead of 
   await submitSignIn(page, origin);
   await page.getByText(timelineText).waitFor();
 
-  // Like nginx after a redeploy: the old chunk is gone, the server answers with an HTML 404 page.
+  // Like nginx after a redeploy: the old chunk is gone, the server answers with an HTML 404 page,
+  // until the reload brings the new build. Newer browsers retry a failed import, so it stays gone until then.
   let staleChunkRequests = 0;
-  await context.route(/\/account_timeline-[^/]+\.js$/, async (route) => {
-    staleChunkRequests++;
-    if (staleChunkRequests === 1) return route.fulfill({ status: 404, contentType: 'text/html', body: '<html>404 Not Found</html>' });
-    return route.continue();
-  });
   let loads = 0;
   page.on('load', () => loads++);
+  await context.route(/\/account_timeline-[^/]+\.js$/, async (route) => {
+    staleChunkRequests++;
+    if (loads === 0) return route.fulfill({ status: 404, contentType: 'text/html', body: '<html>404 Not Found</html>' });
+    return route.continue();
+  });
 
   await page.locator(`a[href="/@${account.acct}"]`).first().click();
   await page.waitForURL(`${origin}/@${account.acct}`);

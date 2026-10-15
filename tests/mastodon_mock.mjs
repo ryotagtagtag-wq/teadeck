@@ -98,6 +98,8 @@ export async function openAccountMenu(page) {
 export async function openPreferences(page) {
   await openAccountMenu(page);
   await page.getByRole('link', { name: /^(Settings|Einstellungen)$/ }).click();
+  // Mastodon closes the menu a moment after the click; opening it again before then would close it instead.
+  await page.getByRole('button', { name: /^(Sign Out|Abmelden)$/ }).waitFor({ state: 'hidden' });
 }
 
 /** Signs out through the account menu and confirms. */
@@ -118,6 +120,12 @@ export async function openComposer(page) {
   await newPost.or(composerText(page)).first().waitFor();
   if (!(await composerText(page).isVisible())) await newPost.click();
   await composerText(page).waitFor();
+}
+
+/** After posting: the composer closes once the server answered; opening it before then would catch the old one. */
+export async function reopenComposer(page) {
+  await composerText(page).waitFor({ state: 'hidden' });
+  await openComposer(page);
 }
 
 export const publishButton = (page) => page.locator('form[role="dialog"]').getByRole('button', { name: /^(Veröffentlichen|Publish)$/ });

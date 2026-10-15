@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { after, test } from 'node:test';
 
 import { postedStatus } from './fixtures.mjs';
-import { composerText, mockMastodon, openComposer, publishButton, waitUntil } from './mastodon_mock.mjs';
+import { composerText, mockMastodon, openComposer, publishButton, reopenComposer, waitUntil } from './mastodon_mock.mjs';
 import { browser, collectPageErrors, origin, submitSignIn, useApp } from './harness.mjs';
 
 useApp();
@@ -51,7 +51,7 @@ test('posting a status with an attached image goes through Teadeck\'s patched co
   assert.deepEqual(published.body.media_ids, [media.id]);
   // The route handler above resolving doesn't imply the page has already
   // processed the response and re-rendered; wait for the composer to reset.
-  await openComposer(page);
+  await reopenComposer(page);
   await page.waitForFunction(() => document.querySelector('form[role="dialog"] textarea')?.value === '');
   assert.deepEqual(pageErrors, []);
 

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { after, test } from 'node:test';
 
 import { instance, postedStatus, timelineText } from './fixtures.mjs';
-import { composerText, mockMastodon, openComposer, respond, waitUntil } from './mastodon_mock.mjs';
+import { composerText, mockMastodon, openComposer, reopenComposer, respond, waitUntil } from './mastodon_mock.mjs';
 import { browser, origin, submitSignIn, useApp } from './harness.mjs';
 
 useApp();
@@ -119,7 +119,7 @@ test('on a detected GoToSocial instance, restricting replies sends the matching 
   });
 
   // The last choice sticks: for the next post, and after reloading the page.
-  await openComposer(page);
+  await reopenComposer(page);
   assert.equal(await composerText(page).inputValue(), '');
   assert.equal(await audience(), 'followers');
   await page.reload();

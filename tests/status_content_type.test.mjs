@@ -110,6 +110,8 @@ async function signedInPage({ instance: instanceBody, account: accountBody, stat
       await textarea.fill(text);
       await page.getByRole('button', { name: 'Veröffentlichen' }).click();
       await waitUntil(() => posted.length === before + 1, { message: 'the status was never posted' });
+      // Closing follows the server's answer; reopening before it would catch the old composer.
+      await textarea.waitFor({ state: 'hidden' });
       await openComposer();
       return posted[posted.length - 1];
     },
