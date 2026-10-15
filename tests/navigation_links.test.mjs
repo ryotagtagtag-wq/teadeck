@@ -22,8 +22,8 @@ async function assertAccountMenu(page) {
   assert.equal(await page.getByRole('link', { name: 'Einstellungen', exact: true }).getAttribute('href'), '/preferences');
   assert.equal(await page.getByRole('link', { name: 'Einstellungen auf dem Server' }).getAttribute('href'), 'https://mastodon.test/settings');
   // The account's own lists, not the server's /relationships page.
-  assert.equal(await page.getByRole('link', { name: 'Followers', exact: true }).getAttribute('href'), '/@alice/followers');
-  assert.equal(await page.getByRole('link', { name: 'Following', exact: true }).getAttribute('href'), '/@alice/following');
+  assert.equal(await page.getByRole('link', { name: 'Follower', exact: true }).getAttribute('href'), '/@alice/followers');
+  assert.equal(await page.getByRole('link', { name: 'Folge ich', exact: true }).getAttribute('href'), '/@alice/following');
   // Nothing about Mastodon in a client that may well talk to GoToSocial.
   assert.equal(await page.locator('a[href*="joinmastodon.org"]').count(), 0);
   assert.equal(await page.getByText(/^Mastodon v/).count(), 0);

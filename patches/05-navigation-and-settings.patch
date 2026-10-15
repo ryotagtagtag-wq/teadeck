@@ -46,6 +46,122 @@ diff --git a/app/javascript/mastodon/features/compose/index.tsx b/app/javascript
      return (
        <div className='drawer'>
          <nav
+diff --git a/app/javascript/mastodon/features/search_panel/footer_links.tsx b/app/javascript/mastodon/features/search_panel/footer_links.tsx
+--- a/app/javascript/mastodon/features/search_panel/footer_links.tsx
++++ b/app/javascript/mastodon/features/search_panel/footer_links.tsx
+@@ -2,11 +2,11 @@ import { FormattedMessage } from 'react-intl';
+ 
+ import { NavLink } from 'react-router-dom';
+ 
++import { privacyPolicyAvailable } from '@/teadeck/server_features';
+ import {
+   statusPageUrl,
+   termsOfServiceEnabled,
+   profile_directory as canViewProfileDirectory,
+-  version,
+   source_url,
+   title,
+   domain,
+@@ -17,20 +17,15 @@ import classes from './footer_links.module.scss';
+ export const FooterLinks: React.FC<{
+   context: 'navigation' | 'search';
+   multiColumn?: boolean;
+-}> = ({ context, multiColumn }) => {
+-  const multiColumnLinkAttrs = multiColumn
+-    ? {
+-        target: '_blank',
+-      }
+-    : undefined;
+-
++}> = ({ context }) => {
++  // Teadeck: these pages open as a column in the multi-column layout, not in a new tab.
+   return (
+     <div className={classes.root} data-context={context}>
+       <section>
+         <h2 className={classes.heading}>{title ?? domain}</h2>
+         <ul className={classes.list}>
+           <li>
+-            <NavLink to='/about' {...multiColumnLinkAttrs}>
++            <NavLink to='/about'>
+               <FormattedMessage
+                 id='footer.about_this_server'
+                 defaultMessage='About'
+@@ -42,7 +37,6 @@ export const FooterLinks: React.FC<{
+               <NavLink
+                 to='/terms-of-service'
+                 rel='terms-of-service'
+-                {...multiColumnLinkAttrs}
+               >
+                 <FormattedMessage
+                   id='footer.terms_of_service_short'
+@@ -51,11 +45,11 @@ export const FooterLinks: React.FC<{
+               </NavLink>
+             </li>
+           )}
++          {privacyPolicyAvailable() && (
+           <li>
+             <NavLink
+               to='/privacy-policy'
+               rel='privacy-policy'
+-              {...multiColumnLinkAttrs}
+             >
+               <FormattedMessage
+                 id='footer.privacy_policy_short'
+@@ -63,6 +57,7 @@ export const FooterLinks: React.FC<{
+               />
+             </NavLink>
+           </li>
++          )}
+           {statusPageUrl && (
+             <li>
+               <a href={statusPageUrl} target='_blank' rel='noopener'>
+@@ -84,7 +79,8 @@ export const FooterLinks: React.FC<{
+       </section>
+ 
+       <section>
+-        <h2 className={classes.heading}>{`Mastodon v${version}`}</h2>
++        {/* This client is Teadeck, whatever software the server runs. */}
++        <h2 className={classes.heading}>Teadeck</h2>
+         <ul className={classes.list}>
+           <li>
+             <a href={source_url} rel='noopener' target='_blank'>
+@@ -94,36 +90,6 @@ export const FooterLinks: React.FC<{
+               />
+             </a>
+           </li>
+-          <li>
+-            <a
+-              href='https://joinmastodon.org/apps'
+-              target='_blank'
+-              rel='noopener'
+-            >
+-              <FormattedMessage id='footer.apps' defaultMessage='Apps' />
+-            </a>
+-          </li>
+-          <li>
+-            <a
+-              href='https://help.joinmastodon.org/'
+-              target='_blank'
+-              rel='noopener'
+-            >
+-              <FormattedMessage id='footer.help' defaultMessage='Help' />
+-            </a>
+-          </li>
+-          <li>
+-            <a
+-              href='https://community.joinmastodon.org/'
+-              target='_blank'
+-              rel='noopener'
+-            >
+-              <FormattedMessage
+-                id='footer.feedback'
+-                defaultMessage='Feedback'
+-              />
+-            </a>
+-          </li>
+         </ul>
+       </section>
+     </div>
 diff --git a/app/javascript/mastodon/features/interaction_modal/index.tsx b/app/javascript/mastodon/features/interaction_modal/index.tsx
 --- a/app/javascript/mastodon/features/interaction_modal/index.tsx
 +++ b/app/javascript/mastodon/features/interaction_modal/index.tsx
@@ -76,29 +192,15 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
    CirclesFourIcon,
    HeartIcon,
    BookmarkSimpleIcon,
-@@ -14,7 +18,6 @@ import {
-   GavelIcon,
-   ShieldStarIcon,
-   SignOutIcon,
--  MastodonLogoIcon,
-   GithubLogoIcon,
-   BellSlashIcon,
-   HandWavingIcon,
-@@ -41,7 +44,7 @@ import {
- } from '@/mastodon/components/menu';
- import { useAccount } from '@/mastodon/hooks/useAccount';
- import { useIdentity } from '@/mastodon/identity_context';
--import { source_url, version } from '@/mastodon/initial_state';
-+import { source_url } from '@/mastodon/initial_state';
- import {
-   canManageReports,
-   canViewAdminDashboard,
-@@ -99,3 +102,4 @@ export const AccountMenuItems: React.FC<{
+@@ -93,6 +97,7 @@ export const AccountMenuItems: React.FC<{
+   const { accountId, permissions } = useIdentity();
+   const account = useAccount(accountId);
+ 
 +  const showCollections = useCollectionsAvailable();
    const confirmLogout = useCallback(() => {
      dispatch(openModal({ modalType: 'CONFIRM_LOG_OUT', modalProps: {} }));
    }, [dispatch]);
-@@ -120,22 +125,33 @@ export const AccountMenuItems: React.FC<{
+@@ -117,22 +122,33 @@ export const AccountMenuItems: React.FC<{
          />
        </MenuItemLink>
  
@@ -141,7 +243,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
        <MenuItemLink to='/favourites' icon={HeartIcon}>
          <FormattedMessage
            id='navigation_bar.liked_posts'
-@@ -193,7 +208,7 @@ export const AccountMenuItems: React.FC<{
+@@ -190,7 +206,7 @@ export const AccountMenuItems: React.FC<{
            <MenuItemDivider />
  
            {isAdmin && (
@@ -150,7 +252,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
                <FormattedMessage
                  id='navigation_bar.administration'
                  defaultMessage='Administration'
-@@ -202,7 +217,7 @@ export const AccountMenuItems: React.FC<{
+@@ -199,7 +215,7 @@ export const AccountMenuItems: React.FC<{
            )}
  
            {isManager && (
@@ -159,109 +261,6 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
                <FormattedMessage
                  id='navigation_bar.moderation'
                  defaultMessage='Moderation'
-@@ -214,24 +229,14 @@ export const AccountMenuItems: React.FC<{
- 
-       <MenuItemDivider />
- 
--      <MenuItemGroup label={`Mastodon v${version}`}>
-+      {/* This client is Teadeck, whatever software the server runs. */}
-+      <MenuItemGroup label='Teadeck'>
-         <MenuItemLink as='a' href={source_url} icon={GithubLogoIcon}>
-           <FormattedMessage
-             id='navigation_bar.source_code'
-             defaultMessage='Source Code'
-           />
-         </MenuItemLink>
--
--        <MenuItemLink
--          as='a'
--          href='https://joinmastodon.org'
--          icon={MastodonLogoIcon}
--        >
--          <FormattedMessage
--            id='navigation_bar.about_mastodon'
--            defaultMessage='About Mastodon'
--          />
--        </MenuItemLink>
-       </MenuItemGroup>
- 
-       <MenuItemDivider />
-diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx b/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx
---- a/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx
-+++ b/app/javascript/mastodon/features/navigation_panel/redesign/footer_links.tsx
-@@ -2,11 +2,11 @@ import { FormattedMessage } from 'react-intl';
- 
- import { NavLink } from 'react-router-dom';
- 
-+import { privacyPolicyAvailable } from '@/teadeck/server_features';
- import {
-   statusPageUrl,
-   termsOfServiceEnabled,
-   profile_directory as canViewProfileDirectory,
--  version,
-   source_url,
- } from '@/mastodon/initial_state';
- 
-@@ -15,18 +15,13 @@ import classes from './footer_links.module.scss';
- export const NavigationFooterLinks: React.FC<{
-   multiColumn?: boolean;
-   withVersionInfo?: boolean;
--}> = ({ multiColumn, withVersionInfo }) => {
--  const multiColumnLinkAttrs = multiColumn
--    ? {
--        target: '_blank',
--      }
--    : undefined;
--
-+}> = ({ withVersionInfo }) => {
-+  // Teadeck: these pages open as a column in the multi-column layout, not in a new tab.
-   return (
-     <div className={classes.root}>
-       <ul className={classes.list}>
-         <li>
--          <NavLink to='/about' {...multiColumnLinkAttrs}>
-+          <NavLink to='/about'>
-             <FormattedMessage
-               id='footer.about_this_server'
-               defaultMessage='About'
-@@ -38,7 +33,6 @@ export const NavigationFooterLinks: React.FC<{
-             <NavLink
-               to='/terms-of-service'
-               rel='terms-of-service'
--              {...multiColumnLinkAttrs}
-             >
-               <FormattedMessage
-                 id='footer.terms_of_service_short'
-@@ -47,11 +41,11 @@ export const NavigationFooterLinks: React.FC<{
-             </NavLink>
-           </li>
-         )}
-+        {privacyPolicyAvailable() && (
-         <li>
-           <NavLink
-             to='/privacy-policy'
-             rel='privacy-policy'
--            {...multiColumnLinkAttrs}
-           >
-             <FormattedMessage
-               id='footer.privacy_policy_short'
-@@ -59,6 +53,7 @@ export const NavigationFooterLinks: React.FC<{
-             />
-           </NavLink>
-         </li>
-+        )}
-         {statusPageUrl && (
-           <li>
-             <a href={statusPageUrl} target='_blank' rel='noopener'>
-@@ -79,7 +74,7 @@ export const NavigationFooterLinks: React.FC<{
-       </ul>
-       {withVersionInfo && (
-         <p>
--          {`Mastodon v${version} `}&nbsp;
-+          {'Teadeck '}&nbsp;
-           <a href={source_url} rel='noopener' target='_blank'>
-             <FormattedMessage
-               id='footer.source_code'
 diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx b/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx
 --- a/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx
 +++ b/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx
@@ -270,23 +269,25 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/logged_o
  import { useCallback, useEffect } from 'react';
  
  import { FormattedMessage } from 'react-intl';
-@@ -69,13 +70,13 @@ export const LoggedOutInfo: React.FC = () => {
-       }
-       isLoading={isLoading}
-     >
--      <Button as='a' href='/auth/sign_up' variant='solid' color='accent'>
-+      <Button as='a' href={serverUrl('/auth/sign_up')} variant='solid' color='accent'>
-         <FormattedMessage
-           id='server_banner.create_account'
-           defaultMessage='Create an account'
-         />
-       </Button>
+@@ -70,7 +71,7 @@ export const LoggedOutInfo: React.FC = () => {
+   );
+ 
+   const signupUrl = useAppSelector(
+-    (state) => state.server.server.item?.registrations.url ?? '/auth/sign_up',
++    (state) => state.server.server.item?.registrations.url ?? serverUrl('/auth/sign_up'),
+   );
+ 
+   let actions = (
+@@ -94,7 +95,7 @@ export const LoggedOutInfo: React.FC = () => {
+           />
+         </Button>
+       )}
 -      <Button as='a' href='/auth/sign_in'>
 +      <Button as='a' href={serverUrl('/auth/sign_in')}>
          <FormattedMessage id='server_banner.log_in' defaultMessage='Log in' />
        </Button>
-     </NavigationFooterLayout>
-@@ -195,7 +196,7 @@ export const DisabledAccountBanner: React.FC = () => {
+     </>
+@@ -245,7 +246,7 @@ export const DisabledAccountBanner: React.FC = () => {
          </Callout>
        }
      >
@@ -303,15 +304,15 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/mobile_n
  import { useCallback, useEffect, useRef } from 'react';
  
  import { FormattedMessage } from 'react-intl';
-@@ -117,7 +118,7 @@ export const RedesignMobileNavigation: React.FC = () => {
-             <LogoLockup className={classes.logoLockup} />
-             <Button
-               as='a'
--              href='/auth/sign_up'
-+              href={serverUrl('/auth/sign_up')}
-               variant='solid'
-               color='accent'
-               size='sm'
+@@ -56,7 +57,7 @@ export const RedesignMobileNavigation: React.FC = () => {
+   const hasSignUpButton = !sso_redirect && !registrationsOpen;
+ 
+   const signupUrl = useAppSelector(
+-    (state) => state.server.server.item?.registrations.url ?? '/auth/sign_up',
++    (state) => state.server.server.item?.registrations.url ?? serverUrl('/auth/sign_up'),
+   );
+ 
+   return (
 diff --git a/app/javascript/mastodon/features/ui/components/columns_area/multi_column_content.tsx b/app/javascript/mastodon/features/ui/components/columns_area/multi_column_content.tsx
 --- a/app/javascript/mastodon/features/ui/components/columns_area/multi_column_content.tsx
 +++ b/app/javascript/mastodon/features/ui/components/columns_area/multi_column_content.tsx

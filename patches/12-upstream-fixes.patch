@@ -14,6 +14,21 @@ diff --git a/app/javascript/mastodon/features/lists/new.tsx b/app/javascript/mas
      setSubmitting(true);
  
      if (id) {
+diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/mobile_nav.tsx b/app/javascript/mastodon/features/navigation_panel/redesign/mobile_nav.tsx
+--- a/app/javascript/mastodon/features/navigation_panel/redesign/mobile_nav.tsx
++++ b/app/javascript/mastodon/features/navigation_panel/redesign/mobile_nav.tsx
+@@ -54,7 +54,10 @@ export const RedesignMobileNavigation: React.FC = () => {
+ 
+   // Hide the mobile sign-up button if registrations are closed or
+   // SSO is used (as there's not much room for a detailed label)
+-  const hasSignUpButton = !sso_redirect && !registrationsOpen;
++  // Teadeck: upstream negates registrationsOpen and so shows the button only
++  // when registrations are closed. Not fixed upstream as of
++  // mastodon/mastodon@d0b3f326.
++  const hasSignUpButton = !sso_redirect && registrationsOpen;
+ 
+   const signupUrl = useAppSelector(
+     (state) => state.server.server.item?.registrations.url ?? serverUrl('/auth/sign_up'),
 diff --git a/app/javascript/mastodon/features/ui/components/confirmation_modals/missing_alt_text.tsx b/app/javascript/mastodon/features/ui/components/confirmation_modals/missing_alt_text.tsx
 --- a/app/javascript/mastodon/features/ui/components/confirmation_modals/missing_alt_text.tsx
 +++ b/app/javascript/mastodon/features/ui/components/confirmation_modals/missing_alt_text.tsx

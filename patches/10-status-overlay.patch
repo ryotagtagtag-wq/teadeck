@@ -9,7 +9,7 @@ diff --git a/app/javascript/mastodon/components/status/action_bar.tsx b/app/java
  
  interface StatusActionBarProps {
    statusId: string;
-@@ -136,6 +137,8 @@ export const StatusActionBar: React.FC<StatusActionBarProps> = ({
+@@ -139,6 +140,8 @@ export const StatusActionBar: React.FC<StatusActionBarProps> = ({
          {bookmark.title}
        </ToggleIconButton>
  
@@ -94,7 +94,7 @@ diff --git a/app/javascript/mastodon/components/status/legacy/header.tsx b/app/j
 diff --git a/app/javascript/mastodon/features/status/redesign.tsx b/app/javascript/mastodon/features/status/redesign.tsx
 --- a/app/javascript/mastodon/features/status/redesign.tsx
 +++ b/app/javascript/mastodon/features/status/redesign.tsx
-@@ -70,9 +70,23 @@ const messages = defineMessages({
+@@ -71,9 +71,23 @@ const messages = defineMessages({
    },
  });
  
@@ -121,7 +121,7 @@ diff --git a/app/javascript/mastodon/features/status/redesign.tsx b/app/javascri
    const intl = useIntl();
    const dispatch = useAppDispatch();
  
-@@ -211,7 +225,7 @@ export const StatusPage: React.FC = () => {
+@@ -212,7 +226,7 @@ export const StatusPage: React.FC = () => {
        label={intl.formatMessage(messages.detailedStatus)}
      >
        <ColumnHeader
@@ -130,7 +130,7 @@ diff --git a/app/javascript/mastodon/features/status/redesign.tsx b/app/javascri
          title={columnTitle}
          extraButtons={
            <>
-@@ -253,7 +267,7 @@ export const StatusPage: React.FC = () => {
+@@ -254,7 +268,7 @@ export const StatusPage: React.FC = () => {
        />
  
        <ScrollContainer
@@ -138,7 +138,7 @@ diff --git a/app/javascript/mastodon/features/status/redesign.tsx b/app/javascri
 +        scrollKey={scrollKey}
          shouldUpdateScroll={shouldUpdateScroll}
        >
-         <div
+         <Scrollable className={classNames('item-list', { fullscreen })}>
 diff --git a/app/javascript/mastodon/features/ui/components/modal_root.jsx b/app/javascript/mastodon/features/ui/components/modal_root.jsx
 --- a/app/javascript/mastodon/features/ui/components/modal_root.jsx
 +++ b/app/javascript/mastodon/features/ui/components/modal_root.jsx
