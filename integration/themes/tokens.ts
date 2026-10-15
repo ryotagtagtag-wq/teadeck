@@ -21,6 +21,12 @@ export interface FontFile {
 }
 
 export interface Half {
+  /**
+   * Whether the ground is dark or light, where that differs from the half:
+   * Earl Grey is the light half of its design but still dark. Mastodon picks
+   * its colour roles (brand text, form controls, scroll bars) by this.
+   */
+  tone?: 'dark' | 'light';
   /** Greys for text, lines and surfaces. */
   neutral: Ramp;
   /** The design's colour: buttons, links, highlights. */

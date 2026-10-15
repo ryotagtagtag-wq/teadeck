@@ -4,7 +4,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 
 import { designsCss, halfVariables } from '../integration/themes/css.ts';
-import { designAttributeNames, designIds, designs, halfAttributes } from '../integration/themes/index.ts';
+import { designAttributeNames, designIds, designs, designTone, halfAttributes } from '../integration/themes/index.ts';
 import { designLabel } from '../integration/themes/tokens.ts';
 
 // The design framework (integration/themes/): designs are values in Teadeck's
@@ -20,7 +20,7 @@ test('every half of every design yields the same variables, all with a value', (
     for (const [variable, value] of variables) assert.ok(typeof value === 'string' && value.trim() !== '' && !value.includes('undefined'), `${name} ${variable}`);
   }
   const css = designsCss(designs);
-  for (const id of designIds) for (const scheme of ['dark', 'light']) assert.ok(css.includes(`html[data-teadeck-theme='${id}'][data-color-scheme='${scheme}'] {`), `${id}/${scheme}`);
+  for (const id of designIds) for (const scheme of ['dark', 'light']) assert.ok(css.includes(`html[data-teadeck-theme='${id}'][data-teadeck-half='${scheme}'] {`), `${id}/${scheme}`);
 });
 
 test('only Hibiscus and Rooibos choose angular steam, and only the cup of blood has none and drips', () => {
@@ -340,4 +340,12 @@ test('the copy button of a code block keeps its muted colour inside posts', asyn
   const rule = allRules(css).find(([selector]) => selector.trim() === '.status__content__text .teadeck-code__copy');
   assert.ok(rule, 'the copy button has no rule inside the post');
   assert.match(rule[1], /color:\s*var\(--td-content-muted/);
+});
+
+test('only Earl Grey has a tone other than its half: a light half on a dark ground', () => {
+  for (const design of designs) for (const scheme of ['dark', 'light']) {
+    const expected = design.id === 'lapsang' ? 'dark' : scheme;
+    assert.equal(designTone(design.id, scheme), expected, `${design.id}/${scheme}`);
+  }
+  assert.equal(designTone('mastodon', 'light'), 'light');
 });

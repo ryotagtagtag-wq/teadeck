@@ -2,7 +2,7 @@ import { readStoredJson, storageKeys, writeStoredJson } from './browser_storage.
 import { isRtlLocale } from './ui_locale.ts';
 import { updateFavicon } from './favicon.ts';
 import { setIconWeight } from './icon_weight.tsx';
-import { designAttributeNames, designAttributes, designIcons } from './themes/index.ts';
+import { designAttributeNames, designAttributes, designIcons, designTone } from './themes/index.ts';
 
 import type { Contrast, ColorScheme, FrontendSettings } from './frontend_settings.ts';
 
@@ -52,7 +52,9 @@ export function applyAppearance(settings: FrontendSettings, locale: string) {
   else root.dataset.teadeckTheme = settings.theme;
 
   const scheme = resolveColorScheme(settings.colorScheme, colorSchemeMediaWatcher.matches) ? 'dark' : 'light';
-  root.dataset.colorScheme = scheme;
+  // The half chosen picks the design's colours; its tone picks Mastodon's colour roles.
+  root.dataset.teadeckHalf = scheme;
+  root.dataset.colorScheme = designTone(settings.theme, scheme);
   for (const name of designAttributeNames) delete root.dataset[name];
   Object.assign(root.dataset, designAttributes(settings.theme, scheme));
   setIconWeight(designIcons(settings.theme, scheme));

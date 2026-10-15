@@ -41,5 +41,8 @@ export function designAttributes(id: string, scheme: Scheme): Partial<Record<(ty
   return chosen ? halfAttributes(chosen) : {};
 }
 
+/** Whether a half's ground is dark or light, for Mastodon's colour roles; Mastodon's design follows the scheme. */
+export const designTone = (id: string, scheme: Scheme): Scheme => (half(id, scheme) as Half | undefined)?.tone ?? scheme;
+
 /** The stroke of the line icons; Mastodon's own is regular. */
 export const designIcons = (id: string, scheme: Scheme) => half(id, scheme)?.icons ?? 'regular';

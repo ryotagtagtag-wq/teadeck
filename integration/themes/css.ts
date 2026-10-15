@@ -159,7 +159,7 @@ export function designsCss(designs: readonly Design[]) {
   for (const design of designs) for (const font of design.fonts) fonts.set(font.file, font);
   const blocks = designs.flatMap((design) => (['dark', 'light'] as const).map((scheme) => {
     const variables = halfVariables(design[scheme]).map(([name, value]) => `  ${name}: ${value};`).join('\n');
-    return `html[data-teadeck-theme='${design.id}'][data-color-scheme='${scheme}'] {\n${variables}\n}`;
+    return `html[data-teadeck-theme='${design.id}'][data-teadeck-half='${scheme}'] {\n${variables}\n}`;
   }));
   return [
     '/* Generated from integration/themes/*.ts by scripts/build.mjs; do not edit. */',

@@ -27,6 +27,7 @@ async function choose(page, { theme, colorScheme }) {
     return {
       theme: document.documentElement.dataset.teadeckTheme ?? null,
       colorScheme: document.documentElement.dataset.colorScheme,
+      half: document.documentElement.dataset.teadeckHalf,
       font: styles.fontFamily,
       surface: getComputedStyle(document.documentElement).getPropertyValue('--color-bg-primary').trim(),
       brand: getComputedStyle(document.documentElement).getPropertyValue('--color-indigo-500').trim(),
@@ -55,7 +56,9 @@ test('each tea design replaces colours, fonts and radii; Mastodon\'s design stay
       const design = await choose(page, { theme, colorScheme });
       const name = `${theme}/${colorScheme}`;
       assert.equal(design.theme, theme, name);
-      assert.equal(design.colorScheme, colorScheme, name);
+      assert.equal(design.half, colorScheme, name);
+      // Earl Grey is the light half of its design but dark: Mastodon gets its dark colour roles.
+      assert.equal(design.colorScheme, theme === 'lapsang' ? 'dark' : colorScheme, `${name}: tone`);
       assert.match(design.font, font, name);
       // Outlined buttons (Hibiscus) are told apart by their text colour.
       const paint = design.button.background === 'rgba(0, 0, 0, 0)' ? design.button.color : design.button.background;

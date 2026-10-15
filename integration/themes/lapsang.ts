@@ -65,8 +65,10 @@ export default defineDesign({
   },
   light: {
     ...look,
+    // The light half, but a dark ground: Mastodon's dark colour roles, so its accents stay light.
+    tone: 'dark',
     neutral: lightNeutral,
-    // 300 is the interface's accent in the light; the main button fills at 600.
+    // 300 is the interface's accent; the main button fills at 600.
     accent: ['#ffecec', '#ffd3d4', '#ffb0b3', '#ff7d82', '#f35a62', '#d8343f', '#9e111a', '#84101a', '#6a0d15', '#3c0a0f', '#22080b'],
     ground: { surface: '#424351', page: '#373845', desktop: '#2b2c37', text: '#f3f2f6', glow: 'radial-gradient(ellipse 340px 420px at 0 0, rgb(170 24 40 / 38%), rgb(170 24 40 / 10%) 55%, transparent)' },
     logo: { ...cup, line: '#1f2028', body: '#5c5c6a', bodyDark: '#2b2c37', highlight: '#f3f2f6' },
