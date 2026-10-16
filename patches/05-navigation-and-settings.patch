@@ -46,9 +46,9 @@ diff --git a/app/javascript/mastodon/features/compose/index.tsx b/app/javascript
      return (
        <div className='drawer'>
          <nav
-diff --git a/app/javascript/mastodon/features/search_panel/footer_links.tsx b/app/javascript/mastodon/features/search_panel/footer_links.tsx
---- a/app/javascript/mastodon/features/search_panel/footer_links.tsx
-+++ b/app/javascript/mastodon/features/search_panel/footer_links.tsx
+diff --git a/app/javascript/mastodon/features/discovery_panel/footer_links.tsx b/app/javascript/mastodon/features/discovery_panel/footer_links.tsx
+--- a/app/javascript/mastodon/features/discovery_panel/footer_links.tsx
++++ b/app/javascript/mastodon/features/discovery_panel/footer_links.tsx
 @@ -2,11 +2,11 @@ import { FormattedMessage } from 'react-intl';
  
  import { NavLink } from 'react-router-dom';
