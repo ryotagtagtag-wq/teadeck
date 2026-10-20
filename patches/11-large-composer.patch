@@ -52,8 +52,8 @@ diff --git a/app/javascript/mastodon/features/compose/redesign/trigger.tsx b/app
  
  export const ComposeRedesignButton: React.FC<{
    /**
-@@ -62,6 +66,8 @@ export const ComposeRedesignButton: React.FC<{
-   }, [dispatch]);
+@@ -75,6 +79,8 @@ export const ComposeRedesignButton: React.FC<{
+     );
  
    const { signedIn } = useIdentity();
 +  // Teadeck's large composer: the same form, in the middle of the window.
@@ -61,7 +61,7 @@ diff --git a/app/javascript/mastodon/features/compose/redesign/trigger.tsx b/app
  
    if (!isRedesignEnabled() || !signedIn) {
      return null;
-@@ -104,8 +110,22 @@ export const ComposeRedesignButton: React.FC<{
+@@ -120,8 +126,22 @@ export const ComposeRedesignButton: React.FC<{
  
    if (displayState === 'showing') {
      return (

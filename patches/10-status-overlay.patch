@@ -138,7 +138,7 @@ diff --git a/app/javascript/mastodon/features/status/redesign.tsx b/app/javascri
 +        scrollKey={scrollKey}
          shouldUpdateScroll={shouldUpdateScroll}
        >
-         <Scrollable className={classNames('item-list', { fullscreen })}>
+         <Scrollable className={classNames({ fullscreen })}>
 diff --git a/app/javascript/mastodon/features/ui/components/modal_root.jsx b/app/javascript/mastodon/features/ui/components/modal_root.jsx
 --- a/app/javascript/mastodon/features/ui/components/modal_root.jsx
 +++ b/app/javascript/mastodon/features/ui/components/modal_root.jsx

@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/mastodon/mastodon.git",
-  "commit": "0ff87ba3132e5adbbe8e8b966837d454f8beb68c",
+  "commit": "5204e8ab940f870dbf13863ee92c48febfc4eedb",
   "packageManager": "yarn@4.18.1",
-  "release": "nightly.2026-10-16",
-  "imageDigest": "sha256:8c47c0b460ac2f68c12f42a73731815cb1aed64709b106cafcaa8607d86f2fc6"
+  "release": "nightly.2026-10-20",
+  "imageDigest": "sha256:88782fbad0bb2b81e1f2c0468c9668e72935c40beec2cd2f67e3edd49a0df2a6"
 }
