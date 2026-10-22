@@ -29,7 +29,7 @@ jobs:
     runs-on: docker
     container:
       # Pinned by digest: node-image.yml moves it daily, after the tests pass on the new image. Node 26 no longer ships Corepack.
-      image: node:26-bookworm@sha256:a856ae5e25d498bbe5ec85fde88f00f5ed99908fda803ba39d7735ab8574f58c
+      image: node:26-bookworm@sha256:5c4012d11d9857c42713ba511fbc19645cac1706bb710d51d42b0d301dff7f88
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
