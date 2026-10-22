@@ -21,7 +21,7 @@ diff --git a/app/javascript/mastodon/features/compose/redesign/header.tsx b/app/
 diff --git a/app/javascript/mastodon/features/compose/redesign/index.tsx b/app/javascript/mastodon/features/compose/redesign/index.tsx
 --- a/app/javascript/mastodon/features/compose/redesign/index.tsx
 +++ b/app/javascript/mastodon/features/compose/redesign/index.tsx
-@@ -25,6 +25,7 @@ import { ComposeSettingsMenu } from './settings';
+@@ -26,6 +26,7 @@ import { ComposeSettingsMenu } from './settings';
  import classes from './styles.module.scss';
  import { ComposeTextarea } from './textarea';
  import { ComposeVisibility } from './visibility';
@@ -29,19 +29,19 @@ diff --git a/app/javascript/mastodon/features/compose/redesign/index.tsx b/app/j
  
  interface RedesignComposeFormProps {
    autoFocus?: boolean;
-@@ -89,6 +90,8 @@ export const RedesignComposeForm: React.FC<
+@@ -92,6 +93,8 @@ export const RedesignComposeForm: React.FC<
          <ComposeAttachments className={classes.attachments} />
        </ComposeTextarea>
  
 +      <ComposerMarkdownPreview />
 +
-       <ComposeHints />
+       <ComposeHints id={hintsId} />
  
        <ComposeFooter onEmojiPick={onEmojiPick} />
 diff --git a/app/javascript/mastodon/features/compose/redesign/trigger.tsx b/app/javascript/mastodon/features/compose/redesign/trigger.tsx
 --- a/app/javascript/mastodon/features/compose/redesign/trigger.tsx
 +++ b/app/javascript/mastodon/features/compose/redesign/trigger.tsx
-@@ -23,6 +23,10 @@ import { ComposeFormHeader } from './header';
+@@ -24,6 +24,10 @@ import { ComposeFormHeader } from './header';
  import { RedesignComposeForm } from './index';
  import composerClasses from './styles.module.scss';
  import classes from './trigger.module.scss';
@@ -52,7 +52,7 @@ diff --git a/app/javascript/mastodon/features/compose/redesign/trigger.tsx b/app
  
  export const ComposeRedesignButton: React.FC<{
    /**
-@@ -75,6 +79,8 @@ export const ComposeRedesignButton: React.FC<{
+@@ -76,6 +80,8 @@ export const ComposeRedesignButton: React.FC<{
      );
  
    const { signedIn } = useIdentity();
@@ -61,7 +61,7 @@ diff --git a/app/javascript/mastodon/features/compose/redesign/trigger.tsx b/app
  
    if (!isRedesignEnabled() || !signedIn) {
      return null;
-@@ -120,8 +126,22 @@ export const ComposeRedesignButton: React.FC<{
+@@ -121,8 +127,22 @@ export const ComposeRedesignButton: React.FC<{
  
    if (displayState === 'showing') {
      return (
@@ -89,7 +89,7 @@ diff --git a/app/javascript/mastodon/features/compose/redesign/trigger.tsx b/app
 diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/index.tsx b/app/javascript/mastodon/features/navigation_panel/redesign/index.tsx
 --- a/app/javascript/mastodon/features/navigation_panel/redesign/index.tsx
 +++ b/app/javascript/mastodon/features/navigation_panel/redesign/index.tsx
-@@ -5,7 +5,6 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+@@ -6,7 +6,6 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
  import type { Map as ImmutableMap } from 'immutable';
  
  import {
@@ -97,7 +97,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/index.ts
    HouseIcon,
    MagnifyingGlassIcon,
    RssSimpleIcon,
-@@ -21,7 +20,6 @@ import { fetchFollowRequests } from '@/mastodon/actions/accounts';
+@@ -24,7 +23,6 @@ import { fetchFollowRequests } from '@/mastodon/actions/accounts';
  import { fetchLists } from '@/mastodon/actions/lists';
  import { closeNavigation } from '@/mastodon/actions/navigation';
  import { fetchFollowedHashtags } from '@/mastodon/actions/tags_typed';
@@ -105,7 +105,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/index.ts
  import { Callout } from '@/mastodon/components/callout/redesign';
  import { FOCUS_TARGET } from '@/mastodon/components/navigation_focus_target';
  import { useScrollSensor } from '@/mastodon/hooks/useScrollSensor';
-@@ -49,6 +47,7 @@ import { ListSection } from './list_section';
+@@ -56,6 +54,7 @@ import { ListSection } from './list_section';
  import { DisabledAccountBanner, LoggedOutInfo } from './logged_out_info';
  import { NavigationLink } from './navigation_link';
  import classes from './styles.module.scss';
@@ -113,7 +113,7 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/index.ts
  
  const messages = defineMessages({
    main: {
-@@ -241,18 +240,12 @@ export const RedesignNavigationPanel: React.FC<{
+@@ -279,18 +278,12 @@ export const RedesignNavigationPanel: React.FC<{
  
            <footer className={classes.footer} data-stuck={!isScrolledToBottom}>
              <div className={classes.newPostButton}>

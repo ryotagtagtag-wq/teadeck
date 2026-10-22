@@ -192,15 +192,15 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
    CirclesFourIcon,
    HeartIcon,
    BookmarkSimpleIcon,
-@@ -93,6 +97,7 @@ export const AccountMenuItems: React.FC<{
-   const { accountId, permissions } = useIdentity();
+@@ -92,6 +96,7 @@ export const AccountMenuItems: React.FC<{
+   const { accountId } = useIdentity();
    const account = useAccount(accountId);
  
 +  const showCollections = useCollectionsAvailable();
    const confirmLogout = useCallback(() => {
      dispatch(openModal({ modalType: 'CONFIRM_LOG_OUT', modalProps: {} }));
    }, [dispatch]);
-@@ -117,22 +122,33 @@ export const AccountMenuItems: React.FC<{
+@@ -113,22 +118,33 @@ export const AccountMenuItems: React.FC<{
          />
        </MenuItemLink>
  
@@ -243,24 +243,32 @@ diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/account_
        <MenuItemLink to='/favourites' icon={HeartIcon}>
          <FormattedMessage
            id='navigation_bar.liked_posts'
-@@ -190,7 +206,7 @@ export const AccountMenuItems: React.FC<{
-           <MenuItemDivider />
+diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/index.tsx b/app/javascript/mastodon/features/navigation_panel/redesign/index.tsx
+--- a/app/javascript/mastodon/features/navigation_panel/redesign/index.tsx
++++ b/app/javascript/mastodon/features/navigation_panel/redesign/index.tsx
+@@ -1,3 +1,4 @@
++import { serverUrl } from '@/teadeck/navigation';
+ import { useCallback, useEffect } from 'react';
  
-           {isAdmin && (
--            <MenuItemLink as='a' href='/admin/dashboard' icon={GavelIcon}>
-+            <MenuItemLink as='a' href={serverUrl('/admin/dashboard')} icon={GavelIcon}>
-               <FormattedMessage
-                 id='navigation_bar.administration'
-                 defaultMessage='Administration'
-@@ -199,7 +215,7 @@ export const AccountMenuItems: React.FC<{
-           )}
- 
-           {isManager && (
--            <MenuItemLink as='a' href='/admin/reports' icon={ShieldStarIcon}>
-+            <MenuItemLink as='a' href={serverUrl('/admin/reports')} icon={ShieldStarIcon}>
-               <FormattedMessage
-                 id='navigation_bar.moderation'
-                 defaultMessage='Moderation'
+ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+@@ -196,7 +197,7 @@ export const RedesignNavigationPanel: React.FC<{
+             {isAdmin && (
+               <NavigationLink
+                 as='a'
+-                href='/admin/dashboard'
++                href={serverUrl('/admin/dashboard')}
+                 iconComponent={GavelIcon}
+               >
+                 <FormattedMessage
+@@ -209,7 +210,7 @@ export const RedesignNavigationPanel: React.FC<{
+             {isManager && (
+               <NavigationLink
+                 as='a'
+-                href='/admin/reports'
++                href={serverUrl('/admin/reports')}
+                 iconComponent={ShieldStarIcon}
+               >
+                 <FormattedMessage
 diff --git a/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx b/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx
 --- a/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx
 +++ b/app/javascript/mastodon/features/navigation_panel/redesign/logged_out_info.tsx
@@ -507,7 +515,7 @@ diff --git a/app/javascript/mastodon/features/ui/index.jsx b/app/javascript/mast
    Firehose,
    AccountTimeline,
    AccountGallery,
-@@ -213,6 +214,7 @@ class SwitchingColumnsArea extends PureComponent {
+@@ -212,6 +213,7 @@ class SwitchingColumnsArea extends PureComponent {
              }
  
              <WrappedRoute path='/keyboard-shortcuts' component={KeyboardShortcuts} content={children} />

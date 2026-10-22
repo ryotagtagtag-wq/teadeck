@@ -47,8 +47,9 @@ test('advanced layout: About and the privacy policy open in the column, not in a
     assert.equal(await page.locator('.logo--wordmark, .logo--icon, img[alt="Mastodon"]').count(), 0);
     assert.equal(await page.locator('img[src*="elephant"], .drawer__inner__mastodon, .navigation-panel__logo').count(), 0);
 
+    // The footer links sit in the discovery column; the navigation hides its copy on wide screens.
     // The first "Über" is this server's (the second, external one is about Mastodon).
-    await page.locator('footer').first().getByRole('link', { name: /^Über/ }).first().click();
+    await page.locator('footer').getByRole('link', { name: /^Über/ }).first().click();
     // Server rules are a collapsible section of the About column, as in Mastodon.
     await page.getByRole('button', { name: 'Serverregeln' }).click();
     await page.getByText('Teadeck test rule 8e2c').waitFor();
@@ -60,7 +61,7 @@ test('advanced layout: About and the privacy policy open in the column, not in a
     // The About column took the place of the start column (like settings do); back to it.
     await page.goBack();
     await page.waitForURL(/\/deck\/home$/);
-    await page.locator('footer a[href="/privacy-policy"]').first().click();
+    await page.locator('footer').getByRole('link', { name: 'Datenschutz' }).first().click();
     await page.getByText('Teadeck test privacy policy 51d0').waitFor();
     assert.equal(context.pages().length, 1, 'no new tab');
     assert.equal(await page.getByText(timelineText).first().isVisible(), true);
